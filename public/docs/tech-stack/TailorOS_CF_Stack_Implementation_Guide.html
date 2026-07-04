@@ -1,0 +1,2990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TailorOS + WhatsApp Connector — Cloudflare Stack Implementation Guide</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --paper: #ffffff;
+      --ink: #111827;
+      --muted: #5b6475;
+      --muted-2: #798196;
+      --line: #d9dee8;
+      --line-2: #edf0f5;
+      --brand: #7c3aed;
+      --brand-2: #2563eb;
+      --brand-soft: #f2edff;
+      --green: #047857;
+      --green-soft: #e9f8f1;
+      --orange: #c2410c;
+      --orange-soft: #fff3ea;
+      --red: #b91c1c;
+      --red-soft: #fff0f0;
+      --blue-soft: #ecf5ff;
+      --code-bg: #0f172a;
+      --code-ink: #e5e7eb;
+      --shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #f0edff 0, transparent 34rem), var(--bg);
+      color: var(--ink);
+      line-height: 1.62;
+    }
+    a { color: var(--brand-2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 22px 80px;
+    }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #111827, #2d1d58 45%, #0f172a);
+      color: white;
+      border-radius: 28px;
+      padding: 48px;
+      box-shadow: var(--shadow);
+    }
+    .hero:before {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background: radial-gradient(circle at 70% 10%, rgba(124, 58, 237, 0.45), transparent 28%),
+                  radial-gradient(circle at 15% 80%, rgba(37, 99, 235, 0.28), transparent 32%);
+      pointer-events: none;
+    }
+    .hero > * { position: relative; z-index: 1; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ddd6fe;
+      font-size: 12px;
+      margin-bottom: 14px;
+    }
+    h1 {
+      margin: 0 0 18px;
+      font-size: clamp(34px, 5vw, 60px);
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+    }
+    .hero p {
+      max-width: 850px;
+      color: #dbeafe;
+      font-size: 18px;
+      margin: 0 0 24px;
+    }
+    .badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      padding: 7px 12px;
+      background: rgba(255,255,255,0.09);
+      color: #f8fafc;
+      font-size: 13px;
+      backdrop-filter: blur(10px);
+    }
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 14px;
+      margin-top: 22px;
+    }
+    .meta .box {
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(255,255,255,0.06);
+    }
+    .meta strong { display: block; color: white; }
+    .meta span { color: #cbd5e1; font-size: 13px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0,1fr);
+      gap: 24px;
+      margin-top: 26px;
+      align-items: start;
+    }
+    .toc {
+      position: sticky;
+      top: 16px;
+      background: rgba(255,255,255,0.86);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+    }
+    .toc h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .toc a {
+      display: block;
+      padding: 8px 10px;
+      border-radius: 10px;
+      color: #334155;
+      font-size: 14px;
+    }
+    .toc a:hover {
+      background: var(--brand-soft);
+      text-decoration: none;
+      color: var(--brand);
+    }
+    section {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 30px;
+      margin-bottom: 22px;
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: 30px;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+    }
+    h3 {
+      margin: 28px 0 10px;
+      font-size: 21px;
+      line-height: 1.25;
+    }
+    h4 {
+      margin: 22px 0 8px;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #374151;
+    }
+    p { margin: 0 0 14px; }
+    ul, ol { margin: 8px 0 16px 22px; padding: 0; }
+    li { margin: 6px 0; }
+    .lead {
+      color: #334155;
+      font-size: 18px;
+      max-width: 920px;
+    }
+    .note, .warning, .success, .decision {
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin: 18px 0;
+      border: 1px solid;
+    }
+    .note { background: var(--blue-soft); border-color: #bfdbfe; }
+    .warning { background: var(--orange-soft); border-color: #fed7aa; }
+    .success { background: var(--green-soft); border-color: #bbf7d0; }
+    .decision { background: var(--brand-soft); border-color: #ddd6fe; }
+    .note strong, .warning strong, .success strong, .decision strong { display: block; margin-bottom: 4px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .card {
+      border: 1px solid var(--line-2);
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .card h4 {
+      margin-top: 0;
+      color: #111827;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 16px;
+    }
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 650;
+      margin: 2px 4px 2px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 22px;
+      font-size: 14px;
+    }
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line-2);
+      padding: 11px 10px;
+    }
+    th {
+      background: #f8fafc;
+      color: #334155;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    tr:last-child td { border-bottom: none; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      background: #f1f5f9;
+      color: #0f172a;
+      border-radius: 6px;
+      padding: 2px 5px;
+      font-size: 0.92em;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-ink);
+      border-radius: 16px;
+      padding: 18px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.55;
+      border: 1px solid rgba(255,255,255,0.06);
+      margin: 14px 0 20px;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    .diagram {
+      background: #0b1220;
+      color: #dbeafe;
+      border-radius: 18px;
+      padding: 18px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 16px 0 20px;
+      border: 1px solid #1f2937;
+    }
+    .small { color: var(--muted); font-size: 13px; }
+    .source {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    .checklist li::marker { color: var(--green); }
+    .risk-table td:first-child { font-weight: 700; color: #334155; width: 24%; }
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 24px 0 8px;
+      font-size: 13px;
+    }
+    .kbd {
+      border: 1px solid #cbd5e1;
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      padding: 1px 6px;
+      background: white;
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+    }
+    .priority-high { color: #b91c1c; font-weight: 700; }
+    .priority-med { color: #b45309; font-weight: 700; }
+    .priority-low { color: #047857; font-weight: 700; }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .toc { position: relative; top: 0; max-height: none; }
+      .meta { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 700px) {
+      .page { padding: 18px 12px 50px; }
+      .hero { padding: 30px 24px; border-radius: 22px; }
+      section { padding: 22px 18px; }
+      .grid, .grid-3 { grid-template-columns: 1fr; }
+      .meta { grid-template-columns: 1fr; }
+      h2 { font-size: 25px; }
+    }
+    @media print {
+      body { background: white; }
+      .page { max-width: none; padding: 0; }
+      .toc { display: none; }
+      .layout { display: block; }
+      section, .hero { box-shadow: none; break-inside: avoid; }
+      a { color: #111827; text-decoration: underline; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="eyebrow">Implementation Guide · Cloudflare Stack · TailorOS SaaS</div>
+      <h1>TailorOS + WhatsApp Connector<br/>Cloudflare Architecture & Implementation Report</h1>
+      <p>
+        A practical build guide for a Tamil Nadu tailor-shop SaaS: fast web app, per-tenant D1 databases,
+        WhatsApp multi-client connector, searchable customer/family/order data, R2 receipt/media storage,
+        background queues, realtime chat path, smooth micro-interactions, and scalable repo structure.
+      </p>
+      <div class="badges">
+        <span class="badge">Next.js on Cloudflare Workers</span>
+        <span class="badge">Hono API Workers</span>
+        <span class="badge">D1 per-tenant databases</span>
+        <span class="badge">R2 storage</span>
+        <span class="badge">Queues + DLQ</span>
+        <span class="badge">WhatsApp Cloud API</span>
+      </div>
+      <div class="meta">
+        <div class="box"><strong>Prepared date</strong><span>July 3, 2026</span></div>
+        <div class="box"><strong>Primary goal</strong><span>Fast, low-cost, maintainable SaaS</span></div>
+        <div class="box"><strong>Database pattern</strong><span>Control DB + per-tenant D1 DB</span></div>
+        <div class="box"><strong>Best-fit phase</strong><span>MVP → paid multi-tenant SaaS</span></div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav class="toc">
+        <h3>Contents</h3>
+        <a href="#executive">1. Executive decision</a>
+        <a href="#target-architecture">2. Target architecture</a>
+        <a href="#cloudflare-services">3. Cloudflare service map</a>
+        <a href="#d1-strategy">4. D1 per-tenant strategy</a>
+        <a href="#onboarding">5. New tenant provisioning flow</a>
+        <a href="#tailoros">6. TailorOS product structure</a>
+        <a href="#whatsapp">7. WhatsApp Connector structure</a>
+        <a href="#search">8. Fast global search design</a>
+        <a href="#repo">9. Recommended repo structure</a>
+        <a href="#frontend">10. Frontend implementation</a>
+        <a href="#animations">11. Micro-interactions & transitions</a>
+        <a href="#api">12. API/backend practices</a>
+        <a href="#security">13. Security & tenant isolation</a>
+        <a href="#deployment">14. Deployment guide</a>
+        <a href="#observability">15. Observability & testing</a>
+        <a href="#edge-cases">16. Edge cases</a>
+        <a href="#roadmap">17. Phased roadmap</a>
+        <a href="#sources">18. Official sources</a>
+      </nav>
+
+      <main>
+        <section id="executive">
+          <h2>1. Executive decision</h2>
+          <p class="lead">
+            The best implementation for your requirement is a <strong>Cloudflare-first multi-service monorepo</strong>:
+            Next.js for the web app, Hono Workers for APIs, a control-plane D1 database, one D1 database per tenant,
+            R2 for media/receipts, Queues for background jobs, Durable Objects for realtime chat later, and a separate
+            WhatsApp Connector service with provider adapters.
+          </p>
+
+          <div class="decision">
+            <strong>Recommended architecture name: Cloudflare Tenant-Isolated SaaS Pattern.</strong>
+            Use one global <code>tailoros_control</code> D1 database to manage tenants, plans, domains, staff identity, provisioning
+            state, integration metadata, and worker routing. For each new tailor shop, provision a separate D1 database
+            such as <code>tailoros_tenant_madurai_sri_raja_01h...</code>. The tenant database stores that shop’s customers,
+            family members, measurements, orders, payments, receipts, search index, WhatsApp logs, and audit logs.
+          </div>
+
+          <h3>Why this is the right direction</h3>
+          <table>
+            <thead>
+              <tr><th>Requirement</th><th>Recommended implementation</th><th>Reason</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Fast app</td>
+                <td>Next.js on Cloudflare Workers + Static Assets</td>
+                <td>Static shell and edge-executed API routes reduce latency for users in India and globally.</td>
+              </tr>
+              <tr>
+                <td>Low cost</td>
+                <td>Workers, D1, R2, Queues</td>
+                <td>Cloudflare pricing is usage-oriented and scales to zero; no always-on server for the MVP.</td>
+              </tr>
+              <tr>
+                <td>Separate data per client</td>
+                <td>Per-tenant D1 database</td>
+                <td>Better isolation, easier export/delete/backup, lower blast radius, simpler per-shop scaling.</td>
+              </tr>
+              <tr>
+                <td>Multiple WhatsApp clients</td>
+                <td>WhatsApp Connector Worker + tenant credentials table</td>
+                <td>One reusable connector can support many shops with different WhatsApp Business credentials.</td>
+              </tr>
+              <tr>
+                <td>Quick search</td>
+                <td>D1 indexes + FTS5 + tenant-local search projection</td>
+                <td>Exact mobile/order search stays indexed; fuzzy/name/item search uses a dedicated search table.</td>
+              </tr>
+              <tr>
+                <td>Smooth UX</td>
+                <td>shadcn/ui + Motion + CSS transform/opacity animations</td>
+                <td>Modern micro-interactions without blocking user actions or harming performance.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="warning">
+            <strong>Important correction for the “one D1 DB per tenant” idea.</strong>
+            You should not simply add every tenant D1 database as a static binding to one Worker forever. D1 has database
+            and binding limits, and runtime D1 access is designed around Worker bindings. For true self-serve tenant onboarding,
+            use a <strong>control plane + provisioning queue + dispatch/tenant Worker pattern</strong>. For the first 5–10 pilot
+            shops, you can manually bind databases, but for serious SaaS you should automate it.
+          </div>
+        </section>
+
+        <section id="target-architecture">
+          <h2>2. Target architecture</h2>
+          <p>
+            The project should be split into multiple deployable Workers instead of one large backend. This improves
+            security, scale, and maintainability. Cloudflare service bindings allow Workers to call one another without
+            exposing every internal service publicly.
+          </p>
+
+          <div class="diagram">
+Browser / PWA
+  │
+  │  HTTPS
+  ▼
+Cloudflare Worker Static Assets / Next.js App
+  │
+  ├─ calls public API routes
+  ▼
+API Gateway Worker
+  │
+  ├─ Auth, session check, tenant resolution
+  ├─ rate limits, request validation
+  ├─ resolves tenant slug/domain from control DB
+  │
+  ├───────────── service binding ─────────────┐
+  ▼                                           ▼
+Tenant Dispatch Worker                  WhatsApp Connector Worker
+  │                                           │
+  ├─ invokes tenant Worker                    ├─ Meta webhook verification
+  ▼                                           ├─ inbound/status ingestion
+Tenant API Worker                         ├─ template/message send API
+  │                                           ▼
+  ├─ TENANT_DB binding                  WhatsApp Queues + DLQ
+  ├─ R2 binding                               │
+  ├─ Search / customers / orders              ▼
+  ▼                                      Meta WhatsApp Cloud API
+Per-tenant D1 DB
+  │
+  ├─ customers, contacts, measurements
+  ├─ orders, payments, receipts
+  ├─ search_docs FTS table
+  ├─ wa_messages, wa_events
+  └─ audit_logs
+
+Control Plane Worker
+  ├─ tenant registration
+  ├─ D1 DB creation via Cloudflare API
+  ├─ migration orchestration
+  ├─ tenant worker deployment/update
+  └─ tenant registry in CONTROL_DB
+          </div>
+
+          <h3>Core deployable apps</h3>
+          <table>
+            <thead>
+              <tr><th>Deployable</th><th>Runtime</th><th>Purpose</th><th>Public?</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>apps/web</code></td>
+                <td>Next.js on Workers / Static Assets</td>
+                <td>TailorOS staff dashboard, onboarding, customer portal pages, receipt view pages.</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td><code>apps/api-gateway</code></td>
+                <td>Cloudflare Worker + Hono</td>
+                <td>Public API entry point. Handles auth, tenant resolution, rate limits, and dispatching.</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td><code>apps/control-plane</code></td>
+                <td>Cloudflare Worker + Queues</td>
+                <td>Tenant registration, database creation, migrations, plan changes, admin operations.</td>
+                <td>Admin-only</td>
+              </tr>
+              <tr>
+                <td><code>apps/tenant-api-template</code></td>
+                <td>Cloudflare Worker + Hono</td>
+                <td>Standard tenant API that is deployed/bound per tenant DB.</td>
+                <td>Invoked by dispatch</td>
+              </tr>
+              <tr>
+                <td><code>apps/whatsapp-connector</code></td>
+                <td>Cloudflare Worker + Hono</td>
+                <td>Meta webhook receiver, provider adapter, outbound message API, template mapping.</td>
+                <td>Webhook routes public, admin routes private</td>
+              </tr>
+              <tr>
+                <td><code>apps/whatsapp-consumer</code></td>
+                <td>Queue consumer Worker</td>
+                <td>Sends queued messages, retries failed sends, writes delivery status.</td>
+                <td>No</td>
+              </tr>
+              <tr>
+                <td><code>apps/realtime</code></td>
+                <td>Durable Objects Worker</td>
+                <td>Later phase: live staff inbox, typing, order board updates, multi-tab sync.</td>
+                <td>Yes, authenticated</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Control-plane vs tenant-plane</h3>
+          <div class="grid">
+            <div class="card">
+              <h4>Control plane</h4>
+              <p>Global platform data lives here: tenants, tenant domains, owner accounts, plan, provisioning status,
+                D1 database UUID/name, tenant worker name, WhatsApp integration registry, global audit events,
+                billing metadata, and support/admin tools.</p>
+            </div>
+            <div class="card">
+              <h4>Tenant plane</h4>
+              <p>Shop-specific operational data lives here: contacts, family customer profiles, measurements, orders,
+                order items, receipts, WhatsApp message history, tenant-local search index, and shop audit logs.</p>
+            </div>
+          </div>
+
+          <p>
+            This split matters because a tailor shop’s operational data should not be joined with another shop’s data.
+            It also makes tenant export, tenant deletion, backup restore, and high-volume tenant migration much cleaner.
+          </p>
+        </section>
+
+        <section id="cloudflare-services">
+          <h2>3. Cloudflare service map</h2>
+          <p class="lead">
+            Use Cloudflare services by their strongest role. Do not use one service for everything. The table below
+            shows the recommended mapping for TailorOS.
+          </p>
+
+          <table>
+            <thead>
+              <tr><th>Cloudflare service</th><th>Use in TailorOS</th><th>Best practice</th><th>Do not use for</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Workers</td>
+                <td>API, web app runtime, webhooks, background consumers</td>
+                <td>Keep Workers small and composable; use bindings and service bindings.</td>
+                <td>Long CPU-heavy processing, large video/image pipelines.</td>
+              </tr>
+              <tr>
+                <td>Workers Static Assets</td>
+                <td>Next.js/static assets deployment</td>
+                <td>Prefer for new Worker-based web deployments where possible.</td>
+                <td>Private file storage.</td>
+              </tr>
+              <tr>
+                <td>D1</td>
+                <td>Control DB and per-tenant relational DB</td>
+                <td>Use indexes, prepared statements, migrations, row-count metrics, read replication sessions.</td>
+                <td>Large file blobs, analytics warehouse, unlimited-size relational DB.</td>
+              </tr>
+              <tr>
+                <td>R2</td>
+                <td>Receipts, garment reference photos, design images, generated PDFs</td>
+                <td>Use signed upload/read URLs, CORS restrictions, object key namespacing.</td>
+                <td>Searchable relational data or hot counters.</td>
+              </tr>
+              <tr>
+                <td>Queues</td>
+                <td>WhatsApp sends, receipt generation, reminders, migrations fan-out</td>
+                <td>Use idempotency and a dead-letter queue.</td>
+                <td>Strict ordering guarantees or realtime chat.</td>
+              </tr>
+              <tr>
+                <td>KV</td>
+                <td>Feature flags, non-critical cache, public config, short-lived computed data</td>
+                <td>Use TTLs and treat it as eventually consistent.</td>
+                <td>Order status, payments, WhatsApp delivery state, authoritative search.</td>
+              </tr>
+              <tr>
+                <td>Durable Objects</td>
+                <td>Live chat rooms, tenant inbox presence, collaborative order board</td>
+                <td>Use WebSocket hibernation for lower cost.</td>
+                <td>Bulk relational storage.</td>
+              </tr>
+              <tr>
+                <td>Turnstile</td>
+                <td>Signup, login abuse protection, public forms</td>
+                <td>Always validate tokens server-side.</td>
+                <td>Authentication replacement.</td>
+              </tr>
+              <tr>
+                <td>Rate Limiting API</td>
+                <td>Login, OTP, search, webhooks, public receipt links</td>
+                <td>Code-defined limits by tenant/user/IP/route.</td>
+                <td>Replacing business authorization.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="success">
+            <strong>Key Cloudflare best practice.</strong>
+            Use platform bindings for D1, R2, KV, Queues, and internal Worker calls. Bindings are direct in-process
+            references exposed on <code>env</code>; they avoid the overhead and complexity of calling Cloudflare REST APIs
+            for normal runtime operations.
+          </div>
+        </section>
+
+        <section id="d1-strategy">
+          <h2>4. D1 per-tenant database strategy</h2>
+          <p>
+            Cloudflare documents D1 as suitable for horizontal scale-out across many smaller databases, including
+            per-user, per-tenant, and per-entity patterns. That matches your requirement: when a tailor shop registers,
+            create a separate D1 database for that shop.
+          </p>
+
+          <h3>Recommended D1 topology</h3>
+          <div class="diagram">
+CONTROL_DB: tailors_control_prod
+  ├─ tenants
+  ├─ tenant_domains
+  ├─ tenant_database_registry
+  ├─ tenant_worker_registry
+  ├─ users
+  ├─ memberships
+  ├─ integration_accounts
+  ├─ provisioning_jobs
+  └─ platform_audit_logs
+
+TENANT_DB: tailors_tenant_{slug}_{shortid}
+  ├─ customer_contacts
+  ├─ customer_profiles
+  ├─ measurement_profiles
+  ├─ measurement_versions
+  ├─ orders
+  ├─ order_items
+  ├─ order_status_history
+  ├─ payments
+  ├─ receipts
+  ├─ r2_files
+  ├─ search_docs / search_fts
+  ├─ wa_messages
+  ├─ wa_webhook_events
+  ├─ outbox_jobs
+  └─ audit_logs
+          </div>
+
+          <h3>Why a control DB is mandatory</h3>
+          <p>
+            With one D1 database per tenant, the app needs a central registry that tells the platform:
+          </p>
+          <ul class="checklist">
+            <li>Which tenant owns which D1 database.</li>
+            <li>Which tenant worker should handle that shop’s requests.</li>
+            <li>Which domain/subdomain maps to which tenant.</li>
+            <li>Which schema version a tenant database is running.</li>
+            <li>Whether provisioning, migration, suspension, export, or deletion is in progress.</li>
+            <li>Which WhatsApp phone number ID maps to which tenant integration.</li>
+          </ul>
+
+          <h3>D1 limits that influence the design</h3>
+          <table>
+            <thead>
+              <tr><th>Limit area</th><th>Why it matters</th><th>Design response</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Databases per account</td>
+                <td>The paid account limit supports many databases, while the free account allows only a small number.</td>
+                <td>Use free tier for development/pilot only. Per-tenant database SaaS needs a paid Cloudflare plan once you exceed pilot scale.</td>
+              </tr>
+              <tr>
+                <td>Database size</td>
+                <td>D1 databases are intentionally smaller than a giant Postgres cluster.</td>
+                <td>Use one DB per tenant; keep files in R2; archive old WhatsApp events; aggregate analytics separately.</td>
+              </tr>
+              <tr>
+                <td>Worker bindings</td>
+                <td>A Worker script has a practical binding limit, so one Worker with thousands of static D1 bindings is not the clean long-term answer.</td>
+                <td>Use Workers for Platforms dispatch namespaces or controlled per-tenant worker deployment.</td>
+              </tr>
+              <tr>
+                <td>Cross-tenant joins</td>
+                <td>You cannot easily perform SQL joins across thousands of separate tenant DBs.</td>
+                <td>Use event-driven projections into a platform analytics/search DB for admin-wide reporting.</td>
+              </tr>
+              <tr>
+                <td>FTS virtual table export</td>
+                <td>D1 supports FTS5, but virtual tables need care during exports/migrations.</td>
+                <td>Store canonical data in normal tables and rebuild FTS indexes during restore/migration.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="warning">
+            <strong>Free-tier reality.</strong>
+            A strict “new tenant = new D1 database” model is not ideal for a completely free-tier SaaS beyond a small pilot,
+            because the free plan’s database count/storage limits are intentionally small. For 1–10 pilot shops, it works.
+            For 25+ self-serve shops, plan for paid Cloudflare usage or start with shared-D1 development and migrate tenants
+            before launch.
+          </div>
+
+          <h3>Primary location and read replication</h3>
+          <p>
+            For Tamil Nadu users, set D1’s broad primary location hint to <code>apac</code> when creating tenant databases.
+            This is not a Chennai-specific guarantee, but it is the closest broad location hint exposed by the D1 create API.
+            Enable D1 read replication with <code>read_replication: { "mode": "auto" }</code> for read-heavy tenants where
+            available. When using D1 read replicas, use the D1 Sessions API so sequential user actions remain consistent.
+          </p>
+
+          <pre><code>{
+  "name": "tailoros_tenant_madurai_sri_raja_01hzabc",
+  "primary_location_hint": "apac",
+  "read_replication": {
+    "mode": "auto"
+  }
+}</code></pre>
+
+          <h3>Runtime access: bindings first, API second</h3>
+          <p>
+            For hot application traffic, use D1 bindings inside Workers. Use the Cloudflare D1 API only for administrative
+            operations such as creating a tenant database, checking metadata, or applying migrations in a controlled
+            provisioning flow.
+          </p>
+
+          <table>
+            <thead>
+              <tr><th>Operation</th><th>Use</th><th>Reason</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Customer search, order create, payment update</td>
+                <td><code>env.TENANT_DB.prepare(...)</code></td>
+                <td>Low-latency binding path designed for Workers.</td>
+              </tr>
+              <tr>
+                <td>Create a new tenant database</td>
+                <td>Cloudflare D1 REST API from control-plane Worker</td>
+                <td>Administrative provisioning operation.</td>
+              </tr>
+              <tr>
+                <td>Apply tenant migration</td>
+                <td>Wrangler/CI or admin D1 API</td>
+                <td>Controlled and auditable schema changes.</td>
+              </tr>
+              <tr>
+                <td>Bulk analytics across all tenants</td>
+                <td>Queue-driven projection or export pipeline</td>
+                <td>Avoid scanning every tenant DB from a user request.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="onboarding">
+          <h2>5. New tenant provisioning flow</h2>
+          <p class="lead">
+            Tenant onboarding must be asynchronous. Do not create a D1 database, apply migrations, deploy worker bindings,
+            seed data, and connect WhatsApp inside a single user-facing HTTP request. Use a provisioning job.
+          </p>
+
+          <h3>Self-serve registration flow</h3>
+          <ol>
+            <li><strong>Signup submitted:</strong> shop owner enters shop name, city, owner name, mobile number, email, preferred subdomain, and plan.</li>
+            <li><strong>Abuse protection:</strong> validate Turnstile token server-side before creating anything.</li>
+            <li><strong>Control record:</strong> insert tenant row with status <code>provisioning_pending</code>.</li>
+            <li><strong>Slug reservation:</strong> reserve <code>{slug}.tailoros.in</code> or route path <code>/t/{slug}</code>.</li>
+            <li><strong>Provisioning job:</strong> send a message to <code>tenant-provisioning-queue</code>.</li>
+            <li><strong>Create D1:</strong> control-plane Worker calls Cloudflare D1 create API with APAC location hint.</li>
+            <li><strong>Apply migrations:</strong> run base tenant SQL migrations and record schema version.</li>
+            <li><strong>Seed defaults:</strong> add garment categories, status workflow, receipt numbering, measurement templates, default roles.</li>
+            <li><strong>Bind/deploy tenant worker:</strong> deploy or register a tenant Worker with that tenant’s D1 binding.</li>
+            <li><strong>Activate:</strong> update control DB status to <code>active</code> and notify owner.</li>
+          </ol>
+
+          <h3>Provisioning state machine</h3>
+          <div class="diagram">
+requested
+  → validating_owner
+  → tenant_reserved
+  → db_creating
+  → db_migrating
+  → defaults_seeding
+  → worker_deploying
+  → active
+
+failure states:
+  → failed_validation
+  → failed_db_create
+  → failed_migration
+  → failed_worker_deploy
+  → needs_manual_review
+          </div>
+
+          <h3>Provisioning code sketch</h3>
+          <pre><code>// apps/control-plane/src/jobs/provisionTenant.ts
+export async function provisionTenant(job: ProvisionTenantJob, env: Env) {
+  const tenant = await getTenantForProvisioning(env.CONTROL_DB, job.tenantId);
+
+  if (!tenant || tenant.status !== "provisioning_pending") {
+    return; // idempotent no-op
+  }
+
+  await markProvisioningStep(env.CONTROL_DB, tenant.id, "db_creating");
+
+  const dbCreateResponse = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/d1/database`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.CF_API_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name: tenant.dbName,
+        primary_location_hint: "apac",
+        read_replication: { mode: "auto" }
+      })
+    }
+  );
+
+  if (!dbCreateResponse.ok) {
+    await failProvisioning(env.CONTROL_DB, tenant.id, "failed_db_create");
+    throw new Error("D1 database creation failed");
+  }
+
+  const created = await dbCreateResponse.json();
+
+  await saveTenantDatabaseRegistry(env.CONTROL_DB, {
+    tenantId: tenant.id,
+    dbName: tenant.dbName,
+    dbUuid: created.result.uuid,
+    readReplication: created.result.read_replication?.mode ?? "disabled"
+  });
+
+  await markProvisioningStep(env.CONTROL_DB, tenant.id, "db_migrating");
+
+  // Apply migrations through CI/admin API, not user request path.
+  await env.TENANT_MIGRATION_QUEUE.send({
+    tenantId: tenant.id,
+    dbUuid: created.result.uuid,
+    targetVersion: CURRENT_TENANT_SCHEMA_VERSION
+  });
+}</code></pre>
+
+          <h3>Workers for Platforms pattern</h3>
+          <p>
+            For a scalable dynamic tenant system, use a dispatch namespace. A dynamic dispatch Worker resolves the tenant
+            from hostname/path/header, performs platform-level checks, then invokes the tenant Worker with
+            <code>env.DISPATCHER.get(workerName)</code>.
+          </p>
+
+          <pre><code>// apps/api-gateway/src/dispatch.ts
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    const url = new URL(request.url);
+    const tenantSlug = resolveTenantSlug(url.hostname, url.pathname);
+
+    const tenant = await findTenantBySlug(env.CONTROL_DB, tenantSlug);
+    if (!tenant || tenant.status !== "active") {
+      return new Response("Tenant not found", { status: 404 });
+    }
+
+    await assertUserCanAccessTenant(request, tenant.id, env);
+
+    const tenantWorker = env.DISPATCH_NAMESPACE.get(tenant.worker_name);
+    return tenantWorker.fetch(request);
+  }
+};</code></pre>
+
+          <h3>Fallback if Workers for Platforms is not available</h3>
+          <table>
+            <thead>
+              <tr><th>Fallback</th><th>When to use</th><th>Tradeoff</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Manual D1 binding per tenant</td>
+                <td>Very small pilot: 1–10 shops</td>
+                <td>Simple, but requires redeploying Worker config and cannot scale cleanly.</td>
+              </tr>
+              <tr>
+                <td>One shared D1 for MVP</td>
+                <td>Strict free-tier prototype</td>
+                <td>Cheapest start, but weaker isolation; must migrate tenants later.</td>
+              </tr>
+              <tr>
+                <td>Automated per-tenant Worker deploys</td>
+                <td>Paid production without WFP availability</td>
+                <td>Operationally heavier than dispatch namespace.</td>
+              </tr>
+              <tr>
+                <td>Postgres fallback</td>
+                <td>Large enterprise / complex reporting</td>
+                <td>Higher cost, but stronger cross-tenant analytics and standard SQL ecosystem.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="tailoros">
+          <h2>6. TailorOS product structure</h2>
+          <p class="lead">
+            TailorOS should be built around real tailoring workflows, not just generic CRUD. The core domain is:
+            contacts, family customer profiles, measurement versions, orders, payments, delivery status, receipts,
+            WhatsApp communication, and audit history.
+          </p>
+
+          <h3>Important customer identity rule</h3>
+          <div class="decision">
+            <strong>Mobile number is not the customer ID.</strong>
+            A single mobile number can belong to a family/contact, and multiple customer profiles can exist under it.
+            Example: one mobile number can have profiles for father, mother, son, daughter, and each profile gets a unique
+            customer code and measurement history.
+          </div>
+
+          <div class="diagram">
+Mobile: +91 98765 43210
+  │
+  ├─ Contact ID: CON-01HV...
+  │
+  ├─ Customer profile: CUS-MDU-000231  Rajendran
+  ├─ Customer profile: CUS-MDU-000232  Meena
+  ├─ Customer profile: CUS-MDU-000233  Karthik
+  └─ Customer profile: CUS-MDU-000234  Ananya
+
+Each customer profile:
+  ├─ Measurement profile(s)
+  ├─ Measurement version history
+  ├─ Orders
+  ├─ Receipts
+  └─ WhatsApp communication through contact/mobile
+          </div>
+
+          <h3>Core product modules</h3>
+          <table>
+            <thead>
+              <tr><th>Module</th><th>Features</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Dashboard</td>
+                <td>Today’s deliveries, pending trials, unpaid balances, new messages, delayed orders.</td>
+                <td>Should be the first screen for shop staff.</td>
+              </tr>
+              <tr>
+                <td>Contacts & family</td>
+                <td>Mobile search, WhatsApp opt-in, address, family profiles, relationship labels.</td>
+                <td>Mobile uniqueness should be per tenant, not global.</td>
+              </tr>
+              <tr>
+                <td>Customer profiles</td>
+                <td>Name, gender/age group, customer code, notes, preferences, default measurement templates.</td>
+                <td>Editable but audit important fields.</td>
+              </tr>
+              <tr>
+                <td>Measurements</td>
+                <td>Garment-specific templates, current measurement, version history, reference photos.</td>
+                <td>Never overwrite without versioning.</td>
+              </tr>
+              <tr>
+                <td>Orders</td>
+                <td>Garment items, quantities, fabric info, trial date, delivery date, status workflow.</td>
+                <td>Each order and item should have unique IDs.</td>
+              </tr>
+              <tr>
+                <td>Payments</td>
+                <td>Estimate, advance, balance, partial payments, refunds, payment mode.</td>
+                <td>Keep payment ledger separate from order total.</td>
+              </tr>
+              <tr>
+                <td>Receipts</td>
+                <td>Printable receipt, WhatsApp receipt link, PDF/image receipt, receipt number.</td>
+                <td>Receipt files stored in R2; metadata in D1.</td>
+              </tr>
+              <tr>
+                <td>WhatsApp inbox</td>
+                <td>Inbound messages, order status query, staff replies, template sends.</td>
+                <td>Use polling first; Durable Objects later for realtime.</td>
+              </tr>
+              <tr>
+                <td>Reports</td>
+                <td>Daily revenue, delivery performance, pending balances, category sales.</td>
+                <td>Per tenant; aggregate later via projections.</td>
+              </tr>
+              <tr>
+                <td>Settings</td>
+                <td>Shop info, receipt format, garment templates, roles, WhatsApp integration.</td>
+                <td>Keep template mapping editable by tenant admin.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Order status workflow</h3>
+          <p>
+            Use an explicit state machine instead of random text statuses. This enables consistent search, reports,
+            WhatsApp messaging, and staff workflows.
+          </p>
+
+          <div class="diagram">
+draft
+  → confirmed
+  → fabric_received
+  → cutting
+  → stitching
+  → trial_ready
+  → trial_done
+  → alteration_needed
+  → ready_for_delivery
+  → delivered
+
+side states:
+  → on_hold
+  → cancelled
+  → refunded
+          </div>
+
+          <h3>Recommended tenant DB schema excerpt</h3>
+          <pre><code>CREATE TABLE customer_contacts (
+  id TEXT PRIMARY KEY,
+  mobile_e164 TEXT NOT NULL,
+  mobile_national TEXT NOT NULL,
+  whatsapp_mobile_e164 TEXT,
+  address_line1 TEXT,
+  address_line2 TEXT,
+  city TEXT,
+  pincode TEXT,
+  whatsapp_opt_in INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX idx_contacts_mobile_e164
+  ON customer_contacts (mobile_e164);
+
+CREATE TABLE customer_profiles (
+  id TEXT PRIMARY KEY,
+  customer_code TEXT NOT NULL UNIQUE,
+  contact_id TEXT NOT NULL REFERENCES customer_contacts(id),
+  full_name TEXT NOT NULL,
+  search_name TEXT NOT NULL,
+  relationship_label TEXT,
+  gender TEXT,
+  notes TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX idx_customer_profiles_contact
+  ON customer_profiles (contact_id);
+
+CREATE INDEX idx_customer_profiles_search_name
+  ON customer_profiles (search_name);
+
+CREATE TABLE orders (
+  id TEXT PRIMARY KEY,
+  order_code TEXT NOT NULL UNIQUE,
+  contact_id TEXT NOT NULL REFERENCES customer_contacts(id),
+  customer_profile_id TEXT REFERENCES customer_profiles(id),
+  current_status TEXT NOT NULL,
+  order_date TEXT NOT NULL,
+  trial_date TEXT,
+  promised_delivery_date TEXT,
+  final_total_paise INTEGER NOT NULL DEFAULT 0,
+  balance_due_paise INTEGER NOT NULL DEFAULT 0,
+  created_by_user_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX idx_orders_contact ON orders(contact_id);
+CREATE INDEX idx_orders_customer ON orders(customer_profile_id);
+CREATE INDEX idx_orders_status_delivery ON orders(current_status, promised_delivery_date);</code></pre>
+
+          <h3>Measurement versioning model</h3>
+          <pre><code>CREATE TABLE measurement_profiles (
+  id TEXT PRIMARY KEY,
+  customer_profile_id TEXT NOT NULL REFERENCES customer_profiles(id),
+  garment_type TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  current_version_id TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE measurement_versions (
+  id TEXT PRIMARY KEY,
+  measurement_profile_id TEXT NOT NULL REFERENCES measurement_profiles(id),
+  version_no INTEGER NOT NULL,
+  measurement_json TEXT NOT NULL,
+  notes TEXT,
+  captured_by_user_id TEXT NOT NULL,
+  captured_at TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX idx_measurement_version_no
+  ON measurement_versions(measurement_profile_id, version_no);</code></pre>
+
+          <p>
+            Use JSON for garment-specific measurement values because shirt, pant, blouse, chudidar, kidswear, and
+            alterations all have different fields. Keep validated Zod schemas per garment type in code so invalid
+            measurement JSON cannot be written.
+          </p>
+        </section>
+
+        <section id="whatsapp">
+          <h2>7. WhatsApp Connector structure</h2>
+          <p class="lead">
+            The WhatsApp integration should be a separate reusable product layer. TailorOS is one client of this connector,
+            but the same connector should support other future SaaS products and multiple tailor shops with their own
+            WhatsApp Business credentials.
+          </p>
+
+          <h3>Connector boundaries</h3>
+          <table>
+            <thead>
+              <tr><th>Concern</th><th>Lives in TailorOS?</th><th>Lives in WhatsApp Connector?</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Order status change</td>
+                <td>Yes</td>
+                <td>No; receives send request/job.</td>
+              </tr>
+              <tr>
+                <td>Template name mapping</td>
+                <td>Reads tenant settings</td>
+                <td>Owns provider-specific template execution.</td>
+              </tr>
+              <tr>
+                <td>Webhook verification</td>
+                <td>No</td>
+                <td>Yes.</td>
+              </tr>
+              <tr>
+                <td>Provider credential storage</td>
+                <td>No direct access from frontend</td>
+                <td>Encrypted tenant integration table.</td>
+              </tr>
+              <tr>
+                <td>Message delivery status</td>
+                <td>Reads normalized status</td>
+                <td>Normalizes provider event into app status.</td>
+              </tr>
+              <tr>
+                <td>Staff chat UI</td>
+                <td>Yes</td>
+                <td>Provides message APIs and webhook events.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>WhatsApp Connector deployables</h3>
+          <div class="grid">
+            <div class="card">
+              <h4><code>whatsapp-connector</code></h4>
+              <p>Public webhook endpoints for Meta and private APIs for sending messages. Validates signatures,
+                maps phone number IDs to tenants, normalizes event payloads, and sends jobs to queues.</p>
+            </div>
+            <div class="card">
+              <h4><code>whatsapp-consumer</code></h4>
+              <p>Queue consumer that sends template/text/media messages, handles retries, writes provider responses,
+                and updates tenant DB message state.</p>
+            </div>
+            <div class="card">
+              <h4><code>packages/whatsapp</code></h4>
+              <p>Provider adapter library. Starts with Meta Cloud API direct, later supports Twilio, 360dialog,
+                Authkey, WATI/Interakt-style providers.</p>
+            </div>
+            <div class="card">
+              <h4><code>packages/message-policy</code></h4>
+              <p>Rules for service window, template requirement, customer opt-in, rate limits, retry policy,
+                and Tamil/English template variables.</p>
+            </div>
+          </div>
+
+          <h3>Provider adapter interface</h3>
+          <pre><code>export interface WhatsAppProviderAdapter {
+  provider: "meta" | "twilio" | "360dialog" | "authkey" | "wati";
+
+  sendTemplate(input: {
+    tenantId: string;
+    to: string;
+    phoneNumberId: string;
+    accessToken: string;
+    templateName: string;
+    languageCode: string;
+    components: unknown[];
+    clientMessageId: string;
+  }): Promise&lt;ProviderSendResult&gt;;
+
+  sendTextWithinServiceWindow(input: {
+    tenantId: string;
+    to: string;
+    text: string;
+    clientMessageId: string;
+  }): Promise&lt;ProviderSendResult&gt;;
+
+  downloadMedia?(input: {
+    mediaId: string;
+    accessToken: string;
+  }): Promise&lt;ReadableStream&gt;;
+}</code></pre>
+
+          <h3>WhatsApp credential model</h3>
+          <p>
+            Tenant-specific WhatsApp credentials should be encrypted per tenant. Do not put every client’s permanent
+            access token directly into static Worker secrets because tenants are dynamic. Keep only platform-level
+            encryption keys and Cloudflare API tokens as Worker secrets.
+          </p>
+
+          <pre><code>CREATE TABLE integration_accounts (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
+  product_code TEXT NOT NULL DEFAULT 'tailoros',
+  provider TEXT NOT NULL,              -- meta, twilio, 360dialog, etc.
+  waba_id TEXT,
+  phone_number_id TEXT NOT NULL,
+  display_phone_number TEXT,
+  encrypted_access_token TEXT NOT NULL,
+  token_last_rotated_at TEXT,
+  webhook_verify_token_hash TEXT,
+  app_secret_hash TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX idx_integration_phone_number
+  ON integration_accounts(provider, phone_number_id);</code></pre>
+
+          <h3>Webhook endpoints</h3>
+          <table>
+            <thead>
+              <tr><th>Endpoint</th><th>Purpose</th><th>Important behavior</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>GET /webhooks/meta</code></td>
+                <td>Meta webhook verification challenge.</td>
+                <td>Validate verify token and return challenge exactly.</td>
+              </tr>
+              <tr>
+                <td><code>POST /webhooks/meta</code></td>
+                <td>Inbound message and status webhooks.</td>
+                <td>Validate signature, store raw event, dedupe, enqueue normalized work.</td>
+              </tr>
+              <tr>
+                <td><code>POST /v1/messages/template</code></td>
+                <td>Internal API to request template send.</td>
+                <td>Requires service token or service binding; never callable directly by browser.</td>
+              </tr>
+              <tr>
+                <td><code>POST /v1/messages/reply</code></td>
+                <td>Send text reply inside customer service window.</td>
+                <td>Reject outside allowed window unless converted to approved template.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Outbox pattern</h3>
+          <p>
+            When an order changes status, do not call WhatsApp directly inside the order update request. Instead:
+          </p>
+          <ol>
+            <li>Update order status in tenant D1.</li>
+            <li>Insert <code>order_status_history</code>.</li>
+            <li>Insert <code>outbox_jobs</code> with idempotency key.</li>
+            <li>Send queue message to WhatsApp queue.</li>
+            <li>Queue consumer sends WhatsApp message.</li>
+            <li>Write provider message ID and delivery status.</li>
+            <li>Retry safely if the provider call fails.</li>
+          </ol>
+
+          <pre><code>CREATE TABLE wa_messages (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
+  contact_id TEXT,
+  order_id TEXT,
+  direction TEXT NOT NULL,             -- inbound | outbound
+  provider TEXT NOT NULL,
+  provider_message_id TEXT,
+  client_message_id TEXT NOT NULL,
+  to_mobile_e164 TEXT,
+  from_mobile_e164 TEXT,
+  message_type TEXT NOT NULL,          -- template | text | media | status
+  template_name TEXT,
+  text_preview TEXT,
+  status TEXT NOT NULL,
+  sent_at TEXT,
+  delivered_at TEXT,
+  read_at TEXT,
+  failed_at TEXT,
+  failure_code TEXT,
+  failure_message TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX idx_wa_provider_message
+  ON wa_messages(provider, provider_message_id);
+
+CREATE UNIQUE INDEX idx_wa_client_message
+  ON wa_messages(client_message_id);
+
+CREATE TABLE wa_webhook_events (
+  id TEXT PRIMARY KEY,
+  provider TEXT NOT NULL,
+  provider_event_id TEXT NOT NULL,
+  phone_number_id TEXT,
+  event_type TEXT NOT NULL,
+  payload_json TEXT NOT NULL,
+  processed_at TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX idx_wa_webhook_dedupe
+  ON wa_webhook_events(provider, provider_event_id);</code></pre>
+
+          <h3>Template examples for TailorOS</h3>
+          <table>
+            <thead>
+              <tr><th>Template</th><th>Trigger</th><th>Variables</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>order_confirmed_ta</code></td>
+                <td>Order created</td>
+                <td>Customer name, order code, garment type, delivery date, shop phone</td>
+              </tr>
+              <tr>
+                <td><code>trial_ready_ta</code></td>
+                <td>Trial ready</td>
+                <td>Customer name, order code, shop name, time window</td>
+              </tr>
+              <tr>
+                <td><code>order_ready_ta</code></td>
+                <td>Ready for delivery</td>
+                <td>Customer name, order code, balance amount, shop location</td>
+              </tr>
+              <tr>
+                <td><code>receipt_link_en</code></td>
+                <td>Receipt generated</td>
+                <td>Receipt number, amount paid, balance, secure receipt link</td>
+              </tr>
+              <tr>
+                <td><code>delivery_reminder_ta</code></td>
+                <td>Scheduled reminder</td>
+                <td>Customer name, order code, expected delivery date</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="search">
+          <h2>8. Fast global search design</h2>
+          <p class="lead">
+            “Global search” should mean two things: a fast tenant-wide command search for staff, and an optional
+            platform-wide admin/support search. The per-tenant D1 architecture makes tenant-wide search fast and isolated,
+            but platform-wide search requires a projection/analytics pattern.
+          </p>
+
+          <h3>Tenant-wide search experience</h3>
+          <p>
+            The staff should press <span class="kbd">Ctrl</span> + <span class="kbd">K</span> or tap the search bar and find:
+            mobile number, customer name, customer ID, order ID, receipt number, garment type, delivery date, and WhatsApp message.
+          </p>
+
+          <table>
+            <thead>
+              <tr><th>Search input</th><th>Expected result</th><th>Implementation</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>98765</code></td>
+                <td>Contacts and orders linked to that mobile number</td>
+                <td>Normalized mobile prefix/exact index.</td>
+              </tr>
+              <tr>
+                <td><code>CUS-MDU-000231</code></td>
+                <td>Exact customer profile</td>
+                <td>Unique customer code index.</td>
+              </tr>
+              <tr>
+                <td><code>ORD-2026-000421</code></td>
+                <td>Exact order page</td>
+                <td>Unique order code index.</td>
+              </tr>
+              <tr>
+                <td><code>Meena blouse</code></td>
+                <td>Customer and blouse orders</td>
+                <td>FTS5 search table + relevance scoring.</td>
+              </tr>
+              <tr>
+                <td><code>today delivery</code></td>
+                <td>Delivery list for current date</td>
+                <td>Status/date index and shortcut parser.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Search data model</h3>
+          <pre><code>CREATE VIRTUAL TABLE search_docs USING fts5(
+  entity_type,
+  entity_id UNINDEXED,
+  title,
+  subtitle,
+  body,
+  tags,
+  tokenize = 'unicode61'
+);
+
+CREATE TABLE search_projection (
+  id TEXT PRIMARY KEY,
+  entity_type TEXT NOT NULL,      -- contact | customer | order | receipt | message
+  entity_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  subtitle TEXT,
+  mobile_e164 TEXT,
+  order_code TEXT,
+  customer_code TEXT,
+  status TEXT,
+  delivery_date TEXT,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX idx_search_projection_mobile ON search_projection(mobile_e164);
+CREATE INDEX idx_search_projection_order_code ON search_projection(order_code);
+CREATE INDEX idx_search_projection_customer_code ON search_projection(customer_code);
+CREATE INDEX idx_search_projection_status_date ON search_projection(status, delivery_date);</code></pre>
+
+          <h3>Search query strategy</h3>
+          <ol>
+            <li><strong>Normalize first:</strong> remove spaces, country-code normalize mobile numbers, uppercase order/customer codes.</li>
+            <li><strong>Fast exact checks:</strong> if input looks like mobile/order/customer code, run indexed exact or prefix query first.</li>
+            <li><strong>FTS fallback:</strong> if input is name/item/free text, use FTS5 against <code>search_docs</code>.</li>
+            <li><strong>Limit results:</strong> return 5–10 per category, not 100 rows.</li>
+            <li><strong>No heavy offset pagination:</strong> use cursor/keyset pagination for lists.</li>
+            <li><strong>Debounce frontend:</strong> 120–180ms debounce, minimum 2 characters, cancel stale queries.</li>
+          </ol>
+
+          <h3>API example</h3>
+          <pre><code>// packages/search/src/searchTenant.ts
+export async function searchTenant(db: D1Database, rawQuery: string) {
+  const q = normalizeSearchQuery(rawQuery);
+
+  if (q.kind === "mobile") {
+    return db.prepare(`
+      SELECT 'contact' AS entity_type, id, mobile_e164 AS title, city AS subtitle
+      FROM customer_contacts
+      WHERE mobile_e164 LIKE ?1
+      LIMIT 10
+    `).bind(`${q.e164Prefix}%`).all();
+  }
+
+  if (q.kind === "order_code") {
+    return db.prepare(`
+      SELECT 'order' AS entity_type, id, order_code AS title, current_status AS subtitle
+      FROM orders
+      WHERE order_code = ?1
+      LIMIT 1
+    `).bind(q.value).all();
+  }
+
+  return db.prepare(`
+    SELECT entity_type, entity_id, title, subtitle, bm25(search_docs) AS rank
+    FROM search_docs
+    WHERE search_docs MATCH ?1
+    ORDER BY rank
+    LIMIT 20
+  `).bind(q.ftsQuery).all();
+}</code></pre>
+
+          <h3>Platform-wide support search</h3>
+          <p>
+            Because each tenant has a separate D1 database, admin/support search across all tenants should not query every
+            tenant database live. Instead, whenever a tenant creates or updates an important record, publish a queue event
+            to update a small global projection in the control database or a dedicated analytics/search database.
+          </p>
+
+          <div class="diagram">
+Tenant DB write
+  → Queue event: search_projection_update
+  → Projection Worker
+  → CONTROL_SEARCH_DB / analytics DB
+  → Platform admin search endpoint
+          </div>
+
+          <div class="warning">
+            <strong>Do not use KV as the source of truth for search.</strong>
+            KV is useful for cached search suggestions and feature flags, but it is eventually consistent. Authoritative
+            customer/order/payment/search state should live in D1 or an explicit search service.
+          </div>
+        </section>
+
+        <section id="repo">
+          <h2>9. Recommended repo structure</h2>
+          <p class="lead">
+            Use a TypeScript monorepo so the frontend, Workers, schemas, database models, WhatsApp provider adapters,
+            and UI components stay consistent. This is better than separate repos while the product is young.
+          </p>
+
+          <h3>Best repo structure</h3>
+          <pre><code>tailoros/
+  apps/
+    web/
+      app/
+        (auth)/
+        (dashboard)/
+          customers/
+          orders/
+          measurements/
+          inbox/
+          reports/
+          settings/
+        api/                         # only Next-local handlers if absolutely needed
+      components/
+      features/
+      lib/
+      public/
+      next.config.ts
+      open-next.config.ts
+      package.json
+
+    api-gateway/
+      src/
+        index.ts
+        middleware/
+          auth.ts
+          tenant-resolver.ts
+          rate-limit.ts
+          request-id.ts
+        routes/
+          health.ts
+          tenant-dispatch.ts
+      wrangler.jsonc
+      package.json
+
+    control-plane/
+      src/
+        index.ts
+        routes/
+          tenants.ts
+          provisioning.ts
+          admin.ts
+        jobs/
+          provision-tenant.ts
+          migrate-tenant.ts
+          suspend-tenant.ts
+        services/
+          cloudflare-api.ts
+          tenant-registry.ts
+      wrangler.jsonc
+      package.json
+
+    tenant-api-template/
+      src/
+        index.ts
+        routes/
+          customers.ts
+          measurements.ts
+          orders.ts
+          payments.ts
+          receipts.ts
+          search.ts
+          files.ts
+          whatsapp.ts
+        services/
+          customers.service.ts
+          orders.service.ts
+          measurement.service.ts
+          search.service.ts
+        repositories/
+          contacts.repo.ts
+          orders.repo.ts
+          measurements.repo.ts
+          payments.repo.ts
+        middleware/
+          require-tenant.ts
+          require-role.ts
+          idempotency.ts
+      wrangler.jsonc
+      package.json
+
+    whatsapp-connector/
+      src/
+        index.ts
+        routes/
+          meta-webhook.ts
+          send-template.ts
+          send-reply.ts
+          templates.ts
+        services/
+          webhook-normalizer.ts
+          credential-vault.ts
+          message-policy.ts
+        providers/
+          meta.provider.ts
+          twilio.provider.ts
+          provider.interface.ts
+      wrangler.jsonc
+      package.json
+
+    whatsapp-consumer/
+      src/
+        index.ts
+        consumers/
+          send-message.consumer.ts
+          process-inbound.consumer.ts
+          process-status.consumer.ts
+      wrangler.jsonc
+      package.json
+
+    realtime/
+      src/
+        index.ts
+        objects/
+          TenantInboxRoom.ts
+          OrderBoardRoom.ts
+      wrangler.jsonc
+      package.json
+
+  packages/
+    config/
+      src/
+        env.ts
+        constants.ts
+        feature-flags.ts
+
+    schemas/
+      src/
+        customer.schema.ts
+        contact.schema.ts
+        measurement.schema.ts
+        order.schema.ts
+        payment.schema.ts
+        whatsapp.schema.ts
+        search.schema.ts
+        api-response.schema.ts
+
+    core/
+      src/
+        order-status-machine.ts
+        id-generators.ts
+        money.ts
+        date.ts
+        phone.ts
+        permissions.ts
+
+    db-control/
+      migrations/
+        0001_init_control.sql
+        0002_integration_accounts.sql
+        0003_tenant_workers.sql
+      src/
+        control-db.types.ts
+        tenants.repo.ts
+        memberships.repo.ts
+
+    db-tenant/
+      migrations/
+        0001_init_tenant.sql
+        0002_measurements.sql
+        0003_orders.sql
+        0004_search_fts.sql
+        0005_whatsapp_logs.sql
+      src/
+        tenant-db.types.ts
+        migrate.ts
+        seed-defaults.ts
+
+    ui/
+      src/
+        components/
+        animations/
+        data-display/
+        forms/
+        command-menu/
+        receipt/
+        status-timeline/
+
+    whatsapp/
+      src/
+        adapters/
+        templates/
+        message-builder.ts
+        policy.ts
+        provider-types.ts
+
+    search/
+      src/
+        normalize.ts
+        tokenizers.ts
+        searchTenant.ts
+        projection-events.ts
+
+    r2/
+      src/
+        object-keys.ts
+        signed-urls.ts
+        upload-policy.ts
+
+    observability/
+      src/
+        logger.ts
+        trace.ts
+        metrics.ts
+        errors.ts
+
+    test-utils/
+      src/
+        fixtures.ts
+        factories.ts
+        worker-test-env.ts
+
+  infra/
+    cloudflare/
+      wrangler/
+        web.wrangler.jsonc
+        api-gateway.wrangler.jsonc
+        control-plane.wrangler.jsonc
+        tenant-api-template.wrangler.jsonc
+        whatsapp-connector.wrangler.jsonc
+        whatsapp-consumer.wrangler.jsonc
+        realtime.wrangler.jsonc
+      scripts/
+        create-control-db.ts
+        create-dispatch-namespace.ts
+        provision-tenant.ts
+        apply-migrations-to-all-tenants.ts
+        rotate-whatsapp-token.ts
+        export-tenant.ts
+        delete-tenant.ts
+      seed/
+        garment-categories.ta.json
+        order-statuses.json
+        measurement-templates.json
+
+  docs/
+    architecture/
+      adr-001-cloudflare-stack.md
+      adr-002-per-tenant-d1.md
+      adr-003-whatsapp-connector.md
+    runbooks/
+      tenant-provisioning.md
+      whatsapp-webhook-failures.md
+      d1-migration-rollback.md
+      incident-response.md
+
+  .github/
+    workflows/
+      ci.yml
+      deploy-staging.yml
+      deploy-production.yml
+
+  package.json
+  pnpm-workspace.yaml
+  turbo.json
+  tsconfig.base.json
+  eslint.config.mjs
+  prettier.config.cjs
+  README.md</code></pre>
+
+          <h3>Why this structure works</h3>
+          <table>
+            <thead>
+              <tr><th>Benefit</th><th>Explanation</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Product boundaries are clear</td>
+                <td>TailorOS, control plane, tenant API, WhatsApp, realtime, and consumers are separate deployables.</td>
+              </tr>
+              <tr>
+                <td>Schema reuse</td>
+                <td>Zod schemas are shared between web forms, API validation, queue payloads, and tests.</td>
+              </tr>
+              <tr>
+                <td>Migration discipline</td>
+                <td>Control DB migrations and tenant DB migrations are separate, avoiding accidental cross-plane changes.</td>
+              </tr>
+              <tr>
+                <td>Provider extensibility</td>
+                <td>WhatsApp provider adapters can be swapped without changing TailorOS order/customer code.</td>
+              </tr>
+              <tr>
+                <td>UI consistency</td>
+                <td>Shared <code>packages/ui</code> provides status chips, receipt components, measurement inputs, and animations.</td>
+              </tr>
+              <tr>
+                <td>Easy future extraction</td>
+                <td>If WhatsApp Connector becomes its own product, <code>apps/whatsapp-*</code> and <code>packages/whatsapp</code> can move to another repo.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Package dependency rule</h3>
+          <pre><code>apps/web
+  → packages/ui
+  → packages/schemas
+  → packages/core
+
+apps/tenant-api-template
+  → packages/db-tenant
+  → packages/schemas
+  → packages/core
+  → packages/search
+  → packages/r2
+
+apps/whatsapp-connector
+  → packages/whatsapp
+  → packages/schemas
+  → packages/core
+  → packages/db-control
+
+packages/core
+  → no dependency on apps
+  → no dependency on Cloudflare runtime
+
+packages/schemas
+  → no dependency on apps
+  → no dependency on database clients</code></pre>
+
+          <div class="note">
+            <strong>Rule of thumb.</strong>
+            Shared packages should contain business logic and types. Deployable apps should contain runtime bindings,
+            HTTP routes, queue consumers, and environment-specific configuration.
+          </div>
+        </section>
+
+        <section id="frontend">
+          <h2>10. Frontend implementation</h2>
+          <p class="lead">
+            Use Next.js App Router, shadcn/ui, Tailwind, TanStack Query, Zustand, React Hook Form, Zod, and Motion.
+            Keep the UI fast by separating server state from local UI state.
+          </p>
+
+          <h3>Frontend roles</h3>
+          <table>
+            <thead>
+              <tr><th>Library</th><th>Use it for</th><th>Do not use it for</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Next.js</td>
+                <td>Routes, layouts, server rendering, static shell, metadata, auth redirects.</td>
+                <td>Long-running background jobs.</td>
+              </tr>
+              <tr>
+                <td>shadcn/ui</td>
+                <td>Accessible components you own and can customize.</td>
+                <td>Blindly adding every component without design system control.</td>
+              </tr>
+              <tr>
+                <td>TanStack Query</td>
+                <td>Server state: customers, orders, search, messages, reports.</td>
+                <td>Local modal/drawer state.</td>
+              </tr>
+              <tr>
+                <td>Zustand</td>
+                <td>Local client state: sidebar, selected order, unsaved drafts, filters, command palette.</td>
+                <td>Duplicating API cache data already owned by TanStack Query.</td>
+              </tr>
+              <tr>
+                <td>Zod</td>
+                <td>Form validation, API contracts, queue payload validation, measurement schemas.</td>
+                <td>Replacing database constraints.</td>
+              </tr>
+              <tr>
+                <td>Motion</td>
+                <td>Micro-interactions, page transitions, shared layout transitions.</td>
+                <td>Animating every table row in large lists.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Suggested route map</h3>
+          <pre><code>app/
+  (public)/
+    page.tsx
+    pricing/page.tsx
+    login/page.tsx
+    signup/page.tsx
+    receipt/[token]/page.tsx
+
+  (dashboard)/
+    layout.tsx
+    template.tsx              # route transition wrapper
+    page.tsx                  # dashboard
+    search/page.tsx
+    customers/
+      page.tsx
+      new/page.tsx
+      [customerId]/page.tsx
+      [customerId]/measurements/page.tsx
+      [customerId]/orders/page.tsx
+    contacts/
+      [contactId]/page.tsx
+    orders/
+      page.tsx
+      new/page.tsx
+      [orderId]/page.tsx
+    inbox/
+      page.tsx
+      [conversationId]/page.tsx
+    reports/
+      page.tsx
+      revenue/page.tsx
+      delivery/page.tsx
+    settings/
+      page.tsx
+      whatsapp/page.tsx
+      users/page.tsx
+      measurement-templates/page.tsx
+      receipt/page.tsx</code></pre>
+
+          <h3>TanStack Query pattern</h3>
+          <pre><code>export function useCustomerSearch(query: string) {
+  return useQuery({
+    queryKey: ["search", "customers", query],
+    queryFn: () => api.search.customers({ q: query }),
+    enabled: query.trim().length >= 2,
+    staleTime: 20_000,
+    gcTime: 5 * 60_000
+  });
+}
+
+export function useUpdateOrderStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: api.orders.updateStatus,
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: ["order", input.orderId] });
+      const previous = queryClient.getQueryData(["order", input.orderId]);
+
+      queryClient.setQueryData(["order", input.orderId], (old: Order | undefined) =>
+        old ? { ...old, currentStatus: input.status } : old
+      );
+
+      return { previous };
+    },
+    onError: (_error, input, context) => {
+      queryClient.setQueryData(["order", input.orderId], context?.previous);
+    },
+    onSettled: (_data, _error, input) => {
+      queryClient.invalidateQueries({ queryKey: ["order", input.orderId] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    }
+  });
+}</code></pre>
+
+          <h3>Zustand UI state slice</h3>
+          <pre><code>type AppUiState = {
+  commandOpen: boolean;
+  selectedOrderId?: string;
+  sidebarCollapsed: boolean;
+  setCommandOpen(open: boolean): void;
+  selectOrder(orderId?: string): void;
+  toggleSidebar(): void;
+};
+
+export const useAppUiStore = create&lt;AppUiState&gt;((set) => ({
+  commandOpen: false,
+  selectedOrderId: undefined,
+  sidebarCollapsed: false,
+  setCommandOpen: (commandOpen) => set({ commandOpen }),
+  selectOrder: (selectedOrderId) => set({ selectedOrderId }),
+  toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed }))
+}));</code></pre>
+
+          <h3>Frontend performance rules</h3>
+          <ul class="checklist">
+            <li>Use route-level code splitting and lazy-load heavy drawers, report charts, and inbox panels.</li>
+            <li>Use skeleton states for list pages and order/customer detail panels.</li>
+            <li>Prefetch likely next pages: search results, order details, customer detail after hover/touch intent.</li>
+            <li>Use optimistic UI for status updates, but always reconcile after server response.</li>
+            <li>Virtualize long order/customer lists if they exceed 100 visible rows.</li>
+            <li>Keep server data in TanStack Query, not Zustand.</li>
+            <li>Use form-level Zod validation and server-side Zod validation; never trust client validation only.</li>
+            <li>Use a PWA manifest and service worker later for offline-friendly shop use.</li>
+          </ul>
+        </section>
+
+        <section id="animations">
+          <h2>11. Micro-interactions & smooth page transitions</h2>
+          <p class="lead">
+            TailorOS should feel premium and responsive, but the animations must be practical. The rule is:
+            <strong>animate feedback, not decoration</strong>. Use motion to confirm actions, clarify state changes,
+            and reduce perceived waiting time.
+          </p>
+
+          <h3>Animation principles</h3>
+          <table>
+            <thead>
+              <tr><th>Principle</th><th>Implementation</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Respect accessibility</td>
+                <td>Use <code>prefers-reduced-motion</code> and Motion’s reduced-motion utilities.</td>
+              </tr>
+              <tr>
+                <td>Use cheap properties</td>
+                <td>Prefer <code>transform</code> and <code>opacity</code>; avoid animating layout-heavy properties.</td>
+              </tr>
+              <tr>
+                <td>Keep durations short</td>
+                <td>Buttons: 90–140ms. Drawer/modal: 160–220ms. Page transition: 180–260ms.</td>
+              </tr>
+              <tr>
+                <td>Do not block work</td>
+                <td>Animations should not delay order creation, receipt generation, or message send.</td>
+              </tr>
+              <tr>
+                <td>Make status visible</td>
+                <td>Use animated chips/timelines for order progress and WhatsApp delivery states.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Micro-interactions to implement</h3>
+          <div class="grid-3">
+            <div class="card">
+              <h4>Order status chip</h4>
+              <p>Status chip gently changes color/position when moving from cutting to stitching to ready.</p>
+            </div>
+            <div class="card">
+              <h4>Measurement save</h4>
+              <p>Save button compresses slightly, shows checkmark, then updates version number.</p>
+            </div>
+            <div class="card">
+              <h4>Customer search</h4>
+              <p>Command palette opens with fade/scale and highlights exact mobile/order matches first.</p>
+            </div>
+            <div class="card">
+              <h4>Receipt drawer</h4>
+              <p>Receipt slides in from right; share/print actions appear after content loads.</p>
+            </div>
+            <div class="card">
+              <h4>WhatsApp send state</h4>
+              <p>Queued → sent → delivered → read indicators update without page reload.</p>
+            </div>
+            <div class="card">
+              <h4>Page transition</h4>
+              <p>Dashboard route content fades and moves 6–10px; app shell remains stable.</p>
+            </div>
+          </div>
+
+          <h3>Page transition component</h3>
+          <pre><code>// packages/ui/src/animations/AnimatedPage.tsx
+"use client";
+
+import { motion, useReducedMotion } from "motion/react";
+
+export function AnimatedPage({ children }: { children: React.ReactNode }) {
+  const reduceMotion = useReducedMotion();
+
+  return (
+    &lt;motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      exit={reduceMotion ? undefined : { opacity: 0, y: -4 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
+    &gt;
+      {children}
+    &lt;/motion.div&gt;
+  );
+}</code></pre>
+
+          <h3>Next.js route transition usage</h3>
+          <pre><code>// apps/web/app/(dashboard)/template.tsx
+import { AnimatedPage } from "@tailoros/ui/animations/AnimatedPage";
+
+export default function DashboardTemplate({
+  children
+}: {
+  children: React.ReactNode;
+}) {
+  return &lt;AnimatedPage&gt;{children}&lt;/AnimatedPage&gt;;
+}</code></pre>
+
+          <h3>CSS reduced motion safety net</h3>
+          <pre><code>@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}</code></pre>
+
+          <h3>Component-level examples</h3>
+          <table>
+            <thead>
+              <tr><th>Component</th><th>Motion behavior</th><th>Why it helps</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Command palette</td>
+                <td>Fade/scale in, keyboard-selected row uses layout transition.</td>
+                <td>Feels fast and helps staff understand focus.</td>
+              </tr>
+              <tr>
+                <td>Status timeline</td>
+                <td>New status node expands from 0.96 scale to 1.</td>
+                <td>Confirms successful workflow step.</td>
+              </tr>
+              <tr>
+                <td>Payment entry</td>
+                <td>Balance amount animates with subtle number transition.</td>
+                <td>Highlights money changes safely.</td>
+              </tr>
+              <tr>
+                <td>Inbox</td>
+                <td>New message bubble slides/fades in; old messages do not re-animate.</td>
+                <td>Makes chat feel live without visual noise.</td>
+              </tr>
+              <tr>
+                <td>Receipt preview</td>
+                <td>Drawer uses transform from right; PDF loading shows skeleton.</td>
+                <td>Reduces perceived wait for generated receipt.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="api">
+          <h2>12. API and backend implementation best practices</h2>
+          <p class="lead">
+            Use Hono Workers with Zod validation, repository/service layers, idempotency keys, structured errors,
+            service bindings, and queue-first background workflows.
+          </p>
+
+          <h3>Hono API pattern</h3>
+          <pre><code>import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import { createCustomerSchema } from "@tailoros/schemas/customer";
+import { createCustomer } from "./services/customers.service";
+
+type Env = {
+  Bindings: {
+    TENANT_DB: D1Database;
+    RECEIPTS_BUCKET: R2Bucket;
+    WHATSAPP_QUEUE: Queue;
+  };
+  Variables: {
+    requestId: string;
+    user: AuthenticatedUser;
+    tenant: TenantContext;
+  };
+};
+
+const app = new Hono&lt;Env&gt;();
+
+app.post(
+  "/v1/customers",
+  zValidator("json", createCustomerSchema),
+  async (c) => {
+    const input = c.req.valid("json");
+    const result = await createCustomer({
+      db: c.env.TENANT_DB,
+      input,
+      actor: c.get("user")
+    });
+
+    return c.json({ ok: true, data: result }, 201);
+  }
+);
+
+export default app;</code></pre>
+
+          <h3>API response standard</h3>
+          <pre><code>type ApiSuccess&lt;T&gt; = {
+  ok: true;
+  data: T;
+  requestId: string;
+};
+
+type ApiError = {
+  ok: false;
+  error: {
+    code: string;
+    message: string;
+    fields?: Record&lt;string, string[]&gt;;
+  };
+  requestId: string;
+};</code></pre>
+
+          <h3>Internal service binding pattern</h3>
+          <p>
+            Public browser requests should go through the API Gateway. Internal Worker-to-Worker calls should use service
+            bindings, not public URLs. This keeps internal services private and avoids extra network overhead.
+          </p>
+
+          <pre><code>// api-gateway calls whatsapp-connector without public Internet round-trip
+await env.WHATSAPP_CONNECTOR.fetch(
+  new Request("https://internal/v1/messages/template", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-internal-service": "api-gateway"
+    },
+    body: JSON.stringify(payload)
+  })
+);</code></pre>
+
+          <h3>Queue practices</h3>
+          <ul class="checklist">
+            <li>Separate queues by job type: <code>wa-send</code>, <code>wa-webhook</code>, <code>receipt-generate</code>, <code>tenant-provision</code>, <code>tenant-migrate</code>.</li>
+            <li>Use DLQs for failed WhatsApp sends, failed webhooks, and failed provisioning jobs.</li>
+            <li>Every queue job must have an idempotency key.</li>
+            <li>Do not assume message ordering.</li>
+            <li>Keep message payloads small; store large payloads in D1/R2 and pass IDs in the queue message.</li>
+            <li>Explicitly acknowledge successful messages in batches to avoid retrying the whole batch when one fails.</li>
+          </ul>
+
+          <h3>Idempotency table</h3>
+          <pre><code>CREATE TABLE idempotency_keys (
+  key TEXT PRIMARY KEY,
+  route TEXT NOT NULL,
+  request_hash TEXT NOT NULL,
+  response_json TEXT,
+  status TEXT NOT NULL,       -- processing | completed | failed
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);</code></pre>
+
+          <h3>D1 query practices</h3>
+          <ul class="checklist">
+            <li>Always use prepared statements with bound parameters.</li>
+            <li>Add explicit indexes for every high-traffic predicate.</li>
+            <li>Measure <code>rows_read</code> and <code>rows_written</code> from D1 query metadata.</li>
+            <li>Use D1 Sessions API when read replication is enabled and a user needs sequential consistency.</li>
+            <li>Avoid scanning WhatsApp logs or audit logs in normal dashboard queries.</li>
+            <li>Archive or compact high-volume webhook logs after retention period.</li>
+          </ul>
+        </section>
+
+        <section id="security">
+          <h2>13. Security and tenant isolation</h2>
+          <p class="lead">
+            Multi-tenant SaaS security must be designed from day one. The goal is to prevent cross-tenant data access,
+            credential leakage, unauthorized WhatsApp sends, and abuse of public endpoints.
+          </p>
+
+          <h3>Tenant isolation rules</h3>
+          <table>
+            <thead>
+              <tr><th>Rule</th><th>Implementation</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Tenant chosen by platform, not user input</td>
+                <td>Resolve tenant from verified domain/subdomain/path and authenticated membership.</td>
+              </tr>
+              <tr>
+                <td>Per-tenant DB binding</td>
+                <td>Tenant Worker receives only its own <code>TENANT_DB</code> binding.</td>
+              </tr>
+              <tr>
+                <td>No browser access to credentials</td>
+                <td>WhatsApp tokens and app secrets never leave backend Workers.</td>
+              </tr>
+              <tr>
+                <td>Role-based authorization</td>
+                <td>Owner, manager, cutter, tailor, cashier, viewer roles with route/action checks.</td>
+              </tr>
+              <tr>
+                <td>Audit sensitive actions</td>
+                <td>Measurement edit, order cancellation, payment edit, receipt delete, WhatsApp credential change.</td>
+              </tr>
+              <tr>
+                <td>Signed private file access</td>
+                <td>R2 receipts/photos accessed through signed URLs or authenticated streaming Worker.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Recommended roles</h3>
+          <table>
+            <thead>
+              <tr><th>Role</th><th>Permissions</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Owner</td>
+                <td>All access, billing, integrations, staff management, export/delete.</td>
+              </tr>
+              <tr>
+                <td>Manager</td>
+                <td>Customers, orders, measurements, payments, reports, WhatsApp inbox.</td>
+              </tr>
+              <tr>
+                <td>Tailor/Cutter</td>
+                <td>View assigned orders, update work status, view measurements, add production notes.</td>
+              </tr>
+              <tr>
+                <td>Cashier</td>
+                <td>Create receipts, collect payments, view balances, print bills.</td>
+              </tr>
+              <tr>
+                <td>Viewer</td>
+                <td>Read-only dashboard and customer/order lookup.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Secrets and credential management</h3>
+          <ul class="checklist">
+            <li>Use Workers secrets for platform-level secrets: Cloudflare API token, JWT/session keys, encryption master key, Meta app secret.</li>
+            <li>Do not put tenant WhatsApp access tokens in <code>vars</code> or committed files.</li>
+            <li>Encrypt tenant integration credentials before writing to D1.</li>
+            <li>Use separate staging and production credentials.</li>
+            <li>Rotate WhatsApp tokens and record <code>token_last_rotated_at</code>.</li>
+            <li>Hash webhook verify tokens; never store raw verify token if not needed.</li>
+          </ul>
+
+          <h3>Public endpoint hardening</h3>
+          <table>
+            <thead>
+              <tr><th>Endpoint</th><th>Protection</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Signup</td>
+                <td>Turnstile server validation, rate limit by IP/mobile/email, duplicate tenant slug check.</td>
+              </tr>
+              <tr>
+                <td>Login</td>
+                <td>Rate limit by IP and account, secure cookie, audit failed attempts.</td>
+              </tr>
+              <tr>
+                <td>Search</td>
+                <td>Authenticated only, min query length, debounce, rate limit by user/tenant.</td>
+              </tr>
+              <tr>
+                <td>Receipt public link</td>
+                <td>Signed token, expiry, optional mobile-last-4 confirmation.</td>
+              </tr>
+              <tr>
+                <td>WhatsApp webhook</td>
+                <td>Provider verification/signature validation, dedupe, quick response, async queue processing.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="deployment">
+          <h2>14. Deployment guide</h2>
+          <p class="lead">
+            Use Wrangler configuration as source of truth, separate environments, controlled migrations, and CI/CD.
+            New Cloudflare Worker projects should prefer <code>wrangler.jsonc</code> where possible.
+          </p>
+
+          <h3>Environment layout</h3>
+          <table>
+            <thead>
+              <tr><th>Environment</th><th>Purpose</th><th>Data</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>local</td>
+                <td>Developer machine</td>
+                <td>Miniflare local D1/R2/KV unless remote binding needed.</td>
+              </tr>
+              <tr>
+                <td>preview</td>
+                <td>PR previews and QA</td>
+                <td>Preview control DB and test tenant DBs.</td>
+              </tr>
+              <tr>
+                <td>staging</td>
+                <td>Production-like testing</td>
+                <td>Staging control DB, staging dispatch namespace, staging WhatsApp test credentials.</td>
+              </tr>
+              <tr>
+                <td>production</td>
+                <td>Live shops</td>
+                <td>Production control DB, per-tenant DBs, production R2 bucket, production queues.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Wrangler dispatch namespace example</h3>
+          <pre><code>{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tailoros-api-gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "CONTROL_DB",
+      "database_name": "tailoros_control_prod",
+      "database_id": "&lt;control-db-uuid&gt;"
+    }
+  ],
+  "dispatch_namespaces": [
+    {
+      "binding": "DISPATCH_NAMESPACE",
+      "namespace": "tailoros-tenants-production"
+    }
+  ],
+  "services": [
+    {
+      "binding": "WHATSAPP_CONNECTOR",
+      "service": "tailoros-whatsapp-connector"
+    }
+  ],
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}</code></pre>
+
+          <h3>Control-plane Worker example</h3>
+          <pre><code>{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tailoros-control-plane",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "CONTROL_DB",
+      "database_name": "tailoros_control_prod",
+      "database_id": "&lt;control-db-uuid&gt;"
+    }
+  ],
+  "queues": {
+    "producers": [
+      { "binding": "TENANT_PROVISION_QUEUE", "queue": "tenant-provision-prod" },
+      { "binding": "TENANT_MIGRATION_QUEUE", "queue": "tenant-migration-prod" }
+    ],
+    "consumers": [
+      { "queue": "tenant-provision-prod", "max_batch_size": 5, "dead_letter_queue": "tenant-provision-dlq" }
+    ]
+  },
+  "r2_buckets": [
+    {
+      "binding": "TENANT_EXPORTS_BUCKET",
+      "bucket_name": "tailoros-tenant-exports-prod"
+    }
+  ],
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}</code></pre>
+
+          <h3>Tenant API template Worker example</h3>
+          <p>
+            The tenant Worker template is the same code for every shop, but each deployed instance receives a different
+            D1 binding for <code>TENANT_DB</code>. This is what gives clean tenant isolation.
+          </p>
+
+          <pre><code>{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tailoros-tenant-api-template",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "TENANT_DB",
+      "database_name": "&lt;tenant-db-name&gt;",
+      "database_id": "&lt;tenant-db-uuid&gt;"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA_BUCKET",
+      "bucket_name": "tailoros-media-prod"
+    }
+  ],
+  "queues": {
+    "producers": [
+      { "binding": "WHATSAPP_SEND_QUEUE", "queue": "wa-send-prod" },
+      { "binding": "RECEIPT_QUEUE", "queue": "receipt-generate-prod" }
+    ]
+  }
+}</code></pre>
+
+          <h3>Setup command checklist</h3>
+          <pre><code># 1. Install
+pnpm install
+
+# 2. Login Cloudflare
+pnpm wrangler login
+
+# 3. Create control D1
+pnpm wrangler d1 create tailoros_control_prod
+
+# 4. Apply control migrations
+pnpm wrangler d1 migrations apply tailoros_control_prod --remote \
+  --config infra/cloudflare/wrangler/control-plane.wrangler.jsonc
+
+# 5. Create dispatch namespace
+pnpm wrangler dispatch-namespace create tailoros-tenants-production
+
+# 6. Create R2 buckets
+pnpm wrangler r2 bucket create tailoros-media-prod
+pnpm wrangler r2 bucket create tailoros-tenant-exports-prod
+
+# 7. Create queues
+pnpm wrangler queues create tenant-provision-prod
+pnpm wrangler queues create tenant-provision-dlq
+pnpm wrangler queues create wa-send-prod
+pnpm wrangler queues create wa-send-dlq
+
+# 8. Add secrets
+pnpm wrangler secret put CF_API_TOKEN --config infra/cloudflare/wrangler/control-plane.wrangler.jsonc
+pnpm wrangler secret put PLATFORM_ENCRYPTION_KEY --config infra/cloudflare/wrangler/control-plane.wrangler.jsonc
+pnpm wrangler secret put META_APP_SECRET --config infra/cloudflare/wrangler/whatsapp-connector.wrangler.jsonc
+
+# 9. Deploy services
+pnpm turbo run deploy --filter=api-gateway --filter=control-plane --filter=whatsapp-connector</code></pre>
+
+          <h3>CI/CD practices</h3>
+          <ul class="checklist">
+            <li>Run typecheck, lint, unit tests, schema validation, and Worker tests before deploy.</li>
+            <li>Apply migrations to staging first, then production.</li>
+            <li>For tenant migrations, use queue fan-out with per-tenant status tracking.</li>
+            <li>Never deploy tenant schema changes without a rollback/repair script.</li>
+            <li>Use preview deployments for frontend changes; use staging Worker env for backend changes.</li>
+            <li>Use separate Cloudflare API tokens with least privilege for CI.</li>
+          </ul>
+        </section>
+
+        <section id="observability">
+          <h2>15. Observability and testing</h2>
+          <p class="lead">
+            You should know which tenant, request, order, and WhatsApp message caused a failure. Observability must be
+            added before production, not after incidents begin.
+          </p>
+
+          <h3>Structured logging fields</h3>
+          <pre><code>{
+  "timestamp": "2026-07-03T10:00:00.000Z",
+  "level": "info",
+  "environment": "production",
+  "worker": "tenant-api",
+  "request_id": "req_01hz...",
+  "tenant_id": "ten_01hz...",
+  "user_id": "usr_01hz...",
+  "route": "POST /v1/orders",
+  "order_id": "ord_01hz...",
+  "db_rows_read": 12,
+  "db_rows_written": 4,
+  "duration_ms": 38
+}</code></pre>
+
+          <h3>Metrics to track</h3>
+          <table>
+            <thead>
+              <tr><th>Area</th><th>Metric</th><th>Why it matters</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>API</td>
+                <td>P50/P95/P99 latency, error rate, route-level request count</td>
+                <td>Detect slow screens and backend errors.</td>
+              </tr>
+              <tr>
+                <td>D1</td>
+                <td>Rows read/written, slow queries, failed migrations</td>
+                <td>Control cost and performance.</td>
+              </tr>
+              <tr>
+                <td>Search</td>
+                <td>Query latency, no-result rate, exact vs FTS hit ratio</td>
+                <td>Improve staff productivity.</td>
+              </tr>
+              <tr>
+                <td>WhatsApp</td>
+                <td>Send success rate, delivery rate, read rate, template rejection rate</td>
+                <td>Measure communication reliability.</td>
+              </tr>
+              <tr>
+                <td>Queues</td>
+                <td>Backlog depth, retries, DLQ count, processing time</td>
+                <td>Catch background job failures.</td>
+              </tr>
+              <tr>
+                <td>Tenant provisioning</td>
+                <td>Provisioning success/failure, average time, failed step</td>
+                <td>Make onboarding reliable.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Testing layers</h3>
+          <table>
+            <thead>
+              <tr><th>Layer</th><th>Tool/style</th><th>Examples</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Unit tests</td>
+                <td>Vitest</td>
+                <td>Order state machine, ID generation, phone normalization, measurement validation.</td>
+              </tr>
+              <tr>
+                <td>Worker tests</td>
+                <td>Cloudflare Workers test pool / Miniflare</td>
+                <td>Hono routes, D1 queries, queue producers, R2 signed URL logic.</td>
+              </tr>
+              <tr>
+                <td>Integration tests</td>
+                <td>Preview environment</td>
+                <td>Tenant signup → DB creation → migration → active tenant.</td>
+              </tr>
+              <tr>
+                <td>E2E tests</td>
+                <td>Playwright</td>
+                <td>Create contact, add family member, save measurement, create order, send WhatsApp message.</td>
+              </tr>
+              <tr>
+                <td>Webhook tests</td>
+                <td>Recorded provider payload fixtures</td>
+                <td>Inbound message, delivery status, failed template, duplicate webhook.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Runbooks to maintain</h3>
+          <ul>
+            <li>Tenant provisioning stuck in <code>db_migrating</code>.</li>
+            <li>WhatsApp webhook verification fails.</li>
+            <li>WhatsApp queue DLQ growing.</li>
+            <li>Tenant migration partially failed.</li>
+            <li>Customer cannot find order by mobile number.</li>
+            <li>R2 receipt link expired or inaccessible.</li>
+            <li>D1 database nearing size limit.</li>
+          </ul>
+        </section>
+
+        <section id="edge-cases">
+          <h2>16. Edge cases and product-quality checklist</h2>
+          <p class="lead">
+            The following edge cases are where TailorOS can become much better than a simple tailor billing app.
+          </p>
+
+          <table class="risk-table">
+            <thead>
+              <tr><th>Edge case</th><th>Risk</th><th>Recommended handling</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Same mobile number, many people</td>
+                <td>Wrong measurements/order assigned to wrong family member.</td>
+                <td>Always select customer profile under contact. Show profile chips before creating an order.</td>
+              </tr>
+              <tr>
+                <td>Customer changes mobile number</td>
+                <td>Old order history becomes hard to find.</td>
+                <td>Keep contact history table and allow multiple numbers per contact later.</td>
+              </tr>
+              <tr>
+                <td>Duplicate customer creation</td>
+                <td>Fragmented family/order history.</td>
+                <td>Before save, show possible matches by mobile/name. Allow merge workflow.</td>
+              </tr>
+              <tr>
+                <td>Measurement correction</td>
+                <td>Old orders may need original measurement.</td>
+                <td>Version measurements; order item should reference measurement version used.</td>
+              </tr>
+              <tr>
+                <td>Partial order delivery</td>
+                <td>One order has multiple garments, some delivered, some pending.</td>
+                <td>Track order item status separately from order status.</td>
+              </tr>
+              <tr>
+                <td>Advance payment refund</td>
+                <td>Balance calculations become wrong.</td>
+                <td>Use payment ledger rows; never only store one mutable paid amount.</td>
+              </tr>
+              <tr>
+                <td>WhatsApp duplicate webhook</td>
+                <td>Message/status processed twice.</td>
+                <td>Dedupe using provider event/message IDs.</td>
+              </tr>
+              <tr>
+                <td>WhatsApp status arrives out of order</td>
+                <td>Read event arrives before delivered event.</td>
+                <td>Status rank model: queued &lt; sent &lt; delivered &lt; read; never downgrade except failed terminal cases.</td>
+              </tr>
+              <tr>
+                <td>Template not approved</td>
+                <td>Order notification fails silently.</td>
+                <td>Template health screen in settings; queue failure visible in admin inbox.</td>
+              </tr>
+              <tr>
+                <td>Tenant DB migration fails</td>
+                <td>Some tenants on old schema, some on new.</td>
+                <td>Record per-tenant schema version and feature-gate by version.</td>
+              </tr>
+              <tr>
+                <td>D1 DB size growth</td>
+                <td>Tenant hits DB size limit.</td>
+                <td>Store files in R2, archive raw webhook logs, compact audit logs, move large tenant to dedicated plan/Postgres if needed.</td>
+              </tr>
+              <tr>
+                <td>Cross-tenant support search</td>
+                <td>Per-tenant DBs cannot be queried in one SQL join.</td>
+                <td>Use global projection DB updated by queues.</td>
+              </tr>
+              <tr>
+                <td>Offline/poor internet shop</td>
+                <td>Staff cannot create order during network drop.</td>
+                <td>Later PWA offline draft queue with conflict resolution. MVP: autosave drafts locally.</td>
+              </tr>
+              <tr>
+                <td>Heavy PDF generation</td>
+                <td>Worker runtime may not suit complex PDF rendering.</td>
+                <td>Start with HTML receipt + print. Offload advanced PDF generation to a small service later if needed.</td>
+              </tr>
+              <tr>
+                <td>Data deletion request</td>
+                <td>Customer privacy issue.</td>
+                <td>Per-contact anonymization/deletion workflow; retain financial records according to business rules.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Production readiness checklist</h3>
+          <ul class="checklist">
+            <li><span class="priority-high">High:</span> Tenant isolation tested with automated tests.</li>
+            <li><span class="priority-high">High:</span> WhatsApp credentials encrypted and never exposed to browser.</li>
+            <li><span class="priority-high">High:</span> Queue DLQs configured and monitored.</li>
+            <li><span class="priority-high">High:</span> D1 migrations reversible or repairable.</li>
+            <li><span class="priority-high">High:</span> Customer/mobile/order search tested with Tamil/English names and partial mobile input.</li>
+            <li><span class="priority-med">Medium:</span> R2 object lifecycle/retention policy documented.</li>
+            <li><span class="priority-med">Medium:</span> Tenant export and delete scripts tested.</li>
+            <li><span class="priority-med">Medium:</span> Animation respects reduced-motion preference.</li>
+            <li><span class="priority-low">Later:</span> Durable Object realtime inbox and order board.</li>
+            <li><span class="priority-low">Later:</span> PWA offline drafts and background sync.</li>
+          </ul>
+        </section>
+
+        <section id="roadmap">
+          <h2>17. Phased implementation roadmap</h2>
+
+          <h3>Phase 0 — Foundations</h3>
+          <ul>
+            <li>Set up monorepo, TypeScript, pnpm, Turbo, ESLint, Prettier.</li>
+            <li>Create Next.js app on Cloudflare deployment path.</li>
+            <li>Create Hono API Worker, control-plane Worker, tenant API template.</li>
+            <li>Create control DB schema and first tenant DB schema.</li>
+            <li>Implement request ID, logging, error shape, Zod validation.</li>
+          </ul>
+
+          <h3>Phase 1 — TailorOS MVP</h3>
+          <ul>
+            <li>Contacts, family profiles, measurements, orders, payments, receipts.</li>
+            <li>Search by mobile, name, customer code, order code.</li>
+            <li>R2 upload for reference images and receipt files.</li>
+            <li>Order status workflow and audit logs.</li>
+            <li>Basic dashboard and reports.</li>
+          </ul>
+
+          <h3>Phase 2 — WhatsApp Connector</h3>
+          <ul>
+            <li>Meta webhook verification and inbound/status event ingestion.</li>
+            <li>Provider adapter interface and Meta direct adapter.</li>
+            <li>Template mapping per tenant.</li>
+            <li>Outbox + queue + DLQ for message sends.</li>
+            <li>Staff inbox with polling and message history.</li>
+          </ul>
+
+          <h3>Phase 3 — Tenant provisioning automation</h3>
+          <ul>
+            <li>Signup → tenant reserved → D1 create → migrations → tenant worker deploy → active.</li>
+            <li>Provisioning UI and admin retry tool.</li>
+            <li>Tenant migration fan-out queue.</li>
+            <li>Tenant export/delete runbooks.</li>
+          </ul>
+
+          <h3>Phase 4 — Experience and scale</h3>
+          <ul>
+            <li>Command palette global search with FTS5.</li>
+            <li>Motion-based page transitions and micro-interactions.</li>
+            <li>Durable Object realtime inbox/order board.</li>
+            <li>PWA offline drafts.</li>
+            <li>Admin analytics projections across tenants.</li>
+          </ul>
+
+          <h3>Final recommended stack</h3>
+          <pre><code>Frontend:
+  Next.js App Router
+  shadcn/ui
+  Tailwind CSS
+  TanStack Query
+  Zustand
+  React Hook Form
+  Zod
+  Motion
+
+Backend:
+  Cloudflare Workers
+  Hono
+  Zod validation
+  Service bindings
+  Queues + DLQ
+  Durable Objects later
+
+Database:
+  D1 control database
+  D1 per-tenant operational databases
+  FTS5 tenant-local search
+  Global projection DB for platform-wide search
+
+Storage:
+  Cloudflare R2
+  signed uploads/downloads
+  tenant-prefixed object keys
+
+WhatsApp:
+  Separate WhatsApp Connector Worker
+  Meta Cloud API provider first
+  encrypted tenant credentials
+  outbox + queue + webhook dedupe
+
+Deployment:
+  Wrangler JSONC configs
+  staging + production environments
+  CI/CD with migrations and tests
+  observability enabled before production</code></pre>
+        </section>
+
+        <section id="sources">
+          <h2>18. Official sources and documentation map</h2>
+          <p>
+            This report is based primarily on official Cloudflare, Meta, Hono, TanStack, Zustand, Zod, Motion,
+            Next.js, MDN, and web.dev documentation.
+          </p>
+
+          <table>
+            <thead>
+              <tr><th>Area</th><th>Official source</th><th>Used for</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Workers best practices</td>
+                <td><a href="https://developers.cloudflare.com/workers/reference/best-practices/" target="_blank">Cloudflare Workers best practices</a></td>
+                <td>Bindings, service boundaries, queues, Workflows, Durable Objects, Hyperdrive guidance.</td>
+              </tr>
+              <tr>
+                <td>D1 limits</td>
+                <td><a href="https://developers.cloudflare.com/d1/platform/limits/" target="_blank">Cloudflare D1 limits</a></td>
+                <td>Database count, database size, storage, query limits, binding considerations.</td>
+              </tr>
+              <tr>
+                <td>D1 scale-out</td>
+                <td><a href="https://developers.cloudflare.com/d1/best-practices/import-export-data/" target="_blank">Cloudflare D1 best practices and scale-out guidance</a></td>
+                <td>Horizontal scale-out across many smaller databases.</td>
+              </tr>
+              <tr>
+                <td>D1 API create</td>
+                <td><a href="https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/create/" target="_blank">Cloudflare D1 create database API</a></td>
+                <td>Tenant database provisioning, APAC location hint, read replication mode.</td>
+              </tr>
+              <tr>
+                <td>Workers for Platforms</td>
+                <td><a href="https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/how-workers-for-platforms-works/" target="_blank">Cloudflare Workers for Platforms</a></td>
+                <td>Dispatch namespaces, dynamic dispatch Workers, user Worker isolation.</td>
+              </tr>
+              <tr>
+                <td>Wrangler configuration</td>
+                <td><a href="https://developers.cloudflare.com/workers/wrangler/configuration/" target="_blank">Cloudflare Wrangler configuration</a></td>
+                <td>Wrangler JSONC, dispatch namespace binding, service bindings, D1/R2/Queue bindings.</td>
+              </tr>
+              <tr>
+                <td>Next.js on Workers</td>
+                <td><a href="https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/" target="_blank">Cloudflare Next.js guide</a></td>
+                <td>Next.js deployment compatibility with Cloudflare Workers.</td>
+              </tr>
+              <tr>
+                <td>Hono on Workers</td>
+                <td><a href="https://hono.dev/docs/getting-started/cloudflare-workers" target="_blank">Hono Cloudflare Workers docs</a></td>
+                <td>Typed bindings and Worker API routing.</td>
+              </tr>
+              <tr>
+                <td>R2</td>
+                <td><a href="https://developers.cloudflare.com/r2/api/workers/workers-api-usage/" target="_blank">Cloudflare R2 Workers API</a></td>
+                <td>Receipt and reference-image object storage.</td>
+              </tr>
+              <tr>
+                <td>Queues</td>
+                <td><a href="https://developers.cloudflare.com/queues/configuration/batching-retries/" target="_blank">Cloudflare Queues retries and batching</a></td>
+                <td>WhatsApp send jobs, DLQ, retry behavior.</td>
+              </tr>
+              <tr>
+                <td>Durable Objects</td>
+                <td><a href="https://developers.cloudflare.com/durable-objects/" target="_blank">Cloudflare Durable Objects</a></td>
+                <td>Realtime chat and stateful collaboration path.</td>
+              </tr>
+              <tr>
+                <td>WhatsApp Cloud API</td>
+                <td><a href="https://developers.facebook.com/docs/whatsapp/cloud-api/" target="_blank">Meta WhatsApp Cloud API</a></td>
+                <td>Message sending, webhooks, phone number registration, templates.</td>
+              </tr>
+              <tr>
+                <td>TanStack Query</td>
+                <td><a href="https://tanstack.com/query/latest/docs/framework/react/overview" target="_blank">TanStack Query docs</a></td>
+                <td>Server state management and caching.</td>
+              </tr>
+              <tr>
+                <td>Zod</td>
+                <td><a href="https://zod.dev/" target="_blank">Zod documentation</a></td>
+                <td>TypeScript-first schema validation.</td>
+              </tr>
+              <tr>
+                <td>Zustand</td>
+                <td><a href="https://zustand.docs.pmnd.rs/" target="_blank">Zustand docs</a></td>
+                <td>Small local UI state stores.</td>
+              </tr>
+              <tr>
+                <td>Motion</td>
+                <td><a href="https://motion.dev/docs" target="_blank">Motion documentation</a></td>
+                <td>AnimatePresence, layout animations, reduced-motion support.</td>
+              </tr>
+              <tr>
+                <td>Animation performance</td>
+                <td><a href="https://web.dev/articles/animations-guide" target="_blank">web.dev animation performance guide</a></td>
+                <td>Use transform/opacity and avoid layout-heavy animations.</td>
+              </tr>
+              <tr>
+                <td>Reduced motion</td>
+                <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion" target="_blank">MDN prefers-reduced-motion</a></td>
+                <td>Accessibility preference handling.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <div class="footer">
+          TailorOS Cloudflare Stack Implementation Guide · Generated for architecture planning and implementation handoff.
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Phase 02 — Design System, Premium UI &amp; Micro-interactions</title><style>
+:root{
+  --bg:#fff9ec; --bg2:#f8edcf; --paper:#fffdf8; --paper2:#fff7df; --ink:#21170b; --muted:#76684f;
+  --line:#e9d9aa; --line2:#f1e6c8; --gold:#b8872f; --gold2:#d6a84a; --gold3:#f3cf75; --goldDark:#765114;
+  --teal:#0f766e; --green:#15803d; --red:#b91c1c; --blue:#2563eb; --orange:#b45309; --violet:#6d28d9;
+  --shadow:0 24px 70px rgba(118,81,20,.13); --shadow2:0 10px 28px rgba(33,23,11,.08); --radius:22px;
+  --code:#15110b; --codeInk:#f8f2df;
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:radial-gradient(circle at 8% -10%,#fff3bf 0,transparent 32rem),linear-gradient(180deg,var(--bg),#fffdf8);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.62} 
+a{color:var(--goldDark);text-decoration:none;border-bottom:1px solid rgba(184,135,47,.35)} a:hover{border-color:var(--goldDark)}
+.page{max-width:1240px;margin:0 auto;padding:30px 22px 80px}.hero{position:relative;overflow:hidden;border:1px solid rgba(232,210,155,.9);border-radius:32px;background:linear-gradient(135deg,#21170b 0%,#5f3f0d 52%,#b8872f 100%);box-shadow:var(--shadow);padding:46px;color:#fff}.hero:before{content:"";position:absolute;inset:-40%;background:radial-gradient(circle at 75% 10%,rgba(255,224,143,.48),transparent 26%),radial-gradient(circle at 10% 80%,rgba(15,118,110,.26),transparent 28%);pointer-events:none}.hero>*{position:relative;z-index:1}.eyebrow{display:inline-flex;gap:8px;align-items:center;padding:7px 11px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.09);font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:850;color:#fff7d8}.hero h1{margin:18px 0 14px;font-size:clamp(34px,5vw,62px);letter-spacing:-.045em;line-height:1.02}.lead{max-width:930px;color:#fff6dc;font-size:18px;margin:0 0 20px}.hero-grid{display:grid;grid-template-columns:1.3fr .7fr;gap:18px;align-items:end}.meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:24px}.meta .box{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);border-radius:17px;padding:13px}.meta strong{display:block;color:#fff}.meta span{display:block;color:#fff3c4;font-size:13px}.layout{display:grid;grid-template-columns:285px minmax(0,1fr);gap:24px;align-items:start;margin-top:24px}.toc{position:sticky;top:16px;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow2);background:rgba(255,253,248,.86);backdrop-filter:blur(12px);padding:16px;max-height:calc(100vh - 32px);overflow:auto}.toc h3{font-size:13px;text-transform:uppercase;letter-spacing:.11em;color:var(--muted);margin:0 0 10px}.toc a{display:block;border:0;color:#4a3510;border-radius:12px;padding:8px 9px;font-size:14px}.toc a:hover{background:#fff2c9;color:var(--goldDark)}
+section{background:rgba(255,253,248,.92);border:1px solid var(--line);box-shadow:var(--shadow2);border-radius:var(--radius);padding:30px;margin-bottom:22px}.kicker{color:var(--goldDark);font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;margin-bottom:9px}h2{font-size:clamp(27px,3vw,39px);letter-spacing:-.03em;line-height:1.12;margin:0 0 16px}h3{font-size:21px;margin:26px 0 10px;letter-spacing:-.015em;line-height:1.25}h4{font-size:16px;margin:20px 0 8px}p{margin:0 0 14px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.card{border:1px solid var(--line2);border-radius:18px;background:#fffefa;padding:18px}.card.gold{background:linear-gradient(180deg,#fff8dc,#fffefa);border-color:#ead08c}.card.green{background:#f0fbf5;border-color:#c6ead5}.card.warn{background:#fff7e8;border-color:#efcf9d}.card.danger{background:#fff4f4;border-color:#f4bcbc}.callout{border:1px solid #d9bd6d;border-left:6px solid var(--gold);background:linear-gradient(180deg,#fff6d9,#fffdf8);border-radius:18px;padding:18px;margin:18px 0}.success{border-left-color:var(--green);background:#f0fbf5;border-color:#c6ead5}.danger{border-left-color:var(--red);background:#fff4f4;border-color:#f4bcbc}.note{border-left-color:var(--teal);background:#effaf8;border-color:#c8e7e3}.pill{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:#fff2c9;color:#6e4c11;font-size:12px;font-weight:800;margin:2px}.pill.green{background:#dcfce7;color:#166534}.pill.red{background:#fee2e2;color:#991b1b}.pill.blue{background:#dbeafe;color:#1d4ed8}.pill.violet{background:#ede9fe;color:#5b21b6}.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:17px;background:#fffefa;margin:16px 0 20px}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:13px 14px;border-bottom:1px solid var(--line2);vertical-align:top;text-align:left;font-size:14px}th{background:#fff3cc;color:#4d350f;font-size:12px;text-transform:uppercase;letter-spacing:.07em}tr:last-child td{border-bottom:0}ul,ol{margin:8px 0 16px 22px;padding:0}li{margin:7px 0}.checklist li::marker{content:"✓  ";color:var(--green);font-weight:900}.risk li::marker{content:"⚠  ";color:var(--orange)}code{background:#fff1c2;color:#4c350f;border-radius:6px;padding:2px 5px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.92em}pre{background:var(--code);color:var(--codeInk);border:1px solid rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);padding:18px;border-radius:18px;overflow:auto;font-size:13px;line-height:1.55}pre code{background:transparent;color:inherit;padding:0}.diagram{background:#15110b;color:#fff5d5;border-radius:20px;padding:18px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.65;border:1px solid #342711}.phase-banner{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.metric{padding:17px;border-radius:17px;background:#fff8df;border:1px solid #edd795}.metric b{display:block;font-size:25px}.footer{text-align:center;color:var(--muted);font-size:13px;padding:20px 0}.src-list li{font-size:14px}.kbd{border:1px solid #d7c48d;border-bottom-width:2px;border-radius:7px;padding:1px 7px;background:white;font-family:ui-monospace,monospace;font-size:12px}@media(max-width:980px){.layout,.hero-grid,.grid,.grid3,.grid4{grid-template-columns:1fr}.toc{position:relative;top:0;max-height:none}.meta{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{padding:32px 24px}}@media(max-width:640px){.page{padding:16px 10px 50px}.meta{grid-template-columns:1fr}section{padding:22px 16px}.hero{border-radius:22px}.table-wrap{border-radius:12px}}@media print{body{background:#fff}.page{max-width:none;padding:0}.toc{display:none}.layout{display:block}.hero,section{box-shadow:none;break-inside:avoid}a{color:#111;text-decoration:underline;border:0}}
+</style></head>
+<body><main class="page"><header class="hero"><div class="hero-grid"><div><p class="eyebrow">TailorOS implementation handbook · Phase 02</p><h1>Phase 02 — Design System, Premium UI &amp; Micro-interactions</h1><p class="lead">Create the light-golden product language, accessible components, frontend state rules, forms, animations, and performance-driven UI foundation.</p><div class="phase-banner"><span class="pill">SOLID</span><span class="pill">DRY</span><span class="pill green">Cloudflare-first</span><span class="pill blue">Fast UI</span><span class="pill violet">Tenant isolated</span></div></div><aside><div class="meta"><div class="box"><strong>Prepared</strong><span>July 4, 2026</span></div><div class="box"><strong>Focus</strong><span>UI Foundation</span></div><div class="box"><strong>Output</strong><span>Implementation-ready HTML report</span></div><div class="box"><strong>Quality bar</strong><span>Senior full-stack review</span></div></div></aside></div></header><div class="layout"><nav class="toc"><h3>Contents</h3><a href="#objective">UI foundation and premium experience goal</a><a href="#tokens">Design token architecture</a><a href="#components">Component-level structure</a><a href="#state">Frontend state, forms, and data fetching</a><a href="#motion">Micro-interaction system</a><a href="#checklist">Tests, accessibility, and exit checklist</a><a href="#sources">Sources</a></nav><div><section id="objective"><p class="kicker">Phase 02 · UI Foundation</p><h2>UI foundation and premium experience goal</h2>
+<p class="lead">Phase 02 establishes the premium TailorOS interface before feature screens multiply. The product should feel like a polished shop operating desk: fast search, elegant cards, calm light-golden surfaces, visible order progress, and tasteful micro-interactions that confirm action without slowing staff.</p>
+<div class="callout"><strong>UI decision.</strong> Build the design system as owned shadcn/ui components, Tailwind tokens, and Motion wrappers. Use TanStack Query for server state, Zustand for local UI state, React Hook Form + Zod for forms, and keep animations transform/opacity-based with reduced-motion support.</div>
+<div class="grid4"><div class="metric"><b>&lt;100ms</b><span>button/tap feedback</span></div><div class="metric"><b>120–180ms</b><span>search debounce</span></div><div class="metric"><b>180–260ms</b><span>route transition</span></div><div class="metric"><b>0</b><span>layout-jank animations</span></div></div>
+</section><section id="tokens"><p class="kicker">Phase 02 · UI Foundation</p><h2>Design token architecture</h2>
+<p>The theme must be implemented using CSS variables, then mapped into Tailwind. This allows future tenant branding without hardcoding colours throughout components.</p>
+<table><thead><tr><th>Token group</th><th>Purpose</th><th>Example</th></tr></thead><tbody>
+<tr><td>Brand</td><td>Gold identity, premium highlights, primary actions.</td><td><code>--brand-gold</code>, <code>--brand-gold-dark</code>, <code>--brand-honey</code></td></tr>
+<tr><td>Surface</td><td>Body, cards, nav, drawers, popovers, receipts.</td><td><code>--surface-canvas</code>, <code>--surface-card</code>, <code>--surface-raised</code></td></tr>
+<tr><td>Text</td><td>Readable hierarchy across desktop and mobile.</td><td><code>--text-ink</code>, <code>--text-muted</code>, <code>--text-soft</code></td></tr>
+<tr><td>State</td><td>Success, warning, danger, info, WhatsApp sent/delivered/read.</td><td><code>--state-success</code>, <code>--state-danger</code>, <code>--wa-read</code></td></tr>
+<tr><td>Motion</td><td>Durations, easing, transform distances.</td><td><code>--motion-fast</code>, <code>--ease-premium</code>, <code>--slide-distance</code></td></tr>
+</tbody></table>
+<pre><code>:root {
+  --surface-canvas: #fff9ec;
+  --surface-card: #fffdf8;
+  --surface-raised: #ffffff;
+  --brand-gold: #b8872f;
+  --brand-gold-dark: #765114;
+  --brand-honey: #f3cf75;
+  --text-ink: #21170b;
+  --text-muted: #76684f;
+  --ring: rgba(184, 135, 47, .35);
+  --radius-card: 18px;
+  --motion-fast: 120ms;
+  --motion-medium: 220ms;
+  --ease-premium: cubic-bezier(.2, .8, .2, 1);
+}</code></pre></section><section id="components"><p class="kicker">Phase 02 · UI Foundation</p><h2>Component-level structure</h2>
+<p>Components should be split by design-system primitives, reusable business UI, and feature-only components. This prevents the common failure where every feature creates a new button/card/status chip.</p>
+<pre><code>packages/ui/src/
+  primitives/
+    button.tsx
+    input.tsx
+    card.tsx
+    dialog.tsx
+    drawer.tsx
+    toast.tsx
+    skeleton.tsx
+  layout/
+    AppShell.tsx
+    Sidebar.tsx
+    Topbar.tsx
+    ResponsivePage.tsx
+  feedback/
+    EmptyState.tsx
+    InlineAlert.tsx
+    LoadingOverlay.tsx
+    ConfirmActionDialog.tsx
+  data-display/
+    DataTable.tsx
+    StatCard.tsx
+    StatusChip.tsx
+    Timeline.tsx
+    MoneyValue.tsx
+  business/
+    CustomerProfileChip.tsx
+    FamilyGroupCard.tsx
+    MeasurementField.tsx
+    OrderStatusTimeline.tsx
+    ReceiptPreview.tsx
+    WhatsAppDeliveryBadge.tsx
+  animations/
+    AnimatedPage.tsx
+    MotionList.tsx
+    ReducedMotionProvider.tsx</code></pre>
+<h3>Component rules</h3><ul class="checklist"><li>Primitives never import TailorOS business types.</li><li>Business components can accept domain DTOs but should not fetch data directly.</li><li>Feature components may call hooks, but mutations belong in feature hooks, not individual buttons.</li><li>Every interactive component has loading, disabled, success, error, and keyboard states.</li></ul>
+</section><section id="state"><p class="kicker">Phase 02 · UI Foundation</p><h2>Frontend state, forms, and data fetching</h2>
+<table><thead><tr><th>Concern</th><th>Tool</th><th>Best practice</th><th>Edge case</th></tr></thead><tbody>
+<tr><td>Server state</td><td>TanStack Query</td><td>Use serializable query keys such as <code>['tenant', tenantSlug, 'orders', filters]</code>; invalidate only affected keys.</td><td>Do not duplicate fetched orders in Zustand.</td></tr>
+<tr><td>Local UI state</td><td>Zustand</td><td>Use for drawers, command palette, selected row, draft step, sidebar collapsed state.</td><td>Reset local state on tenant switch.</td></tr>
+<tr><td>Forms</td><td>React Hook Form + Zod</td><td>Client validation for speed, server validation for trust.</td><td>Measurement JSON must be validated by garment type.</td></tr>
+<tr><td>Optimistic updates</td><td>TanStack mutation lifecycle</td><td>Optimistically update order status and rollback on error.</td><td>Never optimistic-update payment totals without server reconciliation.</td></tr>
+</tbody></table>
+<pre><code>export const orderKeys = {
+  all: (tenant: string) =&gt; [&#x27;tenant&#x27;, tenant, &#x27;orders&#x27;] as const,
+  list: (tenant: string, filters: OrderFilters) =&gt; [...orderKeys.all(tenant), &#x27;list&#x27;, filters] as const,
+  detail: (tenant: string, orderId: string) =&gt; [...orderKeys.all(tenant), &#x27;detail&#x27;, orderId] as const,
+};</code></pre></section><section id="motion"><p class="kicker">Phase 02 · UI Foundation</p><h2>Micro-interaction system</h2>
+<p>Motion should communicate state. TailorOS staff will use the app during busy shop hours, so effects must be elegant, brief, and never block actions.</p>
+<table><thead><tr><th>Interaction</th><th>Motion</th><th>Duration</th><th>Reason</th></tr></thead><tbody>
+<tr><td>Button tap</td><td>Scale to 0.98 and return.</td><td>90–120ms</td><td>Immediate tactile feedback.</td></tr>
+<tr><td>Command palette open</td><td>Opacity + scale from 0.98.</td><td>160–200ms</td><td>Premium search entry.</td></tr>
+<tr><td>Drawer/modal</td><td>Transform slide + fade overlay.</td><td>180–240ms</td><td>Clear spatial model.</td></tr>
+<tr><td>Order status changed</td><td>New timeline node fades and lifts 6px.</td><td>180ms</td><td>Confirms workflow step.</td></tr>
+<tr><td>WhatsApp status</td><td>Badge text crossfades; no row re-layout.</td><td>140ms</td><td>Live feel without distraction.</td></tr>
+<tr><td>Page transition</td><td>Content opacity and y transform only; shell stays fixed.</td><td>180–260ms</td><td>Fast perceived navigation.</td></tr>
+</tbody></table>
+<pre><code>&#x27;use client&#x27;;
+import { motion, useReducedMotion } from &#x27;motion/react&#x27;;
+
+export function AnimatedPage({ children }: { children: React.ReactNode }) {
+  const reduce = useReducedMotion();
+  return (
+    &lt;motion.div
+      initial={reduce ? false : { opacity: 0, y: 8 }}
+      animate={reduce ? undefined : { opacity: 1, y: 0 }}
+      exit={reduce ? undefined : { opacity: 0, y: -4 }}
+      transition={{ duration: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
+    &gt;
+      {children}
+    &lt;/motion.div&gt;
+  );
+}</code></pre></section><section id="checklist"><p class="kicker">Phase 02 · UI Foundation</p><h2>Tests, accessibility, and exit checklist</h2>
+<h3>Design-system tests</h3><ul class="checklist"><li>Visual regression for buttons, inputs, cards, status chips, timeline, receipt, inbox bubble.</li><li>Accessibility checks for keyboard navigation, focus rings, labels, contrast, and dialog trapping.</li><li>Reduced-motion test to verify non-essential animations are disabled.</li><li>Mobile viewport snapshots: 360px, 390px, 768px, 1024px, 1440px.</li><li>Performance test: command palette opens quickly with 100+ cached search results.</li></ul>
+<h3>Exit checklist</h3><ul class="checklist"><li>Light golden theme tokens are documented and available in CSS variables.</li><li>Every major UI state has loading, empty, error, success, blocked, and permission-denied variants.</li><li>Micro-interactions use transform/opacity and respect reduced motion.</li><li>Components are organized into primitives, layout, feedback, data-display, and business components.</li><li>Design-system demo file is available for stakeholder review.</li></ul>
+</section><section id="sources"><p class="kicker">Traceability</p><h2>Source map and documentation basis</h2><p class="muted">This phase report consolidates the uploaded TailorOS PRD, WhatsApp Connector PRD, Cloudflare implementation guide, and the current official documentation listed below.</p><ul class="src-list"><li><strong>TailorOS Final PRD</strong> — <span class="muted">Uploaded file: TailorOS_Final_PRD.html</span></li><li><strong>WhatsApp Chat Connector Final PRD</strong> — <span class="muted">Uploaded file: Whatsapp_Chat_Final_PRD.html</span></li><li><strong>TailorOS Cloudflare Stack Implementation Guide</strong> — <span class="muted">Uploaded file: TailorOS_CF_Stack_Implementation_Guide.html</span></li><li><strong>Cloudflare D1 limits</strong> — <span class="muted">https://developers.cloudflare.com/d1/platform/limits/</span></li><li><strong>Cloudflare D1 FAQ / horizontal scale-out</strong> — <span class="muted">https://developers.cloudflare.com/d1/reference/faq/</span></li><li><strong>Cloudflare D1 read replication</strong> — <span class="muted">https://developers.cloudflare.com/d1/best-practices/read-replication/</span></li><li><strong>Cloudflare Workers best practices</strong> — <span class="muted">https://developers.cloudflare.com/workers/best-practices/workers-best-practices/</span></li><li><strong>Cloudflare service bindings</strong> — <span class="muted">https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/</span></li><li><strong>Cloudflare Workers for Platforms</strong> — <span class="muted">https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/</span></li><li><strong>Cloudflare Next.js on Workers</strong> — <span class="muted">https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/</span></li><li><strong>Cloudflare Queues DLQ/retries</strong> — <span class="muted">https://developers.cloudflare.com/queues/configuration/dead-letter-queues/</span></li><li><strong>Cloudflare Workers Vitest integration</strong> — <span class="muted">https://developers.cloudflare.com/workers/testing/vitest-integration/</span></li><li><strong>Hono Cloudflare Workers docs</strong> — <span class="muted">https://hono.dev/docs/getting-started/cloudflare-workers</span></li><li><strong>TanStack Query docs</strong> — <span class="muted">https://tanstack.com/query/latest/docs/framework/react/overview</span></li><li><strong>Zod docs</strong> — <span class="muted">https://zod.dev/</span></li><li><strong>Motion for React docs</strong> — <span class="muted">https://motion.dev/docs/react</span></li><li><strong>web.dev animation performance</strong> — <span class="muted">https://web.dev/articles/animations-guide</span></li><li><strong>MDN prefers-reduced-motion</strong> — <span class="muted">https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion</span></li><li><strong>Meta WhatsApp Business Platform pricing</strong> — <span class="muted">https://whatsappbusiness.com/products/platform-pricing/</span></li></ul></section><div class="footer">TailorOS phase-wise implementation guide · Phase 02 · Generated July 4, 2026</div></div></div></main></body></html>
