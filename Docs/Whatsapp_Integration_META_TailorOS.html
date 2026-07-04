@@ -1,0 +1,1019 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Meta WhatsApp Cloud API - Step-by-Step Integration Guide</title>
+  <style>
+    :root {
+      --bg: #f5f7f8;
+      --paper: #ffffff;
+      --ink: #111827;
+      --muted: #5f6875;
+      --line: #d8dee6;
+      --soft: #eef2f6;
+      --green: #0f766e;
+      --blue: #2563eb;
+      --amber: #b45309;
+      --red: #b91c1c;
+      --purple: #6d28d9;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+    a { color: var(--blue); text-decoration: none; border-bottom: 1px solid rgba(37, 99, 235, 0.35); }
+    a:hover { border-bottom-color: var(--blue); }
+    .page { max-width: 1180px; margin: 0 auto; padding: 28px; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.32fr) minmax(280px, 0.68fr);
+      gap: 24px;
+      padding: 42px;
+      background: linear-gradient(135deg, #ffffff 0%, #f7fbff 52%, #eefaf7 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, h4 { margin: 0; line-height: 1.16; letter-spacing: 0; }
+    h1 { max-width: 850px; font-size: clamp(37px, 5vw, 64px); }
+    h2 { font-size: clamp(27px, 3vw, 40px); margin-bottom: 18px; }
+    h3 { font-size: 21px; margin-bottom: 10px; }
+    h4 { font-size: 16px; margin-bottom: 7px; }
+    p { margin: 0 0 14px; }
+    .lead { max-width: 850px; margin-top: 18px; color: var(--muted); font-size: 19px; }
+    .hero-panel {
+      padding: 22px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+    .stamp {
+      display: inline-flex;
+      width: fit-content;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #e6f4f1;
+      border: 1px solid #b9dfd8;
+      color: #115e59;
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .toc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+    .toc a {
+      padding: 7px 10px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .hero-list { display: grid; gap: 11px; margin: 20px 0 0; padding: 0; list-style: none; }
+    .hero-list li { display: flex; gap: 10px; color: var(--muted); font-size: 14px; }
+    .tick {
+      flex: 0 0 20px;
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #dcfce7;
+      color: #166534;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    section {
+      margin-top: 32px;
+      padding: 34px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 8px 26px rgba(15, 23, 42, 0.04);
+    }
+    .section-kicker {
+      margin-bottom: 10px;
+      color: var(--amber);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .muted { color: var(--muted); }
+    .grid { display: grid; gap: 16px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card {
+      padding: 20px;
+      background: #fbfdff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .card.alt { background: #f7fcfa; border-color: #c8ded9; }
+    .card.warn { background: #fff8ed; border-color: #f1d4ab; }
+    .card.danger { background: #fff5f5; border-color: #fecaca; }
+    .callout {
+      padding: 20px;
+      background: #eaf7f4;
+      border: 1px solid #b9dfd8;
+      border-left: 5px solid var(--green);
+      border-radius: 14px;
+    }
+    .callout.warning { background: #fff7ed; border-color: #fed7aa; border-left-color: var(--amber); }
+    .callout.danger { background: #fef2f2; border-color: #fecaca; border-left-color: var(--red); }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .pill.good { background: #dcfce7; color: #166534; }
+    .pill.warn { background: #ffedd5; color: #9a3412; }
+    .pill.bad { background: #fee2e2; color: #991b1b; }
+    ul.clean { margin: 12px 0 0; padding: 0; list-style: none; }
+    ul.clean li {
+      position: relative;
+      padding-left: 20px;
+      margin: 9px 0;
+      color: var(--muted);
+    }
+    ul.clean li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.72em;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+    .number-list { counter-reset: item; margin: 14px 0 0; padding: 0; list-style: none; }
+    .number-list li {
+      counter-increment: item;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      margin: 12px 0;
+      color: var(--muted);
+    }
+    .number-list li::before {
+      content: counter(item);
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      background: #eef2f6;
+      color: #334155;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    tr:last-child td { border-bottom: 0; }
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: #eef2f7;
+      color: #334155;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.92em;
+    }
+    pre {
+      overflow-x: auto;
+      margin: 12px 0 0;
+      padding: 16px;
+      background: #0f172a;
+      color: #f8fafc;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    pre code { padding: 0; background: transparent; color: inherit; }
+    .metric {
+      padding: 18px;
+      background: #fbfdff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .metric .value { display: block; font-size: 25px; font-weight: 900; }
+    .metric .label { display: block; color: var(--muted); font-size: 13px; }
+    .step {
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      gap: 18px;
+      padding: 20px;
+      background: #fbfdff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .step + .step { margin-top: 14px; }
+    .step-no {
+      width: 54px;
+      height: 54px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      background: #111827;
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: 900;
+    }
+    .footer { margin: 30px 0 8px; color: var(--muted); text-align: center; font-size: 13px; }
+    @media (max-width: 980px) {
+      .hero, .grid.two, .grid.three, .grid.four { grid-template-columns: 1fr; }
+      .hero { padding: 26px; }
+      section { padding: 24px; }
+      .page { padding: 16px; }
+      .step { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: #fff; }
+      .page { max-width: none; padding: 0; }
+      .hero, section { box-shadow: none; break-inside: avoid; }
+      .toc { display: none; }
+      a { color: inherit; border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Meta Cloud API implementation guide</p>
+        <h1>WhatsApp Integration for TailorOS</h1>
+        <p class="lead">A current, step-by-step guide for building a separate WhatsApp Messaging Hub using Meta WhatsApp Cloud API. It covers setup, webhooks, permanent tokens, templates, Tamil support, production readiness, and multi-client SaaS architecture.</p>
+        <nav class="toc" aria-label="Report sections">
+          <a href="#summary">Summary</a>
+          <a href="#architecture">Architecture</a>
+          <a href="#prerequisites">Prerequisites</a>
+          <a href="#steps">Steps</a>
+          <a href="#templates">Templates</a>
+          <a href="#multi-client">Multi-client</a>
+          <a href="#testing">Testing</a>
+          <a href="#risks">Risks</a>
+          <a href="#sources">Sources</a>
+        </nav>
+      </div>
+      <aside class="hero-panel">
+        <span class="stamp">Verified July 2, 2026</span>
+        <ul class="hero-list">
+          <li><span class="tick">1</span><span>Use Meta Cloud API direct for long-term cost control.</span></li>
+          <li><span class="tick">2</span><span>Keep WhatsApp in a separate multi-tenant Messaging Hub.</span></li>
+          <li><span class="tick">3</span><span>Use utility templates for order events and service messages for customer-initiated chat.</span></li>
+          <li><span class="tick">4</span><span>Use Tamil template language code <code>ta</code> and English India code <code>en_IN</code>.</span></li>
+        </ul>
+      </aside>
+    </header>
+
+    <section id="summary">
+      <p class="section-kicker">Executive summary</p>
+      <h2>Recommended WhatsApp approach</h2>
+      <p>Build a separate WhatsApp Messaging Hub that TailorOS calls when it needs to send order confirmations, receipts, fitting reminders, ready-for-pickup alerts, delay messages, payment balance reminders, or customer status replies. The hub owns Meta credentials, template registry, webhook processing, delivery logs, and usage metering.</p>
+      <div class="grid three" style="margin-top: 18px;">
+        <div class="metric"><span class="value">Meta direct</span><span class="label">Best long-term cost and control for a SaaS product.</span></div>
+        <div class="metric"><span class="value">Cloud API</span><span class="label">Send messages via Graph API and receive events via webhooks.</span></div>
+        <div class="metric"><span class="value">Tenant-aware</span><span class="label">Each client shop keeps its own WhatsApp account, phone number, templates, and usage.</span></div>
+      </div>
+      <div class="callout warning" style="margin-top: 18px;">
+        <h3>Important current-doc note</h3>
+        <p>Meta's current Business Messaging docs are in a newer documentation path. The official Get Started page fetched for this guide was updated June 16, 2026. Webhooks were updated June 26, 2026. Template fundamentals, categorization, service messages, and supported languages were updated May 21, 2026. Use the exact dashboard version and latest Graph API version shown in your Meta app when implementing.</p>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <p class="section-kicker">Architecture</p>
+      <h2>Separate WhatsApp Messaging Hub</h2>
+      <p>Do not place provider-specific WhatsApp code directly inside TailorOS screens. TailorOS should publish events and ask the Messaging Hub to send or receive messages. This lets the same WhatsApp product integrate with TailorOS, future CRM products, appointment apps, billing products, or other client projects.</p>
+      <div class="grid three">
+        <div class="card alt">
+          <h3>TailorOS</h3>
+          <ul class="clean">
+            <li>Creates order events.</li>
+            <li>Stores customer and order context.</li>
+            <li>Shows notification status.</li>
+            <li>Receives inbound status-chat intents.</li>
+          </ul>
+        </div>
+        <div class="card alt">
+          <h3>Messaging Hub</h3>
+          <ul class="clean">
+            <li>Stores tenant WhatsApp settings.</li>
+            <li>Chooses template and language.</li>
+            <li>Sends Cloud API requests.</li>
+            <li>Receives and validates webhooks.</li>
+            <li>Meters usage and costs.</li>
+          </ul>
+        </div>
+        <div class="card alt">
+          <h3>Meta Cloud API</h3>
+          <ul class="clean">
+            <li>Accepts message requests.</li>
+            <li>Delivers WhatsApp messages.</li>
+            <li>Sends inbound messages and status webhooks.</li>
+            <li>Manages templates, phone number quality, and WABA state.</li>
+          </ul>
+        </div>
+      </div>
+      <pre><code>TailorOS event
+  -> Messaging Hub send request
+    -> tenant lookup
+      -> template lookup
+        -> Meta Cloud API /messages
+          -> Meta webhook status
+            -> Messaging Hub log update
+              -> TailorOS notification status</code></pre>
+    </section>
+
+    <section id="prerequisites">
+      <p class="section-kicker">Prerequisites</p>
+      <h2>What you need before implementation</h2>
+      <div class="grid two">
+        <div class="card">
+          <h3>Meta account setup</h3>
+          <ul class="clean">
+            <li>Facebook account or managed Meta account.</li>
+            <li>Meta developer registration.</li>
+            <li>Meta Business Portfolio for your company or client shop.</li>
+            <li>Meta app with the WhatsApp use case.</li>
+            <li>WhatsApp Business Account, also called WABA.</li>
+            <li>Business phone number for WhatsApp Cloud API.</li>
+            <li>Test phone with WhatsApp enabled.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Technical setup</h3>
+          <ul class="clean">
+            <li>Public HTTPS webhook endpoint with valid TLS or SSL certificate. Self-signed certificates are not supported.</li>
+            <li>Backend service to send HTTP requests to Graph API.</li>
+            <li>Secure credential storage for access tokens and app secrets.</li>
+            <li>Database tables for tenants, WABAs, phone number IDs, templates, messages, webhooks, and usage.</li>
+            <li>Logging and retry-safe processing for webhooks.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout" style="margin-top: 18px;">
+        <h3>Plain-language definitions</h3>
+        <p><strong>WABA</strong> is the WhatsApp Business Account. <strong>Phone Number ID</strong> is the ID Meta uses when your API sends messages from a specific WhatsApp number. <strong>Access token</strong> is the secret that allows your server to call Meta APIs. <strong>Webhook</strong> is the public URL where Meta sends incoming messages and delivery status updates.</p>
+      </div>
+    </section>
+
+    <section id="steps">
+      <p class="section-kicker">Implementation steps</p>
+      <h2>Step-by-step Meta Cloud API setup</h2>
+
+      <article class="step">
+        <div><span class="step-no">1</span></div>
+        <div>
+          <h3>Choose the onboarding model</h3>
+          <p>For the first TailorOS pilot, manually onboard each shop in Meta Business tools. For a scalable multi-client SaaS, plan for Tech Provider onboarding and Embedded Signup later, so each shop can authorize its own WABA and phone number from your client portal.</p>
+          <ul class="clean">
+            <li><strong>Pilot mode:</strong> you help each shop create or connect a WABA manually.</li>
+            <li><strong>SaaS mode:</strong> clients connect their WhatsApp account through a guided onboarding flow.</li>
+            <li><strong>Important:</strong> do not put multiple unrelated tailor shops under one shared WhatsApp phone number.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="step">
+        <div><span class="step-no">2</span></div>
+        <div>
+          <h3>Create a Meta app with WhatsApp</h3>
+          <p>Open the Meta App Dashboard, create a new app, select the WhatsApp customer-communication use case, connect or create a business portfolio, and complete app creation. Meta's current quickstart flow redirects you to a WhatsApp quickstart or API setup screen.</p>
+          <ul class="clean">
+            <li>App name and contact email should belong to your business.</li>
+            <li>Use a real business portfolio, not a personal placeholder, for production planning.</li>
+            <li>Keep a setup document with app ID, business ID, WABA ID, and phone number ID.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="step">
+        <div><span class="step-no">3</span></div>
+        <div>
+          <h3>Connect a WhatsApp Business Account</h3>
+          <p>In the API Setup section, connect the app to an existing WABA or create a new WABA. Save the WABA ID and the test phone number ID. The phone number ID is required for message sending.</p>
+          <div class="pill-row">
+            <span class="pill">Business ID</span>
+            <span class="pill">WABA ID</span>
+            <span class="pill">Phone Number ID</span>
+            <span class="pill">Display phone number</span>
+            <span class="pill">App ID</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="step">
+        <div><span class="step-no">4</span></div>
+        <div>
+          <h3>Generate a temporary token and send a test message</h3>
+          <p>Use the dashboard's temporary access token to send the first test message from the test number to your own WhatsApp number. This proves that the app, WABA, phone number ID, recipient number, and basic messaging path work.</p>
+          <ul class="clean">
+            <li>Temporary tokens expire quickly and are not suitable for production.</li>
+            <li>After receiving the test message, reply back from WhatsApp. This opens a 24-hour customer service window.</li>
+            <li>Retain the phone number ID and WABA ID after the test.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="step">
+        <div><span class="step-no">5</span></div>
+        <div>
+          <h3>Create your webhook endpoint</h3>
+          <p>Before production, Meta requires a public webhook endpoint that can answer verification GET requests and accept POST JSON payloads. The endpoint must use a valid TLS/SSL certificate.</p>
+          <h4>GET verification behavior</h4>
+          <pre><code>GET &lt;CALLBACK_URL&gt;
+  ?hub.mode=subscribe
+  &amp;hub.challenge=&lt;HUB_CHALLENGE&gt;
+  &amp;hub.verify_token=&lt;HUB_VERIFY_TOKEN&gt;</code></pre>
+          <ul class="clean">
+            <li>Store your own verify token on the server.</li>
+            <li>When Meta sends verification, compare <code>hub.verify_token</code> to your stored value.</li>
+            <li>If valid, return HTTP 200 with the raw <code>hub.challenge</code> value.</li>
+            <li>If invalid, return a 400-level response.</li>
+          </ul>
+          <h4 style="margin-top: 18px;">POST event behavior</h4>
+          <pre><code>POST &lt;CALLBACK_URL&gt;
+Content-Type: application/json
+X-Hub-Signature-256: sha256=&lt;SHA256_PAYLOAD_HASH&gt;
+
+{ "object": "whatsapp_business_account", "entry": [...] }</code></pre>
+          <ul class="clean">
+            <li>Validate <code>X-Hub-Signature-256</code> using HMAC-SHA256, the raw request body, and your Meta app secret.</li>
+            <li>Store every accepted payload or normalized event because there is no historical webhook API to fetch missed data later.</li>
+            <li>Return HTTP 200 quickly after validating and capturing the event.</li>
+            <li>Design idempotency because Meta can retry failed deliveries for up to 7 days and duplicates can happen.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="step">
+        <div><span class="step-no">6</span></div>
+        <div>
+          <h3>Configure webhooks in the App Dashboard</h3>
+          <p>In the WhatsApp configuration panel, add the Callback URL and Verify token. Once Meta verifies the endpoint, subscribe to the webhook fields your product needs.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Webhook field</th>
+                  <th>Why TailorOS needs it</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>messages</strong></td>
+                  <td>Inbound customer messages and delivery status of messages sent by the business.</td>
+                </tr>
+                <tr>
+                  <td><strong>message_template_status_update</strong></td>
+                  <td>Know when a template is approved, rejected, paused, or changed.</td>
+                </tr>
+                <tr>
+                  <td><strong>message_template_quality_update</strong></td>
+                  <td>Monitor template quality and reduce block/report risk.</td>
+                </tr>
+                <tr>
+                  <td><strong>template_category_update</strong></td>
+                  <td>Detect category changes that can affect pricing and compliance.</td>
+                </tr>
+                <tr>
+                  <td><strong>phone_number_quality_update</strong></td>
+                  <td>Watch WhatsApp phone number health and throughput changes.</td>
+                </tr>
+                <tr>
+                  <td><strong>account_alerts</strong></td>
+                  <td>Receive alerts about messaging limits, business profile, or official account status.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </article>
+
+      <article class="step">
+        <div><span class="step-no">7</span></div>
+        <div>
+          <h3>Create a system user and permanent token</h3>
+          <p>The temporary token is only for testing. For development and production, create a system user in Business Settings, assign the app and WhatsApp account assets, and generate a system user access token.</p>
+          <ul class="clean">
+            <li>Create a system user in Meta Business Settings.</li>
+            <li>Assign the app with Manage app or full control as required by the dashboard.</li>
+            <li>Assign the WhatsApp account with Manage WhatsApp Business accounts.</li>
+            <li>Generate a token with <code>business_management</code>, <code>whatsapp_business_messaging</code>, and <code>whatsapp_business_management</code>.</li>
+            <li>Store the token securely and never expose it in frontend code.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="step">
+        <div><span class="step-no">8</span></div>
+        <div>
+          <h3>Send a service message inside the 24-hour window</h3>
+          <p>When a customer messages the business, a 24-hour customer service window opens. During that window, you can send free-form service messages without pre-approved templates. Use this for customer-initiated status chat.</p>
+          <p class="muted">The current send-messages docs fetched for this guide show <code>v25.0</code> in examples. Use the current Graph API version available in your Meta app and keep it configurable.</p>
+          <pre><code>curl 'https://graph.facebook.com/v25.0/&lt;PHONE_NUMBER_ID&gt;/messages' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer &lt;SYSTEM_USER_ACCESS_TOKEN&gt;' \
+  -d '{
+    "messaging_product": "whatsapp",
+    "recipient_type": "individual",
+    "to": "&lt;CUSTOMER_WHATSAPP_NUMBER&gt;",
+    "type": "text",
+    "text": {
+      "preview_url": false,
+      "body": "Your order ORD-2026-000881 is ready for pickup. Balance due: INR 450."
+    }
+  }'</code></pre>
+          <div class="callout warning" style="margin-top: 16px;">
+            <p>The send API response only means Meta accepted the request. It does not prove delivery. Use <code>messages</code> webhooks to update sent, delivered, read, failed, and rejected status.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="step">
+        <div><span class="step-no">9</span></div>
+        <div>
+          <h3>Create utility templates for order events</h3>
+          <p>Outside the 24-hour service window, TailorOS must use approved templates. For tailor shop operations, most templates should be <strong>utility</strong> because they are non-promotional and tied to a customer order or request.</p>
+          <pre><code>curl 'https://graph.facebook.com/v25.0/&lt;WABA_ID&gt;/message_templates' \
+  -H 'Authorization: Bearer &lt;SYSTEM_USER_ACCESS_TOKEN&gt;' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "tailoros_order_confirmation",
+    "category": "utility",
+    "language": "en_IN",
+    "parameter_format": "named",
+    "components": [
+      {
+        "type": "body",
+        "text": "Hi {{customer_name}}, your order {{order_id}} is confirmed. Delivery date: {{delivery_date}}. Advance paid: {{advance_amount}}. Balance: {{balance_amount}}.",
+        "example": {
+          "body_text_named_params": [
+            { "param_name": "customer_name", "example": "Lakshmi" },
+            { "param_name": "order_id", "example": "ORD-2026-000881" },
+            { "param_name": "delivery_date", "example": "20 July 2026" },
+            { "param_name": "advance_amount", "example": "INR 500" },
+            { "param_name": "balance_amount", "example": "INR 450" }
+          ]
+        }
+      }
+    ]
+  }'</code></pre>
+        </div>
+      </article>
+
+      <article class="step">
+        <div><span class="step-no">10</span></div>
+        <div>
+          <h3>Send an approved template</h3>
+          <p>After Meta approves the template, send it using the Messages API. Named parameters reduce mistakes because variables are matched by name, not by position.</p>
+          <pre><code>curl 'https://graph.facebook.com/v25.0/&lt;PHONE_NUMBER_ID&gt;/messages' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer &lt;SYSTEM_USER_ACCESS_TOKEN&gt;' \
+  -d '{
+    "messaging_product": "whatsapp",
+    "recipient_type": "individual",
+    "to": "&lt;CUSTOMER_WHATSAPP_NUMBER&gt;",
+    "type": "template",
+    "template": {
+      "name": "tailoros_order_confirmation",
+      "language": { "code": "en_IN" },
+      "components": [
+        {
+          "type": "body",
+          "parameters": [
+            { "type": "text", "parameter_name": "customer_name", "text": "Lakshmi" },
+            { "type": "text", "parameter_name": "order_id", "text": "ORD-2026-000881" },
+            { "type": "text", "parameter_name": "delivery_date", "text": "20 July 2026" },
+            { "type": "text", "parameter_name": "advance_amount", "text": "INR 500" },
+            { "type": "text", "parameter_name": "balance_amount", "text": "INR 450" }
+          ]
+        }
+      ]
+    }
+  }'</code></pre>
+        </div>
+      </article>
+
+      <article class="step">
+        <div><span class="step-no">11</span></div>
+        <div>
+          <h3>Move from test number to production number</h3>
+          <p>After testing, connect a real business phone number. The number should belong to the specific tailor shop, not the platform owner, unless you are running your own shop. Customers should recognize the number and business name.</p>
+          <ul class="clean">
+            <li>Prepare business profile: display name, address, description, website if any.</li>
+            <li>Complete business verification if required for scale, limits, or account quality.</li>
+            <li>Confirm the number is not currently locked to an incompatible WhatsApp setup.</li>
+            <li>Submit templates early because approval can block launch.</li>
+            <li>Test inbound and outbound messages with real staff before go-live.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="step">
+        <div><span class="step-no">12</span></div>
+        <div>
+          <h3>Launch with monitoring and fallback</h3>
+          <p>For the first shops, monitor every message path. Keep a manual fallback button in TailorOS so staff can copy message content or call the customer when WhatsApp fails.</p>
+          <ul class="clean">
+            <li>Dashboard: sent, delivered, read, failed, pending, rejected.</li>
+            <li>Alerts: token expiry, webhook failures, template rejection, low quality, high cost.</li>
+            <li>Usage: messages by client, category, template, recipient country, and period.</li>
+            <li>Fallback: staff can manually resend, switch to phone call, or mark customer notified.</li>
+          </ul>
+        </div>
+      </article>
+    </section>
+
+    <section id="templates">
+      <p class="section-kicker">Template strategy</p>
+      <h2>TailorOS templates to create first</h2>
+      <p>Keep every template specific, useful, and non-promotional. If you mix a discount, upsell, or festival offer into an order update, Meta may treat it as marketing. Marketing messages are useful later, but they are not the right default for order operations.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Template name</th>
+              <th>Category</th>
+              <th>Language</th>
+              <th>Variables</th>
+              <th>When to send</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>tailoros_order_confirmation</strong></td>
+              <td>Utility</td>
+              <td>en_IN, ta</td>
+              <td>customer_name, order_id, delivery_date, advance_amount, balance_amount</td>
+              <td>Immediately after order creation.</td>
+            </tr>
+            <tr>
+              <td><strong>tailoros_payment_receipt</strong></td>
+              <td>Utility</td>
+              <td>en_IN, ta</td>
+              <td>customer_name, receipt_id, order_id, paid_amount, balance_amount, receipt_link</td>
+              <td>After advance, balance, or correction receipt.</td>
+            </tr>
+            <tr>
+              <td><strong>tailoros_fitting_reminder</strong></td>
+              <td>Utility</td>
+              <td>en_IN, ta</td>
+              <td>customer_name, order_id, fitting_date, shop_name</td>
+              <td>One day before or morning of fitting.</td>
+            </tr>
+            <tr>
+              <td><strong>tailoros_ready_pickup</strong></td>
+              <td>Utility</td>
+              <td>en_IN, ta</td>
+              <td>customer_name, order_id, pickup_date, balance_amount, shop_name</td>
+              <td>When order status becomes ready.</td>
+            </tr>
+            <tr>
+              <td><strong>tailoros_delay_update</strong></td>
+              <td>Utility</td>
+              <td>en_IN, ta</td>
+              <td>customer_name, order_id, new_date, reason_short</td>
+              <td>When promised date changes.</td>
+            </tr>
+            <tr>
+              <td><strong>tailoros_balance_reminder</strong></td>
+              <td>Utility</td>
+              <td>en_IN, ta</td>
+              <td>customer_name, order_id, balance_amount, shop_name</td>
+              <td>Before pickup or when staff requests reminder.</td>
+            </tr>
+            <tr>
+              <td><strong>tailoros_delivery_confirmation</strong></td>
+              <td>Utility</td>
+              <td>en_IN, ta</td>
+              <td>customer_name, order_id, receipt_link</td>
+              <td>After final delivery.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid two" style="margin-top: 18px;">
+        <div class="card">
+          <h3>Language guidance</h3>
+          <ul class="clean">
+            <li>Meta's supported-language page lists Tamil code as <code>ta</code>.</li>
+            <li>For Indian English, use <code>en_IN</code> if you want India-specific English templates.</li>
+            <li>Meta does not translate template strings or variables. You must create Tamil text yourself.</li>
+            <li>Each language version counts separately against template limits.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Approval guidance</h3>
+          <ul class="clean">
+            <li>Use clear order-specific wording.</li>
+            <li>Do not include offers, coupons, festival sales, or upsell text in utility templates.</li>
+            <li>Include realistic example values for every variable.</li>
+            <li>Use named parameters where possible.</li>
+            <li>Subscribe to template status and quality webhooks.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="multi-client">
+      <p class="section-kicker">Multi-client SaaS design</p>
+      <h2>How to support many shops safely</h2>
+      <p>Each client shop should have isolated WhatsApp settings and usage. A webhook payload includes identifiers such as WABA entry ID and phone number metadata. Use those identifiers to route events to the correct tenant.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Hub table</th>
+              <th>Purpose</th>
+              <th>Key fields</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>tenants</strong></td>
+              <td>Client product account, such as one tailor shop or one external app client.</td>
+              <td>tenant_id, business_name, plan, status, billing_mode, default_language.</td>
+            </tr>
+            <tr>
+              <td><strong>whatsapp_accounts</strong></td>
+              <td>Client's WABA and phone number mapping.</td>
+              <td>tenant_id, provider, business_id, waba_id, phone_number_id, display_phone_number, quality_status.</td>
+            </tr>
+            <tr>
+              <td><strong>provider_credentials</strong></td>
+              <td>Secure token and credential metadata.</td>
+              <td>tenant_id, provider, token_reference, app_id, expiry, last_checked_at, active.</td>
+            </tr>
+            <tr>
+              <td><strong>message_templates</strong></td>
+              <td>Approved template registry per tenant and language.</td>
+              <td>tenant_id, provider_template_id, name, category, language, status, variables.</td>
+            </tr>
+            <tr>
+              <td><strong>message_requests</strong></td>
+              <td>Outbound request created by TailorOS or another product.</td>
+              <td>tenant_id, source_product, recipient, template, payload, idempotency_key, status.</td>
+            </tr>
+            <tr>
+              <td><strong>message_events</strong></td>
+              <td>Webhook and delivery event log.</td>
+              <td>tenant_id, provider_message_id, event_type, delivery_status, raw_payload_reference, occurred_at.</td>
+            </tr>
+            <tr>
+              <td><strong>usage_records</strong></td>
+              <td>Monthly client usage and billing.</td>
+              <td>tenant_id, month, category, country, count, estimated_cost, billed_status.</td>
+            </tr>
+            <tr>
+              <td><strong>inbound_conversations</strong></td>
+              <td>Customer-initiated messages and status chat state.</td>
+              <td>tenant_id, wa_id, customer_reference, open_window_until, current_intent, assigned_staff.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid two" style="margin-top: 18px;">
+        <div class="card alt">
+          <h3>Routing logic</h3>
+          <ul class="clean">
+            <li>Use webhook <code>entry.id</code> and <code>phone_number_id</code> to locate the tenant.</li>
+            <li>Use <code>wa_id</code> or sender number to locate customer or family account in TailorOS.</li>
+            <li>When a phone number maps to many customer profiles, ask the customer to choose active order or customer.</li>
+            <li>Use idempotency keys to prevent duplicate sends from retries.</li>
+          </ul>
+        </div>
+        <div class="card alt">
+          <h3>Credential isolation</h3>
+          <ul class="clean">
+            <li>Encrypt tokens and never show full tokens in UI.</li>
+            <li>Do not reuse one client's token for another client.</li>
+            <li>Restrict admin actions by tenant and role.</li>
+            <li>Record token changes and webhook configuration changes in audit logs.</li>
+            <li>Rotate tokens on a schedule or when staff access changes.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout warning" style="margin-top: 18px;">
+        <h3>Future SaaS onboarding</h3>
+        <p>For scale, investigate Meta's Tech Provider onboarding and Embedded Signup. Manual setup is fine for the first shops, but it becomes slow when you need dozens or hundreds of clients. Embedded Signup lets the customer authorize WhatsApp access from your portal, subject to Meta approval and app review requirements.</p>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <p class="section-kicker">Pricing and cost controls</p>
+      <h2>How WhatsApp billing affects TailorOS</h2>
+      <p>WhatsApp Business Platform pricing is per delivered message. Meta's pricing page states that charging is based on market and message category. Categories are marketing, utility, authentication, and service. Service messages are free when replying inside the customer service window, and utility messages sent in response to users can also receive favorable treatment based on Meta's current pricing model.</p>
+      <div class="grid two">
+        <div class="card">
+          <h3>Use low-risk categories first</h3>
+          <ul class="clean">
+            <li><strong>Service:</strong> customer asks status, system replies during 24-hour window.</li>
+            <li><strong>Utility:</strong> order confirmation, receipt, fitting reminder, ready alert, balance reminder.</li>
+            <li><strong>Authentication:</strong> only needed if you add customer OTP login.</li>
+            <li><strong>Marketing:</strong> festival offers and promotions later, only with opt-in and clear controls.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Cost controls</h3>
+          <ul class="clean">
+            <li>Send one confirmation, one receipt, one reminder, and one ready alert by default.</li>
+            <li>Do not send every internal status change to the customer.</li>
+            <li>Show estimated cost before bulk messages.</li>
+            <li>Meter usage by shop, category, and month.</li>
+            <li>Pause marketing if quality drops or costs spike.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="testing">
+      <p class="section-kicker">Testing checklist</p>
+      <h2>What to verify before go-live</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Test</th>
+              <th>Expected result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Message send</strong></td>
+              <td>Send a text message inside service window.</td>
+              <td>API accepts request and webhook later confirms delivery or failure.</td>
+            </tr>
+            <tr>
+              <td><strong>Template send</strong></td>
+              <td>Send approved order confirmation outside service window.</td>
+              <td>Customer receives template and message log stores provider message ID.</td>
+            </tr>
+            <tr>
+              <td><strong>Inbound chat</strong></td>
+              <td>Customer sends "status".</td>
+              <td>Webhook routes to correct tenant and TailorOS finds matching customer or asks for order choice.</td>
+            </tr>
+            <tr>
+              <td><strong>Shared mobile</strong></td>
+              <td>One phone number has three family members and two active orders.</td>
+              <td>Bot asks which order or customer before revealing status.</td>
+            </tr>
+            <tr>
+              <td><strong>Webhook duplicate</strong></td>
+              <td>Replay same webhook payload.</td>
+              <td>System ignores duplicate or updates idempotently.</td>
+            </tr>
+            <tr>
+              <td><strong>Signature validation</strong></td>
+              <td>Send webhook with invalid signature.</td>
+              <td>Endpoint rejects it and does not process event.</td>
+            </tr>
+            <tr>
+              <td><strong>Template rejection</strong></td>
+              <td>Mark template unavailable in test data.</td>
+              <td>TailorOS blocks send and shows staff a clear fallback.</td>
+            </tr>
+            <tr>
+              <td><strong>Tenant routing</strong></td>
+              <td>Send webhooks for two different phone number IDs.</td>
+              <td>Each event is stored under the correct tenant.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="risks">
+      <p class="section-kicker">Risks and safeguards</p>
+      <h2>Common mistakes to avoid</h2>
+      <div class="grid two">
+        <div class="card danger">
+          <h3>High-risk mistakes</h3>
+          <ul class="clean">
+            <li>Putting access tokens in frontend JavaScript.</li>
+            <li>Ignoring webhook signature validation.</li>
+            <li>Assuming API accepted means message delivered.</li>
+            <li>Using marketing wording inside utility templates.</li>
+            <li>Sending customer data to the wrong family member under a shared phone number.</li>
+            <li>Using one WhatsApp number for many unrelated shops.</li>
+            <li>Not storing webhook events, then losing delivery history.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Safeguards</h3>
+          <ul class="clean">
+            <li>Backend-only token use.</li>
+            <li>HMAC validation for all POST webhooks.</li>
+            <li>Tenant isolation by WABA and phone number ID.</li>
+            <li>Audit logs for credential and template changes.</li>
+            <li>Template review before shop go-live.</li>
+            <li>Opt-in and opt-out tracking.</li>
+            <li>Manual fallback for failed message paths.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="production">
+      <p class="section-kicker">Production readiness</p>
+      <h2>Go-live checklist</h2>
+      <div class="grid three">
+        <div class="card">
+          <h3>Meta setup</h3>
+          <ul class="clean">
+            <li>Production phone number connected.</li>
+            <li>Business profile completed.</li>
+            <li>System user token created.</li>
+            <li>Required permissions assigned.</li>
+            <li>Webhook endpoint verified.</li>
+            <li>Required webhook fields subscribed.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>TailorOS setup</h3>
+          <ul class="clean">
+            <li>Customer opt-in captured.</li>
+            <li>Shared mobile handling tested.</li>
+            <li>Order ID and receipt ID in message templates.</li>
+            <li>Fallback actions visible to staff.</li>
+            <li>Notification log visible on order page.</li>
+            <li>Owner can see monthly usage.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Operational setup</h3>
+          <ul class="clean">
+            <li>Templates approved in English and Tamil.</li>
+            <li>Staff trained on when to send messages.</li>
+            <li>Support path for failed messages.</li>
+            <li>Billing model decided.</li>
+            <li>Monitoring alerts configured.</li>
+            <li>Privacy and consent wording ready.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <p class="section-kicker">Official sources verified</p>
+      <h2>Reference links used for this guide</h2>
+      <p class="muted">These links should be rechecked before production launch because Meta dashboard flows, Graph API versions, and pricing may change.</p>
+      <ul class="clean">
+        <li><a href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started">Meta WhatsApp Cloud API Get Started</a> - verified current quickstart details, temporary token, system user token, and required permissions. Page fetched July 2, 2026; page update shown as June 16, 2026.</li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/send-messages/">Meta Send Messages</a> - verified service-message behavior, customer service window, common request syntax, and response meaning. Page fetched July 2, 2026; page update shown as May 21, 2026.</li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/overview/">Meta Webhooks Overview</a> - verified webhook purpose, fields, payload size, retries, and duplicate risk. Page fetched July 2, 2026; page update shown as June 26, 2026.</li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/create-webhook-endpoint/">Meta Create a Webhook Endpoint</a> - verified GET verification, POST signature, TLS requirement, batching, and 7-day retry behavior. Page fetched July 2, 2026; page update shown as June 17, 2026.</li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/overview/">Meta Template Fundamentals</a> - verified template creation, categories, language behavior, named parameters, approval, and status rules. Page fetched July 2, 2026; page update shown as May 21, 2026.</li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/template-categorization/">Meta Template Categorization</a> - verified marketing, utility, and authentication category guidance. Page fetched July 2, 2026; page update shown as May 21, 2026.</li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/supported-languages/">Meta Supported Template Languages</a> - verified Tamil template code <code>ta</code> and English India code <code>en_IN</code>. Page fetched July 2, 2026; page update shown as May 21, 2026.</li>
+        <li><a href="https://whatsappbusiness.com/products/platform-pricing/">WhatsApp Business Platform Pricing</a> - verified per-delivered-message pricing model and message categories: marketing, utility, authentication, and service.</li>
+      </ul>
+    </section>
+
+    <p class="footer">Meta WhatsApp Cloud API Step-by-Step Guide - generated July 2, 2026.</p>
+  </main>
+</body>
+</html>

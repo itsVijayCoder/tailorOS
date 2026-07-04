@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Phase 04 — Tenant Data Model, Domain Layer &amp; D1 Schema</title><style>
+:root{
+  --bg:#fff9ec; --bg2:#f8edcf; --paper:#fffdf8; --paper2:#fff7df; --ink:#21170b; --muted:#76684f;
+  --line:#e9d9aa; --line2:#f1e6c8; --gold:#b8872f; --gold2:#d6a84a; --gold3:#f3cf75; --goldDark:#765114;
+  --teal:#0f766e; --green:#15803d; --red:#b91c1c; --blue:#2563eb; --orange:#b45309; --violet:#6d28d9;
+  --shadow:0 24px 70px rgba(118,81,20,.13); --shadow2:0 10px 28px rgba(33,23,11,.08); --radius:22px;
+  --code:#15110b; --codeInk:#f8f2df;
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:radial-gradient(circle at 8% -10%,#fff3bf 0,transparent 32rem),linear-gradient(180deg,var(--bg),#fffdf8);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.62} 
+a{color:var(--goldDark);text-decoration:none;border-bottom:1px solid rgba(184,135,47,.35)} a:hover{border-color:var(--goldDark)}
+.page{max-width:1240px;margin:0 auto;padding:30px 22px 80px}.hero{position:relative;overflow:hidden;border:1px solid rgba(232,210,155,.9);border-radius:32px;background:linear-gradient(135deg,#21170b 0%,#5f3f0d 52%,#b8872f 100%);box-shadow:var(--shadow);padding:46px;color:#fff}.hero:before{content:"";position:absolute;inset:-40%;background:radial-gradient(circle at 75% 10%,rgba(255,224,143,.48),transparent 26%),radial-gradient(circle at 10% 80%,rgba(15,118,110,.26),transparent 28%);pointer-events:none}.hero>*{position:relative;z-index:1}.eyebrow{display:inline-flex;gap:8px;align-items:center;padding:7px 11px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.09);font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:850;color:#fff7d8}.hero h1{margin:18px 0 14px;font-size:clamp(34px,5vw,62px);letter-spacing:-.045em;line-height:1.02}.lead{max-width:930px;color:#fff6dc;font-size:18px;margin:0 0 20px}.hero-grid{display:grid;grid-template-columns:1.3fr .7fr;gap:18px;align-items:end}.meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:24px}.meta .box{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);border-radius:17px;padding:13px}.meta strong{display:block;color:#fff}.meta span{display:block;color:#fff3c4;font-size:13px}.layout{display:grid;grid-template-columns:285px minmax(0,1fr);gap:24px;align-items:start;margin-top:24px}.toc{position:sticky;top:16px;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow2);background:rgba(255,253,248,.86);backdrop-filter:blur(12px);padding:16px;max-height:calc(100vh - 32px);overflow:auto}.toc h3{font-size:13px;text-transform:uppercase;letter-spacing:.11em;color:var(--muted);margin:0 0 10px}.toc a{display:block;border:0;color:#4a3510;border-radius:12px;padding:8px 9px;font-size:14px}.toc a:hover{background:#fff2c9;color:var(--goldDark)}
+section{background:rgba(255,253,248,.92);border:1px solid var(--line);box-shadow:var(--shadow2);border-radius:var(--radius);padding:30px;margin-bottom:22px}.kicker{color:var(--goldDark);font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;margin-bottom:9px}h2{font-size:clamp(27px,3vw,39px);letter-spacing:-.03em;line-height:1.12;margin:0 0 16px}h3{font-size:21px;margin:26px 0 10px;letter-spacing:-.015em;line-height:1.25}h4{font-size:16px;margin:20px 0 8px}p{margin:0 0 14px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.card{border:1px solid var(--line2);border-radius:18px;background:#fffefa;padding:18px}.card.gold{background:linear-gradient(180deg,#fff8dc,#fffefa);border-color:#ead08c}.card.green{background:#f0fbf5;border-color:#c6ead5}.card.warn{background:#fff7e8;border-color:#efcf9d}.card.danger{background:#fff4f4;border-color:#f4bcbc}.callout{border:1px solid #d9bd6d;border-left:6px solid var(--gold);background:linear-gradient(180deg,#fff6d9,#fffdf8);border-radius:18px;padding:18px;margin:18px 0}.success{border-left-color:var(--green);background:#f0fbf5;border-color:#c6ead5}.danger{border-left-color:var(--red);background:#fff4f4;border-color:#f4bcbc}.note{border-left-color:var(--teal);background:#effaf8;border-color:#c8e7e3}.pill{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:#fff2c9;color:#6e4c11;font-size:12px;font-weight:800;margin:2px}.pill.green{background:#dcfce7;color:#166534}.pill.red{background:#fee2e2;color:#991b1b}.pill.blue{background:#dbeafe;color:#1d4ed8}.pill.violet{background:#ede9fe;color:#5b21b6}.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:17px;background:#fffefa;margin:16px 0 20px}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:13px 14px;border-bottom:1px solid var(--line2);vertical-align:top;text-align:left;font-size:14px}th{background:#fff3cc;color:#4d350f;font-size:12px;text-transform:uppercase;letter-spacing:.07em}tr:last-child td{border-bottom:0}ul,ol{margin:8px 0 16px 22px;padding:0}li{margin:7px 0}.checklist li::marker{content:"✓  ";color:var(--green);font-weight:900}.risk li::marker{content:"⚠  ";color:var(--orange)}code{background:#fff1c2;color:#4c350f;border-radius:6px;padding:2px 5px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.92em}pre{background:var(--code);color:var(--codeInk);border:1px solid rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);padding:18px;border-radius:18px;overflow:auto;font-size:13px;line-height:1.55}pre code{background:transparent;color:inherit;padding:0}.diagram{background:#15110b;color:#fff5d5;border-radius:20px;padding:18px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.65;border:1px solid #342711}.phase-banner{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.metric{padding:17px;border-radius:17px;background:#fff8df;border:1px solid #edd795}.metric b{display:block;font-size:25px}.footer{text-align:center;color:var(--muted);font-size:13px;padding:20px 0}.src-list li{font-size:14px}.kbd{border:1px solid #d7c48d;border-bottom-width:2px;border-radius:7px;padding:1px 7px;background:white;font-family:ui-monospace,monospace;font-size:12px}@media(max-width:980px){.layout,.hero-grid,.grid,.grid3,.grid4{grid-template-columns:1fr}.toc{position:relative;top:0;max-height:none}.meta{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{padding:32px 24px}}@media(max-width:640px){.page{padding:16px 10px 50px}.meta{grid-template-columns:1fr}section{padding:22px 16px}.hero{border-radius:22px}.table-wrap{border-radius:12px}}@media print{body{background:#fff}.page{max-width:none;padding:0}.toc{display:none}.layout{display:block}.hero,section{box-shadow:none;break-inside:avoid}a{color:#111;text-decoration:underline;border:0}}
+</style></head>
+<body><main class="page"><header class="hero"><div class="hero-grid"><div><p class="eyebrow">TailorOS implementation handbook · Phase 04</p><h1>Phase 04 — Tenant Data Model, Domain Layer &amp; D1 Schema</h1><p class="lead">Design and implement TailorOS domain entities, per-tenant D1 schema, repositories, services, invariants, measurements, orders, payments, and audit records.</p><div class="phase-banner"><span class="pill">SOLID</span><span class="pill">DRY</span><span class="pill green">Cloudflare-first</span><span class="pill blue">Fast UI</span><span class="pill violet">Tenant isolated</span></div></div><aside><div class="meta"><div class="box"><strong>Prepared</strong><span>July 4, 2026</span></div><div class="box"><strong>Focus</strong><span>Domain Model</span></div><div class="box"><strong>Output</strong><span>Implementation-ready HTML report</span></div><div class="box"><strong>Quality bar</strong><span>Senior full-stack review</span></div></div></aside></div></header><div class="layout"><nav class="toc"><h3>Contents</h3><a href="#objective">Tenant domain model objective</a><a href="#schema">Tenant D1 schema structure</a><a href="#measurement">Measurement versioning and order snapshots</a><a href="#orders">Order, item, production, and payment model</a><a href="#repositories">Repository and service layer implementation</a><a href="#invariants">Domain invariants and failure handling</a><a href="#checklist">Edge cases, tests, and checklist</a><a href="#sources">Sources</a></nav><div><section id="objective"><p class="kicker">Phase 04 · Domain Model</p><h2>Tenant domain model objective</h2>
+<p class="lead">Phase 04 builds the per-tenant operational database, repositories, domain services, and invariants for TailorOS. This phase converts the PRD into a durable data model: one mobile number can represent a family, each person has their own customer profile, measurements are versioned, orders have unique IDs, payments are ledger-based, and receipts/messages remain traceable.</p>
+<div class="callout"><strong>Core invariant.</strong> Mobile number is a contact channel, not a customer identity. Never attach measurements directly to a phone number. Attach measurements to a customer profile and attach orders to a customer profile plus contact.</div>
+</section><section id="schema"><p class="kicker">Phase 04 · Domain Model</p><h2>Tenant D1 schema structure</h2>
+<div class="diagram">tenant_db
+  contacts & family
+    customer_contacts
+    contact_phone_history
+    customer_profiles
+  tailoring
+    garment_types
+    measurement_profiles
+    measurement_versions
+    order_measurement_snapshots
+  commerce
+    orders
+    order_items
+    production_tasks
+    alteration_logs
+    payments
+    receipts
+  communication
+    notification_logs
+    wa_messages
+    wa_webhook_events
+  support
+    audit_logs
+    search_projection
+    search_docs FTS5</div>
+<pre><code>CREATE TABLE customer_contacts (
+  id TEXT PRIMARY KEY,
+  primary_mobile_e164 TEXT NOT NULL,
+  primary_mobile_national TEXT NOT NULL,
+  whatsapp_mobile_e164 TEXT,
+  whatsapp_opt_in INTEGER NOT NULL DEFAULT 0,
+  address_json TEXT,
+  notes TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX idx_contacts_mobile ON customer_contacts(primary_mobile_e164);
+
+CREATE TABLE customer_profiles (
+  id TEXT PRIMARY KEY,
+  customer_code TEXT NOT NULL UNIQUE,
+  contact_id TEXT NOT NULL REFERENCES customer_contacts(id),
+  full_name TEXT NOT NULL,
+  search_name TEXT NOT NULL,
+  relation_label TEXT,
+  gender_context TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX idx_profiles_contact ON customer_profiles(contact_id);
+CREATE INDEX idx_profiles_search_name ON customer_profiles(search_name);</code></pre></section><section id="measurement"><p class="kicker">Phase 04 · Domain Model</p><h2>Measurement versioning and order snapshots</h2>
+<p>Measurements are high-trust records. The system must preserve what the tailor used for a historical order even after a customer changes body size or style preference.</p>
+<pre><code>CREATE TABLE measurement_profiles (
+  id TEXT PRIMARY KEY,
+  customer_profile_id TEXT NOT NULL REFERENCES customer_profiles(id),
+  garment_type_code TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  current_version_id TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE measurement_versions (
+  id TEXT PRIMARY KEY,
+  measurement_profile_id TEXT NOT NULL REFERENCES measurement_profiles(id),
+  version_no INTEGER NOT NULL,
+  values_json TEXT NOT NULL,
+  unit TEXT NOT NULL DEFAULT &#x27;inch&#x27;,
+  fit_notes TEXT,
+  reason TEXT,
+  captured_by_user_id TEXT NOT NULL,
+  captured_at TEXT NOT NULL,
+  UNIQUE(measurement_profile_id, version_no)
+);
+
+CREATE TABLE order_measurement_snapshots (
+  id TEXT PRIMARY KEY,
+  order_item_id TEXT NOT NULL,
+  source_measurement_version_id TEXT,
+  values_json TEXT NOT NULL,
+  override_json TEXT,
+  created_at TEXT NOT NULL
+);</code></pre>
+<ul class="checklist"><li>Updating the current measurement creates a new version, not an overwrite.</li><li>Order item stores snapshot values used at booking time.</li><li>One-off loose/tight changes are order overrides unless staff explicitly updates the base profile.</li><li>Photos belong in R2, referenced by metadata rows; never store image blobs in D1.</li></ul>
+</section><section id="orders"><p class="kicker">Phase 04 · Domain Model</p><h2>Order, item, production, and payment model</h2>
+<p>Orders should support multiple garments and partial completion. A single order may include blouse, petticoat, alteration, and fall/pico work; each item can move through workflow independently.</p>
+<pre><code>CREATE TABLE orders (
+  id TEXT PRIMARY KEY,
+  order_code TEXT NOT NULL UNIQUE,
+  contact_id TEXT NOT NULL REFERENCES customer_contacts(id),
+  customer_profile_id TEXT NOT NULL REFERENCES customer_profiles(id),
+  current_status TEXT NOT NULL,
+  order_date TEXT NOT NULL,
+  trial_date TEXT,
+  promised_delivery_date TEXT,
+  subtotal_paise INTEGER NOT NULL DEFAULT 0,
+  discount_paise INTEGER NOT NULL DEFAULT 0,
+  final_total_paise INTEGER NOT NULL DEFAULT 0,
+  balance_due_paise INTEGER NOT NULL DEFAULT 0,
+  created_by_user_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE order_items (
+  id TEXT PRIMARY KEY,
+  item_code TEXT NOT NULL UNIQUE,
+  order_id TEXT NOT NULL REFERENCES orders(id),
+  garment_type_code TEXT NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  item_status TEXT NOT NULL,
+  price_paise INTEGER NOT NULL DEFAULT 0,
+  assigned_staff_user_id TEXT,
+  promised_delivery_date TEXT,
+  notes TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE payments (
+  id TEXT PRIMARY KEY,
+  payment_code TEXT NOT NULL UNIQUE,
+  order_id TEXT NOT NULL REFERENCES orders(id),
+  amount_paise INTEGER NOT NULL,
+  mode TEXT NOT NULL,
+  kind TEXT NOT NULL,       -- advance | balance | refund | correction
+  reference TEXT,
+  recorded_by_user_id TEXT NOT NULL,
+  recorded_at TEXT NOT NULL
+);</code></pre></section><section id="repositories"><p class="kicker">Phase 04 · Domain Model</p><h2>Repository and service layer implementation</h2>
+<p>The repository layer hides SQL, while the service layer enforces business rules. This keeps route handlers thin and testable.</p>
+<pre><code>// Route → Service → Repository → D1
+app.post(&#x27;/v1/orders&#x27;, zValidator(&#x27;json&#x27;, createOrderSchema), async (c) =&gt; {
+  const result = await createOrderService({
+    db: c.env.TENANT_DB,
+    media: c.env.MEDIA_BUCKET,
+    whatsappQueue: c.env.WHATSAPP_SEND_QUEUE,
+    actor: c.get(&#x27;user&#x27;),
+    input: c.req.valid(&#x27;json&#x27;),
+    requestId: c.get(&#x27;requestId&#x27;)
+  });
+  return c.json({ ok: true, data: result, requestId: c.get(&#x27;requestId&#x27;) }, 201);
+});
+
+export async function createOrderService(ctx: CreateOrderContext) {
+  return withTenantTransaction(ctx.db, async (tx) =&gt; {
+    const customer = await customerRepo.findProfile(tx, ctx.input.customerProfileId);
+    assertCanCreateOrder(ctx.actor, customer);
+    const order = await orderRepo.insert(tx, buildOrderRecord(ctx.input, ctx.actor));
+    await auditRepo.insert(tx, audit(&#x27;ORDER_CREATED&#x27;, ctx.actor, order.id));
+    await outboxRepo.insert(tx, orderBookedEvent(order, ctx.requestId));
+    return order;
+  });
+}</code></pre></section><section id="invariants"><p class="kicker">Phase 04 · Domain Model</p><h2>Domain invariants and failure handling</h2>
+<table><thead><tr><th>Invariant</th><th>Enforcement</th><th>Test</th></tr></thead><tbody>
+<tr><td>One mobile can have many customer profiles.</td><td>Contact table separate from profile table.</td><td>Create 4 profiles under one mobile and create profile-specific order.</td></tr>
+<tr><td>Measurement edits are historical.</td><td>Insert version; update current_version_id; never mutate old version.</td><td>Old order still references old snapshot.</td></tr>
+<tr><td>Payment correction is auditable.</td><td>Ledger rows plus audit log; no silent overwrite.</td><td>Payment edit creates correction record and reason.</td></tr>
+<tr><td>Partial delivery supported.</td><td>Order item statuses independent; aggregate order status derived.</td><td>One item delivered, one item stitching, order remains partially ready.</td></tr>
+<tr><td>WhatsApp notification is not blocking order creation.</td><td>Outbox queue after transaction.</td><td>WhatsApp failure does not rollback order creation.</td></tr>
+</tbody></table>
+</section><section id="checklist"><p class="kicker">Phase 04 · Domain Model</p><h2>Edge cases, tests, and checklist</h2>
+<h3>Edge cases</h3><ul class="risk"><li>Customer changes phone number: keep contact phone history; search old numbers as aliases.</li><li>Duplicate family profile: show possible matches and add merge workflow later.</li><li>Order created without measurement: allow only for alteration/simple service with explicit reason.</li><li>Refund after partial delivery: payment ledger must support refund and balance recalculation.</li><li>Measurement unit mismatch: show unit in every field and store unit in version.</li><li>Garment-specific schema evolves: version garment template and validate old measurements against old template.</li></ul>
+<h3>Tests</h3><ul class="checklist"><li>Repository tests for contacts, profiles, measurement versions, orders, payments.</li><li>Service tests for create order, update measurement, receive payment, cancel order.</li><li>Migration tests using a fresh tenant DB and a seeded older schema.</li><li>Search projection tests after customer/order/payment updates.</li><li>Audit tests for payment, measurement, status, export, delete actions.</li></ul>
+<h3>Exit checklist</h3><ul class="checklist"><li>Tenant DB migrations complete.</li><li>All high-traffic queries have indexes.</li><li>Domain services enforce invariants.</li><li>Outbox events are written for order booked, receipt generated, payment received, status changed.</li><li>Seed data includes garment types, statuses, roles, receipt numbering, measurement templates.</li></ul>
+</section><section id="sources"><p class="kicker">Traceability</p><h2>Source map and documentation basis</h2><p class="muted">This phase report consolidates the uploaded TailorOS PRD, WhatsApp Connector PRD, Cloudflare implementation guide, and the current official documentation listed below.</p><ul class="src-list"><li><strong>TailorOS Final PRD</strong> — <span class="muted">Uploaded file: TailorOS_Final_PRD.html</span></li><li><strong>WhatsApp Chat Connector Final PRD</strong> — <span class="muted">Uploaded file: Whatsapp_Chat_Final_PRD.html</span></li><li><strong>TailorOS Cloudflare Stack Implementation Guide</strong> — <span class="muted">Uploaded file: TailorOS_CF_Stack_Implementation_Guide.html</span></li><li><strong>Cloudflare D1 limits</strong> — <span class="muted">https://developers.cloudflare.com/d1/platform/limits/</span></li><li><strong>Cloudflare D1 FAQ / horizontal scale-out</strong> — <span class="muted">https://developers.cloudflare.com/d1/reference/faq/</span></li><li><strong>Cloudflare D1 read replication</strong> — <span class="muted">https://developers.cloudflare.com/d1/best-practices/read-replication/</span></li><li><strong>Cloudflare Workers best practices</strong> — <span class="muted">https://developers.cloudflare.com/workers/best-practices/workers-best-practices/</span></li><li><strong>Cloudflare service bindings</strong> — <span class="muted">https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/</span></li><li><strong>Cloudflare Workers for Platforms</strong> — <span class="muted">https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/</span></li><li><strong>Cloudflare Next.js on Workers</strong> — <span class="muted">https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/</span></li><li><strong>Cloudflare Queues DLQ/retries</strong> — <span class="muted">https://developers.cloudflare.com/queues/configuration/dead-letter-queues/</span></li><li><strong>Cloudflare Workers Vitest integration</strong> — <span class="muted">https://developers.cloudflare.com/workers/testing/vitest-integration/</span></li><li><strong>Hono Cloudflare Workers docs</strong> — <span class="muted">https://hono.dev/docs/getting-started/cloudflare-workers</span></li><li><strong>TanStack Query docs</strong> — <span class="muted">https://tanstack.com/query/latest/docs/framework/react/overview</span></li><li><strong>Zod docs</strong> — <span class="muted">https://zod.dev/</span></li><li><strong>Motion for React docs</strong> — <span class="muted">https://motion.dev/docs/react</span></li><li><strong>web.dev animation performance</strong> — <span class="muted">https://web.dev/articles/animations-guide</span></li><li><strong>MDN prefers-reduced-motion</strong> — <span class="muted">https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion</span></li><li><strong>Meta WhatsApp Business Platform pricing</strong> — <span class="muted">https://whatsappbusiness.com/products/platform-pricing/</span></li></ul></section><div class="footer">TailorOS phase-wise implementation guide · Phase 04 · Generated July 4, 2026</div></div></div></main></body></html>

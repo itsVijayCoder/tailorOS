@@ -1,0 +1,1499 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TailorOS Premium shadcn Design System + Calendar UI</title>
+  <meta name="description" content="TailorOS premium light golden shadcn/ui design system, CSS variables, calendar UI, micro interactions, page transitions, implementation guide, edge cases, and QA checklist." />
+  <style>
+    /*
+      TailorOS Premium Design System Demo
+      ------------------------------------------------------
+      This file intentionally mirrors shadcn/ui's semantic CSS variable approach.
+      In the actual app, these variables should live in app/globals.css and be mapped
+      with Tailwind v4 @theme inline. This static demo uses the same variables directly.
+    */
+
+    :root {
+      color-scheme: light;
+      --radius: 1rem;
+
+      /* shadcn/ui semantic variables - Light Golden Theme */
+      --background: oklch(0.985 0.013 88.9);
+      --foreground: oklch(0.178 0.027 66.5);
+      --card: oklch(0.997 0.006 92.0);
+      --card-foreground: oklch(0.178 0.027 66.5);
+      --popover: oklch(1 0 0);
+      --popover-foreground: oklch(0.178 0.027 66.5);
+      --primary: oklch(0.735 0.150 78.0);
+      --primary-foreground: oklch(0.160 0.032 66.0);
+      --secondary: oklch(0.944 0.030 86.5);
+      --secondary-foreground: oklch(0.255 0.042 65.0);
+      --muted: oklch(0.955 0.018 86.0);
+      --muted-foreground: oklch(0.485 0.032 70.0);
+      --accent: oklch(0.915 0.060 81.2);
+      --accent-foreground: oklch(0.205 0.040 67.0);
+      --destructive: oklch(0.565 0.220 27.0);
+      --destructive-foreground: oklch(0.985 0.010 95.0);
+      --border: oklch(0.884 0.026 82.0);
+      --input: oklch(0.892 0.024 84.0);
+      --ring: oklch(0.735 0.150 78.0);
+
+      --chart-1: oklch(0.735 0.150 78.0);
+      --chart-2: oklch(0.690 0.120 148.0);
+      --chart-3: oklch(0.630 0.145 248.0);
+      --chart-4: oklch(0.720 0.155 38.0);
+      --chart-5: oklch(0.600 0.115 325.0);
+
+      --sidebar: oklch(0.965 0.022 88.0);
+      --sidebar-foreground: oklch(0.230 0.037 67.0);
+      --sidebar-primary: oklch(0.735 0.150 78.0);
+      --sidebar-primary-foreground: oklch(0.160 0.032 66.0);
+      --sidebar-accent: oklch(0.927 0.052 82.0);
+      --sidebar-accent-foreground: oklch(0.210 0.040 67.0);
+      --sidebar-border: oklch(0.865 0.030 82.0);
+      --sidebar-ring: oklch(0.735 0.150 78.0);
+
+      /* TailorOS product-level semantic aliases. Keep these small and derived. */
+      --surface-raised: oklch(1 0 0 / 0.78);
+      --surface-soft: oklch(0.970 0.018 88.0);
+      --gold-glow: oklch(0.820 0.155 78 / 0.34);
+      --gold-line: oklch(0.735 0.150 78 / 0.32);
+      --success: oklch(0.640 0.145 150.0);
+      --success-foreground: oklch(0.980 0.012 140.0);
+      --warning: oklch(0.745 0.162 70.0);
+      --warning-foreground: oklch(0.180 0.032 66.0);
+      --info: oklch(0.620 0.145 245.0);
+      --info-foreground: oklch(0.985 0.006 248.0);
+      --whatsapp: oklch(0.665 0.155 151.0);
+      --whatsapp-foreground: oklch(0.985 0.010 145.0);
+
+      --shadow-xs: 0 1px 2px oklch(0.140 0.025 65 / 0.05);
+      --shadow-sm: 0 4px 12px oklch(0.140 0.025 65 / 0.07);
+      --shadow-md: 0 14px 35px oklch(0.140 0.025 65 / 0.10);
+      --shadow-lg: 0 24px 70px oklch(0.140 0.025 65 / 0.14);
+      --shadow-gold: 0 20px 55px oklch(0.735 0.150 78 / 0.18);
+
+      --ease-premium: cubic-bezier(.2,.8,.2,1);
+      --ease-spring-soft: cubic-bezier(.16,1,.3,1);
+      --duration-fast: 120ms;
+      --duration-base: 180ms;
+      --duration-panel: 260ms;
+      --duration-page: 320ms;
+    }
+
+    .dark {
+      color-scheme: dark;
+      --background: oklch(0.145 0.022 67.0);
+      --foreground: oklch(0.956 0.012 88.0);
+      --card: oklch(0.185 0.025 67.0);
+      --card-foreground: oklch(0.956 0.012 88.0);
+      --popover: oklch(0.170 0.024 67.0);
+      --popover-foreground: oklch(0.956 0.012 88.0);
+      --primary: oklch(0.790 0.145 82.0);
+      --primary-foreground: oklch(0.142 0.026 66.0);
+      --secondary: oklch(0.255 0.032 67.0);
+      --secondary-foreground: oklch(0.930 0.018 86.0);
+      --muted: oklch(0.245 0.024 67.0);
+      --muted-foreground: oklch(0.730 0.030 82.0);
+      --accent: oklch(0.310 0.047 72.0);
+      --accent-foreground: oklch(0.960 0.016 86.0);
+      --destructive: oklch(0.635 0.230 27.0);
+      --destructive-foreground: oklch(0.985 0.010 95.0);
+      --border: oklch(0.325 0.026 70.0);
+      --input: oklch(0.310 0.026 70.0);
+      --ring: oklch(0.790 0.145 82.0);
+      --chart-1: oklch(0.790 0.145 82.0);
+      --chart-2: oklch(0.720 0.135 152.0);
+      --chart-3: oklch(0.710 0.130 248.0);
+      --chart-4: oklch(0.735 0.150 38.0);
+      --chart-5: oklch(0.720 0.125 325.0);
+      --sidebar: oklch(0.175 0.025 67.0);
+      --sidebar-foreground: oklch(0.930 0.018 86.0);
+      --sidebar-primary: oklch(0.790 0.145 82.0);
+      --sidebar-primary-foreground: oklch(0.142 0.026 66.0);
+      --sidebar-accent: oklch(0.290 0.035 72.0);
+      --sidebar-accent-foreground: oklch(0.930 0.018 86.0);
+      --sidebar-border: oklch(0.325 0.026 70.0);
+      --sidebar-ring: oklch(0.790 0.145 82.0);
+      --surface-raised: oklch(0.205 0.026 67 / 0.82);
+      --surface-soft: oklch(0.205 0.026 67);
+      --gold-glow: oklch(0.790 0.145 82 / 0.20);
+      --gold-line: oklch(0.790 0.145 82 / 0.30);
+    }
+
+    .theme-sandal {
+      --primary: oklch(0.700 0.120 63.0);
+      --primary-foreground: oklch(0.160 0.030 55.0);
+      --accent: oklch(0.918 0.060 65.0);
+      --ring: oklch(0.700 0.120 63.0);
+      --gold-glow: oklch(0.700 0.120 63 / 0.32);
+    }
+
+    .theme-rose {
+      --primary: oklch(0.705 0.130 25.0);
+      --primary-foreground: oklch(0.990 0.008 30.0);
+      --accent: oklch(0.936 0.045 27.0);
+      --ring: oklch(0.705 0.130 25.0);
+      --gold-glow: oklch(0.705 0.130 25 / 0.25);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, var(--gold-glow) 0, transparent 34rem),
+        radial-gradient(circle at 85% 5%, color-mix(in oklch, var(--accent) 54%, transparent) 0, transparent 26rem),
+        linear-gradient(180deg, var(--background), color-mix(in oklch, var(--background), var(--muted) 62%));
+      color: var(--foreground);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+      transition: background var(--duration-page) var(--ease-premium), color var(--duration-page) var(--ease-premium);
+    }
+
+    a { color: inherit; }
+    button, input, select, textarea { font: inherit; }
+    .page { max-width: 1460px; margin: 0 auto; padding: 22px; }
+    .shell {
+      display: grid;
+      grid-template-columns: 286px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 18px;
+      min-height: calc(100vh - 36px);
+      border: 1px solid var(--sidebar-border);
+      border-radius: calc(var(--radius) + 10px);
+      background: linear-gradient(180deg, var(--sidebar), color-mix(in oklch, var(--sidebar), var(--card) 58%));
+      box-shadow: var(--shadow-md);
+      padding: 18px;
+      overflow: hidden;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--sidebar-border);
+    }
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: var(--primary-foreground);
+      background:
+        radial-gradient(circle at 35% 25%, color-mix(in oklch, white 35%, var(--primary)), var(--primary) 62%),
+        var(--primary);
+      box-shadow: var(--shadow-gold);
+      font-weight: 950;
+      letter-spacing: -0.04em;
+    }
+    .brand h1 { margin: 0; font-size: 19px; letter-spacing: -0.04em; color: var(--sidebar-foreground); }
+    .brand p { margin: 2px 0 0; color: var(--muted-foreground); font-size: 12px; }
+    .nav-section { margin-top: 18px; }
+    .nav-label {
+      margin: 0 0 8px;
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted-foreground);
+      font-weight: 850;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      border: 0;
+      color: var(--sidebar-foreground);
+      background: transparent;
+      padding: 10px 11px;
+      border-radius: 13px;
+      cursor: pointer;
+      text-align: left;
+      transition: transform var(--duration-fast) var(--ease-premium), background var(--duration-base) var(--ease-premium), box-shadow var(--duration-base) var(--ease-premium);
+    }
+    .nav-item:hover { transform: translateX(2px); background: var(--sidebar-accent); }
+    .nav-item.active {
+      background: linear-gradient(135deg, var(--sidebar-primary), color-mix(in oklch, var(--sidebar-primary), white 12%));
+      color: var(--sidebar-primary-foreground);
+      box-shadow: var(--shadow-gold);
+    }
+    .nav-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: color-mix(in oklch, var(--card), transparent 18%);
+      border: 1px solid color-mix(in oklch, var(--sidebar-border), transparent 45%);
+    }
+    .active .nav-icon { background: color-mix(in oklch, white 26%, transparent); border-color: color-mix(in oklch, white 40%, transparent); }
+    .sidebar-card {
+      margin-top: 18px;
+      border: 1px solid var(--gold-line);
+      border-radius: var(--radius);
+      padding: 15px;
+      background: linear-gradient(135deg, color-mix(in oklch, var(--primary), transparent 84%), color-mix(in oklch, var(--card), transparent 7%));
+    }
+    .sidebar-card strong { display: block; font-size: 13px; margin-bottom: 4px; }
+    .sidebar-card span { color: var(--muted-foreground); font-size: 12px; }
+
+    .main { min-width: 0; }
+    .topbar {
+      position: sticky;
+      top: 18px;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 10px);
+      padding: 12px;
+      background: color-mix(in oklch, var(--card), transparent 12%);
+      backdrop-filter: blur(22px);
+      box-shadow: var(--shadow-sm);
+    }
+    .searchbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--input);
+      border-radius: 16px;
+      background: var(--background);
+      color: var(--muted-foreground);
+      min-width: 0;
+      transition: border-color var(--duration-base) var(--ease-premium), box-shadow var(--duration-base) var(--ease-premium), transform var(--duration-fast) var(--ease-premium);
+    }
+    .searchbar:focus-within {
+      border-color: var(--ring);
+      box-shadow: 0 0 0 4px color-mix(in oklch, var(--ring), transparent 82%);
+      transform: translateY(-1px);
+    }
+    .searchbar input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--foreground);
+    }
+    .kbd {
+      flex: none;
+      border: 1px solid var(--border);
+      border-bottom-width: 2px;
+      background: var(--muted);
+      color: var(--muted-foreground);
+      border-radius: 8px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 40px;
+      border: 1px solid transparent;
+      border-radius: 13px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: 800;
+      color: var(--foreground);
+      background: var(--secondary);
+      transition: transform var(--duration-fast) var(--ease-premium), box-shadow var(--duration-base) var(--ease-premium), background var(--duration-base) var(--ease-premium), border-color var(--duration-base) var(--ease-premium);
+      user-select: none;
+      white-space: nowrap;
+    }
+    .button:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    .button:active { transform: translateY(0) scale(.985); }
+    .button.primary { color: var(--primary-foreground); background: linear-gradient(135deg, var(--primary), color-mix(in oklch, var(--primary), white 13%)); box-shadow: var(--shadow-gold); }
+    .button.outline { background: color-mix(in oklch, var(--card), transparent 2%); border-color: var(--border); }
+    .button.ghost { background: transparent; border-color: transparent; }
+    .button.icon { width: 40px; padding: 0; }
+    .button.active { background: var(--primary); color: var(--primary-foreground); box-shadow: var(--shadow-gold); }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      margin-top: 18px;
+      padding: clamp(22px, 4vw, 44px);
+      border-radius: 32px;
+      border: 1px solid var(--border);
+      background:
+        linear-gradient(135deg, color-mix(in oklch, var(--card), transparent 6%), color-mix(in oklch, var(--accent), transparent 56%)),
+        var(--card);
+      box-shadow: var(--shadow-lg);
+      isolation: isolate;
+      animation: page-in var(--duration-page) var(--ease-premium) both;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      width: 460px;
+      height: 460px;
+      border-radius: 999px;
+      right: -160px;
+      top: -160px;
+      background: radial-gradient(circle, var(--gold-glow), transparent 64%);
+      z-index: -1;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      border: 1px solid var(--gold-line);
+      border-radius: 999px;
+      background: color-mix(in oklch, var(--accent), transparent 55%);
+      color: var(--accent-foreground);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    .hero h2 {
+      margin: 18px 0 12px;
+      max-width: 880px;
+      font-size: clamp(34px, 5vw, 76px);
+      line-height: .98;
+      letter-spacing: -0.065em;
+    }
+    .lead { margin: 0; max-width: 880px; color: var(--muted-foreground); font-size: clamp(17px, 1.6vw, 21px); }
+    .hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 18px; margin-top: 26px; align-items: stretch; }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 6px);
+      background: color-mix(in oklch, var(--card), transparent 0%);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: transform var(--duration-base) var(--ease-premium), box-shadow var(--duration-base) var(--ease-premium), border-color var(--duration-base) var(--ease-premium);
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: color-mix(in oklch, var(--primary), var(--border) 58%); }
+    .card.pad { padding: 18px; }
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 18px 0; }
+    .card h3 { margin: 0; font-size: 20px; letter-spacing: -.03em; }
+    .card p { margin: 6px 0 0; color: var(--muted-foreground); }
+    .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-top: 18px; }
+    .metric {
+      position: relative;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 4px);
+      background: linear-gradient(180deg, color-mix(in oklch, var(--card), transparent 5%), color-mix(in oklch, var(--muted), transparent 45%));
+      overflow: hidden;
+    }
+    .metric::after { content: ""; position: absolute; inset: auto 14px 0; height: 3px; border-radius: 999px 999px 0 0; background: var(--primary); opacity: .75; transform-origin: left; animation: scale-x 1.1s var(--ease-spring-soft) both; }
+    .metric strong { display: block; font-size: 28px; letter-spacing: -.05em; }
+    .metric span { color: var(--muted-foreground); font-size: 13px; }
+
+    .section {
+      margin-top: 18px;
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      background: color-mix(in oklch, var(--card), transparent 5%);
+      box-shadow: var(--shadow-md);
+      padding: clamp(20px, 3vw, 32px);
+      animation: page-in var(--duration-page) var(--ease-premium) both;
+    }
+    .section-title { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    .section-title h2 { margin: 0; font-size: clamp(28px, 3vw, 44px); letter-spacing: -.055em; line-height: 1.03; }
+    .section-title p { margin: 8px 0 0; color: var(--muted-foreground); max-width: 760px; }
+
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill, .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: color-mix(in oklch, var(--muted), transparent 28%);
+      color: var(--muted-foreground);
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+    .badge.gold { color: var(--primary-foreground); background: var(--primary); border-color: transparent; }
+    .badge.success { color: var(--success-foreground); background: var(--success); border-color: transparent; }
+    .badge.warning { color: var(--warning-foreground); background: var(--warning); border-color: transparent; }
+    .badge.info { color: var(--info-foreground); background: var(--info); border-color: transparent; }
+    .badge.whatsapp { color: var(--whatsapp-foreground); background: var(--whatsapp); border-color: transparent; }
+
+    .demo-board {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .premium-window {
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: var(--card);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+    .window-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in oklch, var(--muted), transparent 58%);
+    }
+    .dots { display: flex; gap: 6px; }
+    .dot { width: 10px; height: 10px; border-radius: 999px; background: var(--border); }
+    .dot:nth-child(1) { background: oklch(0.700 0.185 28); }
+    .dot:nth-child(2) { background: oklch(0.780 0.165 82); }
+    .dot:nth-child(3) { background: oklch(0.670 0.145 150); }
+    .preview-shell { display: grid; grid-template-columns: 200px minmax(0,1fr); min-height: 440px; }
+    .mini-sidebar { padding: 14px; border-right: 1px solid var(--border); background: var(--sidebar); }
+    .mini-sidebar .item { display: flex; align-items: center; gap: 8px; padding: 9px; border-radius: 12px; color: var(--muted-foreground); font-size: 13px; font-weight: 760; }
+    .mini-sidebar .item.active { background: var(--sidebar-primary); color: var(--sidebar-primary-foreground); box-shadow: var(--shadow-sm); }
+    .preview-content { padding: 16px; background: linear-gradient(180deg, color-mix(in oklch, var(--background), transparent 0%), color-mix(in oklch, var(--muted), transparent 65%)); }
+    .preview-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .avatar-stack { display: flex; }
+    .avatar { width: 34px; height: 34px; margin-left: -8px; border: 2px solid var(--card); border-radius: 999px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: grid; place-items: center; font-weight: 900; color: var(--primary-foreground); font-size: 12px; }
+    .avatar:first-child { margin-left: 0; }
+
+    .task-list { display: grid; gap: 10px; }
+    .task {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--card);
+      transition: transform var(--duration-fast) var(--ease-premium), border-color var(--duration-base) var(--ease-premium), background var(--duration-base) var(--ease-premium);
+    }
+    .task:hover { transform: translateX(2px); border-color: var(--ring); background: color-mix(in oklch, var(--card), var(--accent) 18%); }
+    .task-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 13px; background: var(--secondary); color: var(--secondary-foreground); }
+    .task strong { display: block; font-size: 14px; }
+    .task small { color: var(--muted-foreground); }
+
+    .calendar-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) 360px; gap: 16px; }
+    .calendar-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 14px; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--muted), transparent 55%); }
+    .view-tabs { display: inline-flex; padding: 4px; border: 1px solid var(--border); border-radius: 14px; background: var(--background); }
+    .view-tab { border: 0; background: transparent; color: var(--muted-foreground); border-radius: 11px; padding: 7px 11px; font-size: 13px; font-weight: 850; cursor: pointer; transition: background var(--duration-base) var(--ease-premium), color var(--duration-base) var(--ease-premium); }
+    .view-tab.active { background: var(--primary); color: var(--primary-foreground); box-shadow: var(--shadow-xs); }
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 13px 14px; border-bottom: 1px solid var(--border); }
+    .filter-chip { border: 1px solid var(--border); background: var(--card); color: var(--muted-foreground); border-radius: 999px; padding: 7px 10px; font-size: 12px; font-weight: 850; cursor: pointer; transition: all var(--duration-base) var(--ease-premium); }
+    .filter-chip:hover { transform: translateY(-1px); box-shadow: var(--shadow-xs); }
+    .filter-chip.active { border-color: transparent; background: var(--primary); color: var(--primary-foreground); }
+
+    .month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .weekday { padding: 12px 10px; text-align: center; color: var(--muted-foreground); font-size: 12px; font-weight: 900; border-bottom: 1px solid var(--border); }
+    .day {
+      min-height: 124px;
+      padding: 9px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in oklch, var(--card), transparent 0%);
+      transition: background var(--duration-base) var(--ease-premium), transform var(--duration-fast) var(--ease-premium);
+    }
+    .day:nth-child(7n) { border-right: 0; }
+    .day:hover { background: color-mix(in oklch, var(--accent), var(--card) 76%); transform: translateY(-1px); }
+    .day.outside { background: color-mix(in oklch, var(--muted), transparent 48%); opacity: .72; }
+    .date-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+    .date-num { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 999px; font-weight: 900; font-size: 13px; }
+    .today .date-num { background: var(--primary); color: var(--primary-foreground); box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary), transparent 82%); }
+    .event-count { color: var(--muted-foreground); font-size: 11px; font-weight: 850; }
+    .event {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      margin: 5px 0;
+      padding: 6px 7px;
+      border-radius: 10px;
+      border: 1px solid color-mix(in oklch, var(--border), transparent 22%);
+      background: color-mix(in oklch, var(--secondary), transparent 12%);
+      color: var(--secondary-foreground);
+      font-size: 11px;
+      font-weight: 780;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: transform var(--duration-fast) var(--ease-premium), box-shadow var(--duration-base) var(--ease-premium);
+    }
+    .event:hover { transform: translateX(2px); box-shadow: var(--shadow-xs); }
+    .event::before { content: ""; width: 7px; height: 7px; flex: none; border-radius: 999px; background: currentColor; }
+    .event.delivery { background: color-mix(in oklch, var(--success), transparent 86%); color: var(--success); }
+    .event.trial { background: color-mix(in oklch, var(--info), transparent 86%); color: var(--info); }
+    .event.pickup { background: color-mix(in oklch, var(--primary), transparent 84%); color: color-mix(in oklch, var(--primary), black 16%); }
+    .event.overdue { background: color-mix(in oklch, var(--destructive), transparent 88%); color: var(--destructive); }
+    .event.whatsapp { background: color-mix(in oklch, var(--whatsapp), transparent 86%); color: var(--whatsapp); }
+
+    .week-view, .day-view { display: none; padding: 16px; }
+    .week-grid { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 10px; }
+    .week-card { border: 1px solid var(--border); background: var(--card); border-radius: 18px; padding: 12px; min-height: 240px; }
+    .week-card.today { border-color: var(--ring); box-shadow: 0 0 0 4px color-mix(in oklch, var(--ring), transparent 86%); }
+    .timeline { position: relative; padding: 12px 0 0 16px; }
+    .timeline::before { content: ""; position: absolute; top: 0; bottom: 0; left: 4px; width: 2px; background: var(--border); }
+    .timeline-item { position: relative; margin: 0 0 12px; padding: 12px; border: 1px solid var(--border); border-radius: 15px; background: var(--card); box-shadow: var(--shadow-xs); }
+    .timeline-item::before { content: ""; position: absolute; left: -17px; top: 18px; width: 10px; height: 10px; border-radius: 999px; background: var(--primary); box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary), transparent 84%); }
+
+    .calendar-side { display: grid; gap: 12px; align-content: start; }
+    .side-panel { padding: 16px; border: 1px solid var(--border); border-radius: 22px; background: var(--card); box-shadow: var(--shadow-sm); }
+    .side-panel h3 { margin: 0 0 4px; font-size: 18px; letter-spacing: -.03em; }
+    .side-panel p { margin: 0 0 12px; color: var(--muted-foreground); font-size: 13px; }
+    .legend { display: grid; gap: 9px; }
+    .legend-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--muted-foreground); }
+    .legend-name { display: inline-flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 999px; background: var(--primary); }
+    .legend-dot.delivery { background: var(--success); }
+    .legend-dot.trial { background: var(--info); }
+    .legend-dot.overdue { background: var(--destructive); }
+    .legend-dot.wa { background: var(--whatsapp); }
+    .order-detail-card { border: 1px solid var(--gold-line); border-radius: 20px; padding: 14px; background: linear-gradient(135deg, color-mix(in oklch, var(--primary), transparent 88%), var(--card)); }
+    .detail-row { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid color-mix(in oklch, var(--border), transparent 42%); font-size: 13px; }
+    .detail-row:last-child { border-bottom: 0; }
+    .detail-row span:first-child { color: var(--muted-foreground); }
+    .detail-row span:last-child { font-weight: 850; text-align: right; }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 20px; background: var(--card); }
+    table { width: 100%; border-collapse: collapse; min-width: 820px; }
+    th, td { text-align: left; vertical-align: top; padding: 13px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+    th { color: var(--muted-foreground); background: color-mix(in oklch, var(--muted), transparent 55%); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    tr:last-child td { border-bottom: 0; }
+
+    .component-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+    .component-card { padding: 16px; border: 1px solid var(--border); border-radius: 20px; background: var(--card); }
+    .component-card h3 { margin: 0 0 8px; font-size: 17px; }
+    .component-card p { margin: 0 0 12px; color: var(--muted-foreground); font-size: 13px; }
+    .input { width: 100%; height: 42px; border: 1px solid var(--input); border-radius: 13px; background: var(--background); color: var(--foreground); padding: 0 12px; outline: 0; transition: border-color var(--duration-base) var(--ease-premium), box-shadow var(--duration-base) var(--ease-premium); }
+    .input:focus { border-color: var(--ring); box-shadow: 0 0 0 4px color-mix(in oklch, var(--ring), transparent 84%); }
+    .measurement { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .measurement label { font-size: 12px; color: var(--muted-foreground); font-weight: 850; }
+    .measurement .field { display: grid; gap: 5px; }
+    .receipt {
+      position: relative;
+      border: 1px dashed color-mix(in oklch, var(--primary), var(--border) 35%);
+      border-radius: 18px;
+      padding: 16px;
+      background: linear-gradient(180deg, color-mix(in oklch, var(--card), transparent 0%), color-mix(in oklch, var(--accent), transparent 70%));
+    }
+    .receipt::before, .receipt::after { content: ""; position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 999px; background: var(--background); border: 1px solid var(--border); }
+    .receipt::before { left: -10px; }
+    .receipt::after { right: -10px; }
+    .progress { height: 8px; border-radius: 999px; background: var(--muted); overflow: hidden; }
+    .progress span { display: block; height: 100%; width: 68%; background: linear-gradient(90deg, var(--primary), var(--success)); border-radius: inherit; animation: scale-x 1.1s var(--ease-spring-soft) both; }
+
+    .code {
+      margin: 14px 0 0;
+      border: 1px solid color-mix(in oklch, var(--border), transparent 15%);
+      border-radius: 20px;
+      background: oklch(0.145 0.022 67.0);
+      color: oklch(0.930 0.018 86.0);
+      overflow: hidden;
+    }
+    .code-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid oklch(0.280 0.025 67.0); color: oklch(0.780 0.040 82.0); font-size: 12px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; }
+    pre { margin: 0; padding: 16px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; line-height: 1.55; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .inline-code { padding: 2px 6px; border-radius: 7px; background: var(--muted); color: var(--foreground); font-size: .92em; }
+
+    .checklist-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+    .checklist { padding: 16px; border: 1px solid var(--border); border-radius: 20px; background: var(--card); }
+    .checklist h3 { margin: 0 0 8px; font-size: 18px; }
+    .checklist ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+    .checklist li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; color: var(--muted-foreground); }
+    .checklist li::before { content: "✓"; width: 22px; height: 22px; border-radius: 999px; display: grid; place-items: center; background: color-mix(in oklch, var(--success), transparent 84%); color: var(--success); font-weight: 950; font-size: 12px; }
+    .warning-list li::before { content: "!"; background: color-mix(in oklch, var(--warning), transparent 82%); color: color-mix(in oklch, var(--warning), black 20%); }
+
+    .footer { margin: 18px 0 0; color: var(--muted-foreground); text-align: center; font-size: 12px; }
+    .source-list { display: grid; gap: 9px; color: var(--muted-foreground); font-size: 13px; }
+    .source-list a { color: var(--foreground); text-decoration: none; border-bottom: 1px solid color-mix(in oklch, var(--ring), transparent 55%); }
+
+    .motion-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .motion-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent, color-mix(in oklch, white 42%, transparent), transparent);
+      transform: translateX(-120%);
+      animation: shimmer 3.8s var(--ease-premium) infinite;
+      pointer-events: none;
+      opacity: .34;
+    }
+
+    .toast-demo {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 50;
+      max-width: 360px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--popover);
+      color: var(--popover-foreground);
+      box-shadow: var(--shadow-lg);
+      padding: 14px;
+      display: none;
+      animation: toast-in 240ms var(--ease-spring-soft) both;
+    }
+    .toast-demo.show { display: block; }
+
+    @keyframes page-in { from { opacity: 0; transform: translateY(10px) scale(.995); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes scale-x { from { transform: scaleX(.08); } to { transform: scaleX(1); } }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(18px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes shimmer { 0%, 44% { transform: translateX(-120%); } 72%, 100% { transform: translateX(120%); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { position: relative; top: 0; min-height: auto; }
+      .sidebar .nav-section:nth-of-type(2) { display: none; }
+      .hero-grid, .demo-board, .calendar-layout { grid-template-columns: 1fr; }
+      .preview-shell { grid-template-columns: 1fr; }
+      .mini-sidebar { display: none; }
+      .component-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px) {
+      .page { padding: 12px; }
+      .topbar { position: relative; top: 0; grid-template-columns: 1fr; }
+      .actions { justify-content: flex-start; }
+      .section, .hero { border-radius: 24px; }
+      .component-grid, .checklist-grid, .metric-grid, .week-grid { grid-template-columns: 1fr; }
+      .calendar-layout { gap: 12px; }
+      .day { min-height: 108px; }
+      .month-grid { min-width: 760px; }
+      .calendar-scroll { overflow-x: auto; }
+      table { min-width: 760px; }
+    }
+    @media print {
+      .sidebar, .topbar, .toast-demo, .actions, .theme-actions { display: none !important; }
+      .shell { display: block; }
+      .page { max-width: none; padding: 0; }
+      .hero, .section, .card, .premium-window { box-shadow: none; break-inside: avoid; }
+      body { background: white; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      <aside class="sidebar" aria-label="TailorOS demo navigation">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">T</div>
+          <div>
+            <h1>TailorOS</h1>
+            <p>Premium golden design system</p>
+          </div>
+        </div>
+        <div class="nav-section">
+          <p class="nav-label">Demo sections</p>
+          <button class="nav-item active" data-scroll="#overview"><span class="nav-icon">✦</span><span>Overview</span></button>
+          <button class="nav-item" data-scroll="#tokens"><span class="nav-icon">◐</span><span>shadcn tokens</span></button>
+          <button class="nav-item" data-scroll="#calendar"><span class="nav-icon">◷</span><span>Order calendar</span></button>
+          <button class="nav-item" data-scroll="#components"><span class="nav-icon">▧</span><span>Components</span></button>
+          <button class="nav-item" data-scroll="#motion"><span class="nav-icon">⌁</span><span>Motion system</span></button>
+          <button class="nav-item" data-scroll="#implementation"><span class="nav-icon">⌘</span><span>Implementation</span></button>
+          <button class="nav-item" data-scroll="#qa"><span class="nav-icon">✓</span><span>QA checklist</span></button>
+        </div>
+        <div class="sidebar-card motion-card">
+          <strong>Design decision</strong>
+          <span>Use shadcn semantic variables, not hardcoded colour utilities. This makes TailorOS premium and themeable per tenant.</span>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="topbar">
+          <label class="searchbar" aria-label="Search demo">
+            <span>⌕</span>
+            <input id="demoSearch" placeholder="Search customer, mobile, order, due date…" />
+            <span class="kbd">⌘ K</span>
+          </label>
+          <div class="actions theme-actions">
+            <button class="button outline" id="themeDefault">Gold</button>
+            <button class="button outline" id="themeSandal">Sandal</button>
+            <button class="button outline" id="themeRose">Rose</button>
+            <button class="button icon outline" id="toggleDark" aria-label="Toggle dark mode">◑</button>
+            <button class="button primary" id="showToast">Show micro-feedback</button>
+          </div>
+        </div>
+
+        <header class="hero" id="overview">
+          <span class="eyebrow">Design System · shadcn/ui · Premium TailorOS</span>
+          <h2>A rich, calm, premium UI system that tailor shops can trust every day.</h2>
+          <p class="lead">This HTML file is both a design-system report and a working visual demo: shadcn-compatible CSS variables, light golden theme, tenant-customisable theme variants, calendar UI for orders/trials/delivery, component rules, micro-interactions, page transitions, edge cases, and test checklist.</p>
+          <div class="metric-grid">
+            <div class="metric"><strong>0 hardcoded</strong><span>core colours in app components</span></div>
+            <div class="metric"><strong>180ms</strong><span>standard micro-interaction timing</span></div>
+            <div class="metric"><strong>44px+</strong><span>mobile-friendly touch targets</span></div>
+            <div class="metric"><strong>WCAG</strong><span>contrast + reduced-motion guardrails</span></div>
+          </div>
+
+          <div class="hero-grid">
+            <div class="premium-window">
+              <div class="window-bar">
+                <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+                <span class="pill">Tenant preview · Sri Lakshmi Tailors</span>
+              </div>
+              <div class="preview-shell">
+                <div class="mini-sidebar">
+                  <div class="item active">✦ Dashboard</div>
+                  <div class="item">⌕ Customers</div>
+                  <div class="item">◷ Calendar</div>
+                  <div class="item">▧ Orders</div>
+                  <div class="item">☘ WhatsApp</div>
+                  <div class="item">⚙ Settings</div>
+                </div>
+                <div class="preview-content">
+                  <div class="preview-header">
+                    <div>
+                      <span class="badge gold">Premium shop cockpit</span>
+                      <h3 style="margin:10px 0 0;font-size:28px;letter-spacing:-.05em;">Today’s tailoring flow</h3>
+                    </div>
+                    <div class="avatar-stack"><span class="avatar">R</span><span class="avatar">M</span><span class="avatar">K</span></div>
+                  </div>
+                  <div class="task-list">
+                    <div class="task"><span class="task-icon">👗</span><div><strong>Meena · Blouse trial</strong><small>ORD-MDU-2026-0142 · 11:30 AM</small></div><span class="badge info">Trial</span></div>
+                    <div class="task"><span class="task-icon">✂</span><div><strong>Rajendran · Shirt cutting</strong><small>Assigned to Master Kumar</small></div><span class="badge warning">Due today</span></div>
+                    <div class="task"><span class="task-icon">✓</span><div><strong>Ananya · Salwar ready</strong><small>Balance ₹850 · WhatsApp sent</small></div><span class="badge success">Ready</span></div>
+                    <div class="task"><span class="task-icon">☘</span><div><strong>12 WhatsApp replies</strong><small>3 status requests · 2 receipt requests</small></div><span class="badge whatsapp">Inbox</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card pad">
+              <h3>Senior designer direction</h3>
+              <p>The visual style should feel premium but not luxury-for-show. TailorOS is used in busy shops, so the design must be warm, fast, legible, and calm.</p>
+              <div class="pill-row" style="margin-top:14px;">
+                <span class="pill">Warm golden surfaces</span>
+                <span class="pill">Low-noise dashboards</span>
+                <span class="pill">High-contrast actions</span>
+                <span class="pill">Subtle motion</span>
+                <span class="pill">Tamil-ready spacing</span>
+                <span class="pill">Touch-first forms</span>
+              </div>
+              <div class="order-detail-card" style="margin-top:16px;">
+                <strong>Premium means:</strong>
+                <div class="detail-row"><span>Every status is understandable</span><span>No visual clutter</span></div>
+                <div class="detail-row"><span>Every action gives feedback</span><span>No guessing</span></div>
+                <div class="detail-row"><span>Every tenant can brand it</span><span>Without rewriting UI</span></div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="section" id="tokens">
+          <div class="section-title">
+            <div>
+              <h2>1. shadcn-compatible theme architecture</h2>
+              <p>Use shadcn/ui’s semantic token model: components use <span class="inline-code">background</span>, <span class="inline-code">foreground</span>, <span class="inline-code">primary</span>, <span class="inline-code">accent</span>, <span class="inline-code">border</span>, <span class="inline-code">ring</span>, <span class="inline-code">sidebar</span>, and chart variables. A tenant theme becomes only a CSS-variable override, not a component rewrite.</p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Token group</th><th>TailorOS usage</th><th>Best practice</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>background / foreground</strong></td><td>App shell, page background, default text.</td><td>Keep background warm and calm; keep foreground dark enough for invoices and measurement screens.</td></tr>
+                <tr><td><strong>card / popover</strong></td><td>Dashboard panels, order cards, command palette, calendar popovers, receipt drawer.</td><td>Cards should not compete with the primary action; popovers should be slightly brighter and more elevated.</td></tr>
+                <tr><td><strong>primary</strong></td><td>Main CTA, selected nav, selected calendar date, premium brand highlight.</td><td>Golden primary should usually use dark foreground for contrast, not white by default.</td></tr>
+                <tr><td><strong>accent / muted</strong></td><td>Hover rows, subtle panels, empty states, helper text.</td><td>Use for calm affordance; do not overuse gold for every row.</td></tr>
+                <tr><td><strong>ring / border / input</strong></td><td>Focus states, forms, search box, measurement fields.</td><td>Focus ring must be visible on mobile and keyboard navigation.</td></tr>
+                <tr><td><strong>sidebar tokens</strong></td><td>Tenant navigation shell, active items, module grouping.</td><td>Sidebar should feel branded but never reduce content readability.</td></tr>
+                <tr><td><strong>chart tokens</strong></td><td>Revenue, ready/pending split, delivery performance, WhatsApp health.</td><td>Charts should use semantic variables through chart config, not hardcoded hex.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="code">
+            <div class="code-header"><span>app/globals.css · Tailwind v4 + shadcn token mapping</span><span>Copy into project</span></div>
+<pre><code>@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 1rem;
+  --background: oklch(0.985 0.013 88.9);
+  --foreground: oklch(0.178 0.027 66.5);
+  --card: oklch(0.997 0.006 92.0);
+  --card-foreground: oklch(0.178 0.027 66.5);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.178 0.027 66.5);
+  --primary: oklch(0.735 0.150 78.0);
+  --primary-foreground: oklch(0.160 0.032 66.0);
+  --secondary: oklch(0.944 0.030 86.5);
+  --secondary-foreground: oklch(0.255 0.042 65.0);
+  --muted: oklch(0.955 0.018 86.0);
+  --muted-foreground: oklch(0.485 0.032 70.0);
+  --accent: oklch(0.915 0.060 81.2);
+  --accent-foreground: oklch(0.205 0.040 67.0);
+  --destructive: oklch(0.565 0.220 27.0);
+  --border: oklch(0.884 0.026 82.0);
+  --input: oklch(0.892 0.024 84.0);
+  --ring: oklch(0.735 0.150 78.0);
+
+  --chart-1: oklch(0.735 0.150 78.0);
+  --chart-2: oklch(0.690 0.120 148.0);
+  --chart-3: oklch(0.630 0.145 248.0);
+  --chart-4: oklch(0.720 0.155 38.0);
+  --chart-5: oklch(0.600 0.115 325.0);
+
+  --sidebar: oklch(0.965 0.022 88.0);
+  --sidebar-foreground: oklch(0.230 0.037 67.0);
+  --sidebar-primary: oklch(0.735 0.150 78.0);
+  --sidebar-primary-foreground: oklch(0.160 0.032 66.0);
+  --sidebar-accent: oklch(0.927 0.052 82.0);
+  --sidebar-accent-foreground: oklch(0.210 0.040 67.0);
+  --sidebar-border: oklch(0.865 0.030 82.0);
+  --sidebar-ring: oklch(0.735 0.150 78.0);
+}
+
+.dark {
+  --background: oklch(0.145 0.022 67.0);
+  --foreground: oklch(0.956 0.012 88.0);
+  --card: oklch(0.185 0.025 67.0);
+  --card-foreground: oklch(0.956 0.012 88.0);
+  --primary: oklch(0.790 0.145 82.0);
+  --primary-foreground: oklch(0.142 0.026 66.0);
+  --border: oklch(0.325 0.026 70.0);
+  --input: oklch(0.310 0.026 70.0);
+  --ring: oklch(0.790 0.145 82.0);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}</code></pre>
+          </div>
+        </section>
+
+        <section class="section" id="calendar">
+          <div class="section-title">
+            <div>
+              <h2>2. Premium calendar UI for orders, trials, delivery and pickup</h2>
+              <p>The calendar should be an operational control room, not a decorative date picker. The shop owner should immediately see today’s delivery load, overdue orders, upcoming trials, ready-for-pickup garments, WhatsApp reminders, and branch-level workload.</p>
+            </div>
+            <div class="pill-row">
+              <span class="badge gold">July 2026</span>
+              <span class="badge success">34 ready</span>
+              <span class="badge warning">18 due today</span>
+            </div>
+          </div>
+
+          <div class="calendar-layout">
+            <div class="premium-window">
+              <div class="calendar-toolbar">
+                <div>
+                  <strong style="font-size:18px;letter-spacing:-.03em;">Order Calendar</strong>
+                  <span style="display:block;color:var(--muted-foreground);font-size:12px;">Asia/Kolkata · Sri Lakshmi Tailors · Madurai branch</span>
+                </div>
+                <div class="view-tabs" aria-label="Calendar view switcher">
+                  <button class="view-tab active" data-view="month">Month</button>
+                  <button class="view-tab" data-view="week">Week</button>
+                  <button class="view-tab" data-view="day">Day</button>
+                </div>
+              </div>
+              <div class="filters">
+                <button class="filter-chip active">All</button>
+                <button class="filter-chip">Delivery</button>
+                <button class="filter-chip">Trial</button>
+                <button class="filter-chip">Pickup</button>
+                <button class="filter-chip">Overdue</button>
+                <button class="filter-chip">WhatsApp</button>
+                <button class="filter-chip">Branch: Madurai</button>
+              </div>
+              <div class="calendar-scroll month-view" id="monthView">
+                <div class="month-grid">
+                  <div class="weekday">Sun</div><div class="weekday">Mon</div><div class="weekday">Tue</div><div class="weekday">Wed</div><div class="weekday">Thu</div><div class="weekday">Fri</div><div class="weekday">Sat</div>
+                  <div class="day outside"><div class="date-row"><span class="date-num">28</span></div></div>
+                  <div class="day outside"><div class="date-row"><span class="date-num">29</span></div></div>
+                  <div class="day outside"><div class="date-row"><span class="date-num">30</span></div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">1</span><span class="event-count">4</span></div><div class="event trial">2 blouse trials</div><div class="event delivery">Uniform delivery</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">2</span><span class="event-count">7</span></div><div class="event pickup">5 pickup alerts</div><div class="event whatsapp">Receipt reminders</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">3</span><span class="event-count">9</span></div><div class="event delivery">12 garment due</div><div class="event overdue">3 overdue</div></div>
+                  <div class="day today"><div class="date-row"><span class="date-num">4</span><span class="event-count">18</span></div><div class="event delivery" data-detail="Ananya salwar ready · Balance ₹850 · WhatsApp sent">Ananya salwar ready</div><div class="event trial" data-detail="Meena blouse trial · 11:30 AM · Master Ramesh">Meena blouse trial</div><div class="event overdue" data-detail="Rajendran shirt delayed · Cutting pending · Call customer">Rajendran shirt overdue</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">5</span><span class="event-count">6</span></div><div class="event trial">Kidswear fitting</div><div class="event whatsapp">6 status replies</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">6</span><span class="event-count">11</span></div><div class="event delivery">Wedding blouse set</div><div class="event pickup">Ready pickup</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">7</span><span class="event-count">8</span></div><div class="event delivery">School uniform batch</div><div class="event trial">Alteration review</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">8</span><span class="event-count">5</span></div><div class="event pickup">3 pickups</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">9</span><span class="event-count">13</span></div><div class="event delivery">Bulk office uniforms</div><div class="event whatsapp">Balance reminders</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">10</span><span class="event-count">7</span></div><div class="event trial">Pant fitting</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">11</span><span class="event-count">4</span></div><div class="event pickup">Weekend pickups</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">12</span><span class="event-count">2</span></div><div class="event whatsapp">Auto reminders</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">13</span><span class="event-count">8</span></div><div class="event delivery">Chudidar delivery</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">14</span><span class="event-count">10</span></div><div class="event trial">4 trials</div><div class="event delivery">6 due</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">15</span><span class="event-count">3</span></div><div class="event pickup">Ready set</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">16</span><span class="event-count">12</span></div><div class="event delivery">Festival orders</div><div class="event whatsapp">Customer replies</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">17</span><span class="event-count">6</span></div><div class="event delivery">Alteration due</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">18</span><span class="event-count">5</span></div><div class="event trial">Trial block</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">19</span><span class="event-count">3</span></div><div class="event whatsapp">Reminders</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">20</span><span class="event-count">9</span></div><div class="event delivery">Ready for pickup</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">21</span><span class="event-count">10</span></div><div class="event trial">Trial day</div><div class="event delivery">Delivery load</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">22</span><span class="event-count">4</span></div><div class="event pickup">Pickup list</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">23</span><span class="event-count">7</span></div><div class="event delivery">Salwar delivery</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">24</span><span class="event-count">5</span></div><div class="event trial">Trial set</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">25</span><span class="event-count">8</span></div><div class="event pickup">Weekend pickup</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">26</span><span class="event-count">2</span></div><div class="event whatsapp">Bot status queries</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">27</span><span class="event-count">11</span></div><div class="event delivery">End-month due</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">28</span><span class="event-count">9</span></div><div class="event trial">Alteration trial</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">29</span><span class="event-count">4</span></div><div class="event pickup">Pickup ready</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">30</span><span class="event-count">12</span></div><div class="event delivery">Monthly close</div><div class="event whatsapp">Balance reminders</div></div>
+                  <div class="day"><div class="date-row"><span class="date-num">31</span><span class="event-count">7</span></div><div class="event delivery">Month-end delivery</div></div>
+                  <div class="day outside"><div class="date-row"><span class="date-num">1</span></div></div>
+                </div>
+              </div>
+
+              <div class="week-view" id="weekView">
+                <div class="week-grid">
+                  <div class="week-card"><strong>Sun 28</strong><p style="color:var(--muted-foreground);font-size:12px;">No major load</p></div>
+                  <div class="week-card"><strong>Mon 29</strong><div class="event delivery">6 due</div></div>
+                  <div class="week-card"><strong>Tue 30</strong><div class="event pickup">4 pickup</div></div>
+                  <div class="week-card"><strong>Wed 1</strong><div class="event trial">2 trials</div><div class="event delivery">Uniform due</div></div>
+                  <div class="week-card"><strong>Thu 2</strong><div class="event whatsapp">Receipt reminders</div></div>
+                  <div class="week-card"><strong>Fri 3</strong><div class="event overdue">3 overdue</div><div class="event delivery">12 due</div></div>
+                  <div class="week-card today"><strong>Sat 4</strong><div class="event trial">Meena trial</div><div class="event delivery">Ananya ready</div><div class="event overdue">Rajendran overdue</div></div>
+                </div>
+              </div>
+
+              <div class="day-view" id="dayView">
+                <h3 style="margin:0 0 12px;letter-spacing:-.03em;">Saturday, July 4, 2026</h3>
+                <div class="timeline">
+                  <div class="timeline-item"><span class="badge info">09:30</span><strong style="display:block;margin-top:8px;">Review overdue orders</strong><p>Rajendran shirt cutting pending. Owner action required.</p></div>
+                  <div class="timeline-item"><span class="badge warning">11:30</span><strong style="display:block;margin-top:8px;">Meena blouse trial</strong><p>Measurement version V3, alteration note: sleeve +0.5 inch.</p></div>
+                  <div class="timeline-item"><span class="badge success">16:00</span><strong style="display:block;margin-top:8px;">Ananya salwar pickup</strong><p>Balance ₹850, WhatsApp ready-for-pickup sent.</p></div>
+                  <div class="timeline-item"><span class="badge whatsapp">18:30</span><strong style="display:block;margin-top:8px;">Auto reminder batch</strong><p>Send trial reminders for July 5 and payment reminders for ready orders.</p></div>
+                </div>
+              </div>
+            </div>
+
+            <aside class="calendar-side">
+              <div class="side-panel">
+                <h3>Calendar interaction rules</h3>
+                <p>Every date cell is actionable. Click a day to open a right drawer with grouped orders, quick status updates, WhatsApp action, and print/export options.</p>
+                <div class="legend">
+                  <div class="legend-row"><span class="legend-name"><span class="legend-dot delivery"></span>Delivery due</span><strong>68</strong></div>
+                  <div class="legend-row"><span class="legend-name"><span class="legend-dot trial"></span>Trial/Fitting</span><strong>22</strong></div>
+                  <div class="legend-row"><span class="legend-name"><span class="legend-dot"></span>Pickup ready</span><strong>34</strong></div>
+                  <div class="legend-row"><span class="legend-name"><span class="legend-dot overdue"></span>Overdue</span><strong>7</strong></div>
+                  <div class="legend-row"><span class="legend-name"><span class="legend-dot wa"></span>WhatsApp action</span><strong>41</strong></div>
+                </div>
+              </div>
+              <div class="side-panel">
+                <h3>Selected order</h3>
+                <p id="selectedOrderText">Click a calendar event to preview details here.</p>
+                <div class="order-detail-card">
+                  <div class="detail-row"><span>Customer</span><span id="detailCustomer">Ananya</span></div>
+                  <div class="detail-row"><span>Order</span><span id="detailOrder">ORD-MDU-2026-0148</span></div>
+                  <div class="detail-row"><span>Status</span><span id="detailStatus">Ready for pickup</span></div>
+                  <div class="detail-row"><span>Balance</span><span id="detailBalance">₹850</span></div>
+                  <div class="detail-row"><span>WhatsApp</span><span id="detailWA">Delivered</span></div>
+                </div>
+                <div class="pill-row" style="margin-top:12px;">
+                  <button class="button primary">Open order</button>
+                  <button class="button outline">Send WA</button>
+                </div>
+              </div>
+              <div class="side-panel">
+                <h3>Calendar data model</h3>
+                <p>Use a derived event table/projection, not repeated logic on the frontend.</p>
+                <div class="code" style="margin-top:10px;"><pre><code>calendar_events
+  id
+  order_id
+  order_item_id
+  customer_profile_id
+  event_type
+  starts_at
+  ends_at
+  status
+  branch_id
+  assigned_user_id</code></pre></div>
+              </div>
+            </aside>
+          </div>
+
+          <div class="table-wrap" style="margin-top:16px;">
+            <table>
+              <thead><tr><th>Calendar edge case</th><th>UX decision</th><th>Technical decision</th></tr></thead>
+              <tbody>
+                <tr><td>One order has many garments with different due dates</td><td>Show one event per order item; group under order drawer.</td><td>Calendar event references both <span class="inline-code">order_id</span> and optional <span class="inline-code">order_item_id</span>.</td></tr>
+                <tr><td>Trial date changed after WhatsApp reminder sent</td><td>Show rescheduled badge and reminder history.</td><td>Create new calendar event version and write notification log entry.</td></tr>
+                <tr><td>Overdue but customer asked to hold</td><td>Show as “On hold”, not angry red overdue.</td><td>Status state machine must distinguish shop delay vs customer hold.</td></tr>
+                <tr><td>Multiple branches</td><td>Branch filter and branch colour dot.</td><td>Every event has <span class="inline-code">branch_id</span>; calendar API accepts branch filter.</td></tr>
+                <tr><td>Mobile staff use</td><td>Day agenda becomes default under 760px.</td><td>Responsive switch, not a separate component fork.</td></tr>
+                <tr><td>Timezone mismatch</td><td>Display dates in shop timezone.</td><td>Persist timezone on tenant; use Asia/Kolkata by default for Tamil Nadu shops.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="components">
+          <div class="section-title">
+            <div>
+              <h2>3. Premium component system</h2>
+              <p>Build TailorOS with shadcn components you own. Every component should use CSS variables and business state, not arbitrary Tailwind colour strings. The tenant should feel the product is custom-made for their shop.</p>
+            </div>
+          </div>
+
+          <div class="component-grid">
+            <div class="component-card">
+              <h3>Buttons</h3>
+              <p>Primary for the next business action; outline for secondary; ghost for utility. Touch target 40–44px minimum.</p>
+              <div class="pill-row"><button class="button primary">Create order</button><button class="button outline">Print receipt</button><button class="button ghost">Cancel</button></div>
+            </div>
+            <div class="component-card">
+              <h3>Measurement fields</h3>
+              <p>Compact but readable. Show unit, previous value, and validation hint for sensitive values.</p>
+              <div class="measurement">
+                <div class="field"><label>Chest</label><input class="input" value="38 in" /></div>
+                <div class="field"><label>Waist</label><input class="input" value="34 in" /></div>
+                <div class="field"><label>Sleeve</label><input class="input" value="23.5 in" /></div>
+              </div>
+            </div>
+            <div class="component-card">
+              <h3>Status chips</h3>
+              <p>Use consistent status grammar: neutral, progress, warning, success, blocked.</p>
+              <div class="pill-row"><span class="badge info">Trial</span><span class="badge warning">Cutting</span><span class="badge success">Ready</span><span class="badge whatsapp">Delivered</span></div>
+            </div>
+            <div class="component-card">
+              <h3>Receipt card</h3>
+              <p>Receipt previews should feel official, printable, and WhatsApp-shareable.</p>
+              <div class="receipt"><strong>Receipt #RCT-2026-0181</strong><div class="detail-row"><span>Paid</span><span>₹1,500</span></div><div class="detail-row"><span>Balance</span><span>₹850</span></div></div>
+            </div>
+            <div class="component-card">
+              <h3>Progress timeline</h3>
+              <p>Owners need clarity: booked → cutting → stitching → finishing → ready.</p>
+              <div class="progress" aria-label="Order progress"><span></span></div><p style="margin-top:10px;">Stitching stage · 68% complete</p>
+            </div>
+            <div class="component-card motion-card">
+              <h3>Premium feedback</h3>
+              <p>Use shimmer only for skeleton/loading surfaces, not permanent decoration.</p>
+              <div class="task"><span class="task-icon">✓</span><div><strong>Saved successfully</strong><small>Measurement V4 created</small></div><span class="badge success">Done</span></div>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-top:16px;">
+            <table>
+              <thead><tr><th>Component</th><th>shadcn base</th><th>TailorOS premium variant</th><th>Senior design rule</th></tr></thead>
+              <tbody>
+                <tr><td>App shell</td><td>Sidebar, Separator, ScrollArea</td><td>Tenant-branded sidebar with stable navigation.</td><td>Never collapse critical search behind multiple taps on mobile.</td></tr>
+                <tr><td>Command search</td><td>Command, Dialog</td><td>Search customers, mobile, order, receipt, due date.</td><td>Exact matches first; family members grouped under one mobile.</td></tr>
+                <tr><td>Calendar</td><td>Calendar, Popover, Button</td><td>Operational month/week/day planner with event chips.</td><td>Calendar is for action; every event opens order/customer context.</td></tr>
+                <tr><td>Order drawer</td><td>Sheet, Tabs, Badge</td><td>Order timeline, measurements, payment, WhatsApp history.</td><td>Use drawer for quick updates; full page for deep editing.</td></tr>
+                <tr><td>Forms</td><td>Input, Select, Textarea, Form</td><td>Large labels, unit suffixes, validation hints, autosave draft.</td><td>Measure twice, save once; mistakes are expensive.</td></tr>
+                <tr><td>Toast</td><td>Sonner</td><td>Concise success/failure with next action.</td><td>Toast confirms action; it should not hide important errors.</td></tr>
+                <tr><td>Data table</td><td>Table, DropdownMenu</td><td>Orders list with status, delivery date, balance, WhatsApp status.</td><td>Prefer scannability over dense spreadsheet design.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="motion">
+          <div class="section-title">
+            <div>
+              <h2>4. Micro-interactions and page transitions</h2>
+              <p>The animation system should make TailorOS feel fast and premium without slowing staff. Animate confirmation, navigation, and state changes. Do not animate everything.</p>
+            </div>
+          </div>
+
+          <div class="demo-board">
+            <div class="card pad">
+              <h3>Motion tokens</h3>
+              <div class="table-wrap" style="margin-top:12px;">
+                <table>
+                  <thead><tr><th>Motion</th><th>Duration</th><th>Easing</th><th>Use</th></tr></thead>
+                  <tbody>
+                    <tr><td>Button press</td><td>90–120ms</td><td>ease-out</td><td>Tap feedback, save, status update.</td></tr>
+                    <tr><td>Hover lift</td><td>120–180ms</td><td>premium</td><td>Cards, calendar events, nav rows.</td></tr>
+                    <tr><td>Drawer/sheet</td><td>180–260ms</td><td>spring-soft</td><td>Receipt drawer, order quick-view.</td></tr>
+                    <tr><td>Page transition</td><td>220–320ms</td><td>premium</td><td>Route content fade/translate; app shell stable.</td></tr>
+                    <tr><td>Skeleton shimmer</td><td>1.8–3.8s</td><td>linear/ease</td><td>Only during actual loading.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card pad">
+              <h3>Page transition design</h3>
+              <p>Keep the sidebar/topbar persistent. Animate only the route content with opacity + small Y movement. Avoid sliding full pages from left/right because it feels heavy and can cause motion discomfort.</p>
+              <div class="order-detail-card" style="margin-top:14px;">
+                <div class="detail-row"><span>Enter</span><span>opacity 0 → 1, y 8 → 0</span></div>
+                <div class="detail-row"><span>Exit</span><span>opacity 1 → 0, y 0 → -4</span></div>
+                <div class="detail-row"><span>Reduced motion</span><span>opacity only</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="code">
+            <div class="code-header"><span>packages/ui/src/animations/animated-page.tsx</span><span>Motion implementation</span></div>
+<pre><code>"use client"
+
+import { motion, useReducedMotion } from "motion/react"
+
+export function AnimatedPage({ children }: { children: React.ReactNode }) {
+  const reduceMotion = useReducedMotion()
+
+  return (
+    &lt;motion.div
+      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.995 }}
+      animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+      exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+      transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
+    &gt;
+      {children}
+    &lt;/motion.div&gt;
+  )
+}</code></pre>
+          </div>
+
+          <div class="table-wrap" style="margin-top:16px;">
+            <table>
+              <thead><tr><th>Interaction</th><th>Animation</th><th>Do</th><th>Do not</th></tr></thead>
+              <tbody>
+                <tr><td>Save measurement</td><td>Button press + check icon + version chip appears.</td><td>Confirm V4 created and show undo/edit.</td><td>Do not show only a disappearing toast for critical measurement saves.</td></tr>
+                <tr><td>Move order status</td><td>Chip morph + timeline node appears.</td><td>Optimistic update then reconcile.</td><td>Do not trigger WhatsApp animation unless message job is actually queued.</td></tr>
+                <tr><td>Calendar event click</td><td>Right drawer slides/fades in.</td><td>Keep selected date highlighted.</td><td>Do not navigate away for every small check.</td></tr>
+                <tr><td>New WhatsApp message</td><td>Message bubble fade/translate once.</td><td>Only animate newly inserted message.</td><td>Do not reanimate whole inbox list on polling.</td></tr>
+                <tr><td>Command palette</td><td>Dialog fade/scale and row hover.</td><td>Keyboard-first with visible focus ring.</td><td>Do not make search wait for all categories before showing exact ID hit.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="implementation">
+          <div class="section-title">
+            <div>
+              <h2>5. Implementation structure for maintainable premium UI</h2>
+              <p>Keep UI tokens, variants, and business components separate. shadcn components live in the app and are owned by you; TailorOS-specific components live in feature folders or shared packages.</p>
+            </div>
+          </div>
+
+          <div class="code">
+            <div class="code-header"><span>Recommended UI repo structure</span><span>TailorOS + WhatsApp Connector</span></div>
+<pre><code>apps/web/
+  app/
+    globals.css                 # shadcn variables + TailorOS theme aliases
+    (dashboard)/
+      layout.tsx                # stable sidebar/topbar shell
+      template.tsx              # route transition wrapper
+      calendar/page.tsx
+      orders/page.tsx
+      customers/page.tsx
+      inbox/page.tsx
+  components/
+    ui/                         # shadcn generated components you own
+      button.tsx
+      calendar.tsx
+      popover.tsx
+      command.tsx
+      sheet.tsx
+      badge.tsx
+      table.tsx
+      sonner.tsx
+    layout/
+      app-sidebar.tsx
+      topbar-search.tsx
+      tenant-switcher.tsx
+    tailoros/
+      order-status-chip.tsx
+      order-calendar.tsx
+      order-day-drawer.tsx
+      measurement-field.tsx
+      receipt-preview-card.tsx
+      whatsapp-status-badge.tsx
+      customer-family-card.tsx
+      timeline.tsx
+  features/
+    calendar/
+      api.ts
+      hooks.ts
+      calendar-event.types.ts
+      calendar-filters.store.ts
+      components/
+        order-calendar-shell.tsx
+        month-grid.tsx
+        week-view.tsx
+        day-agenda.tsx
+        event-chip.tsx
+        order-event-drawer.tsx
+    orders/
+    customers/
+    whatsapp/
+
+packages/ui/
+  src/
+    theme/
+      tailoros-theme.css
+      theme-contract.ts
+      tenant-theme-presets.ts
+    motion/
+      animated-page.tsx
+      motion-tokens.ts
+    primitives/
+      premium-card.tsx
+      premium-section.tsx
+    patterns/
+      status-timeline.tsx
+      empty-state.tsx
+      page-header.tsx</code></pre>
+          </div>
+
+          <div class="table-wrap" style="margin-top:16px;">
+            <table>
+              <thead><tr><th>Best practice</th><th>Reason</th><th>Rule</th></tr></thead>
+              <tbody>
+                <tr><td>Token-first theming</td><td>Tenants can change branding without code rewrite.</td><td>Use <span class="inline-code">bg-background</span>, <span class="inline-code">text-foreground</span>, <span class="inline-code">border-border</span>, <span class="inline-code">ring-ring</span>; avoid raw <span class="inline-code">bg-yellow-500</span> inside product components.</td></tr>
+                <tr><td>Business components separate from shadcn primitives</td><td>Calendar, receipt, measurement, WhatsApp badge are product patterns.</td><td>Do not edit every shadcn primitive for product logic; compose them.</td></tr>
+                <tr><td>Feature-local state</td><td>Calendar filters and selected date are local UI state.</td><td>Use Zustand for filters/drawers; TanStack Query for server data.</td></tr>
+                <tr><td>Accessible by default</td><td>Shop staff may use keyboard, small phones, old displays.</td><td>Visible focus, 44px touch targets, reduced motion, semantic buttons.</td></tr>
+                <tr><td>Motion as system tokens</td><td>Animations should feel consistent.</td><td>Centralize durations/easings; do not invent per-component motion.</td></tr>
+                <tr><td>Calendar API is derived</td><td>Orders, items, trials, pickups, WhatsApp reminders all become events.</td><td>Build <span class="inline-code">calendar_events</span> projection from order/order item/appointment data.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="code">
+            <div class="code-header"><span>shadcn install commands</span><span>Start from official components</span></div>
+<pre><code>pnpm dlx shadcn@latest init
+pnpm dlx shadcn@latest add button badge card calendar popover command dialog sheet drawer
+pnpm dlx shadcn@latest add input label select textarea table tabs separator skeleton sonner tooltip
+
+# Calendar uses React DayPicker under the hood.
+# Use shadcn Calendar for date selection, then compose TailorOS OrderCalendar around it.</code></pre>
+          </div>
+        </section>
+
+        <section class="section" id="qa">
+          <div class="section-title">
+            <div>
+              <h2>6. Edge cases and verification checklist</h2>
+              <p>Use this checklist before implementing the design system into the production repository.</p>
+            </div>
+          </div>
+
+          <div class="checklist-grid">
+            <div class="checklist">
+              <h3>Design-system checks</h3>
+              <ul>
+                <li>All colours come from shadcn semantic CSS variables or TailorOS semantic aliases.</li>
+                <li>Dark mode uses the same token names under <span class="inline-code">.dark</span>.</li>
+                <li>Tenant theme overrides only variables, not component source.</li>
+                <li>Buttons, cards, inputs, popovers, sidebars, charts and status chips are token-driven.</li>
+                <li>Focus ring is visible against light golden and dark themes.</li>
+              </ul>
+            </div>
+            <div class="checklist">
+              <h3>Calendar checks</h3>
+              <ul>
+                <li>Month/week/day views are consistent and keyboard accessible.</li>
+                <li>Overdue, trial, pickup, delivery, WhatsApp and payment events are visually distinct.</li>
+                <li>Multiple order items on one order can appear separately but open one grouped drawer.</li>
+                <li>Tenant timezone is respected and selected date does not shift on hydration.</li>
+                <li>Mobile layout becomes agenda-first instead of squeezing a complex month grid.</li>
+              </ul>
+            </div>
+            <div class="checklist">
+              <h3>Motion checks</h3>
+              <ul>
+                <li>Only <span class="inline-code">transform</span> and <span class="inline-code">opacity</span> are used for frequent motion.</li>
+                <li>Reduced-motion users get opacity-only transitions.</li>
+                <li>List polling does not reanimate all old rows.</li>
+                <li>Page shell remains stable while route content transitions.</li>
+                <li>No animation blocks save, status update, payment, or WhatsApp send actions.</li>
+              </ul>
+            </div>
+            <div class="checklist warning-list">
+              <h3>Product edge cases</h3>
+              <ul>
+                <li>One mobile number can show many family/customer profiles without mixing measurements.</li>
+                <li>Payment corrections are visible and not hidden by pretty UI.</li>
+                <li>WhatsApp failed/blocked messages are visible on the order page, not only in admin logs.</li>
+                <li>Calendar filters do not hide overdue critical orders without a clear active filter state.</li>
+                <li>Print mode removes nav, actions and background gradients for clean receipts/reports.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-top:16px;">
+            <table>
+              <thead><tr><th>Acceptance test</th><th>Expected result</th><th>Pass criteria</th></tr></thead>
+              <tbody>
+                <tr><td>Switch tenant theme</td><td>Primary, accent, sidebar, focus ring, charts and badges update.</td><td>No component-specific CSS edits required.</td></tr>
+                <tr><td>Open calendar on mobile</td><td>Agenda/day view is usable without horizontal frustration.</td><td>Critical actions reachable within two taps.</td></tr>
+                <tr><td>Keyboard navigate command search</td><td>Focus states and selection are clear.</td><td>Can open order using keyboard only.</td></tr>
+                <tr><td>Reduced motion enabled</td><td>No large sliding/scaling transitions.</td><td>Only minimal opacity transitions remain.</td></tr>
+                <tr><td>High workload day</td><td>Calendar does not become unreadable.</td><td>Shows top 2–3 events plus count; drawer lists all.</td></tr>
+                <tr><td>Dark theme contrast</td><td>Gold primary remains readable.</td><td>Button text, chips, table rows and calendar cells pass visual contrast review.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="sources">
+          <div class="section-title">
+            <div>
+              <h2>Official documentation reference map</h2>
+              <p>Use these sources when implementing this demo in the real TailorOS codebase.</p>
+            </div>
+          </div>
+          <div class="source-list">
+            <div><strong>shadcn/ui theming:</strong> semantic CSS variables, background/foreground pairs, sidebar tokens, and CSS-variable-based customization.</div>
+            <div><strong>shadcn/ui Tailwind v4:</strong> <span class="inline-code">@theme inline</span> mapping and direct variable access.</div>
+            <div><strong>shadcn Calendar:</strong> Calendar built on React DayPicker; Date Picker composed from Popover + Calendar.</div>
+            <div><strong>Motion for React:</strong> AnimatePresence, layout animations, useReducedMotion/MotionConfig.</div>
+            <div><strong>web.dev animation performance:</strong> prefer transform and opacity; avoid layout/paint-heavy animation.</div>
+            <div><strong>TailorOS PRD:</strong> calendar and dashboard must support due, overdue, ready, trial, payment due, production board, WhatsApp readiness and notification logs.</div>
+          </div>
+        </section>
+
+        <p class="footer">TailorOS Premium shadcn Design System + Calendar UI Demo · Generated July 4, 2026 · Self-contained HTML preview</p>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-demo" id="toast">
+    <strong>Measurement saved</strong>
+    <div style="color:var(--muted-foreground);font-size:13px;margin-top:3px;">Version V4 created for Meena · Blouse template. WhatsApp message not sent.</div>
+  </div>
+
+  <script>
+    const body = document.body;
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach((item) => {
+      item.addEventListener('click', () => {
+        navItems.forEach((n) => n.classList.remove('active'));
+        item.classList.add('active');
+        document.querySelector(item.dataset.scroll)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    function resetTenantThemes() {
+      body.classList.remove('theme-sandal', 'theme-rose');
+    }
+    document.getElementById('themeDefault').addEventListener('click', () => resetTenantThemes());
+    document.getElementById('themeSandal').addEventListener('click', () => { resetTenantThemes(); body.classList.add('theme-sandal'); });
+    document.getElementById('themeRose').addEventListener('click', () => { resetTenantThemes(); body.classList.add('theme-rose'); });
+    document.getElementById('toggleDark').addEventListener('click', () => body.classList.toggle('dark'));
+
+    const toast = document.getElementById('toast');
+    document.getElementById('showToast').addEventListener('click', () => {
+      toast.classList.add('show');
+      window.clearTimeout(window.__toastTimer);
+      window.__toastTimer = window.setTimeout(() => toast.classList.remove('show'), 3200);
+    });
+
+    const viewTabs = document.querySelectorAll('.view-tab');
+    const monthView = document.getElementById('monthView');
+    const weekView = document.getElementById('weekView');
+    const dayView = document.getElementById('dayView');
+    viewTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        viewTabs.forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        monthView.style.display = tab.dataset.view === 'month' ? 'block' : 'none';
+        weekView.style.display = tab.dataset.view === 'week' ? 'block' : 'none';
+        dayView.style.display = tab.dataset.view === 'day' ? 'block' : 'none';
+      });
+    });
+
+    document.querySelectorAll('.filter-chip').forEach((chip) => {
+      chip.addEventListener('click', () => chip.classList.toggle('active'));
+    });
+
+    document.querySelectorAll('.event').forEach((event) => {
+      event.addEventListener('click', () => {
+        const detail = event.dataset.detail || event.textContent.trim();
+        document.getElementById('selectedOrderText').textContent = detail;
+        if (detail.includes('Meena')) {
+          document.getElementById('detailCustomer').textContent = 'Meena';
+          document.getElementById('detailOrder').textContent = 'ORD-MDU-2026-0142';
+          document.getElementById('detailStatus').textContent = 'Trial scheduled';
+          document.getElementById('detailBalance').textContent = '₹1,200';
+          document.getElementById('detailWA').textContent = 'Reminder queued';
+        } else if (detail.includes('Rajendran')) {
+          document.getElementById('detailCustomer').textContent = 'Rajendran';
+          document.getElementById('detailOrder').textContent = 'ORD-MDU-2026-0145';
+          document.getElementById('detailStatus').textContent = 'Overdue';
+          document.getElementById('detailBalance').textContent = '₹0';
+          document.getElementById('detailWA').textContent = 'Manual call needed';
+        } else {
+          document.getElementById('detailCustomer').textContent = 'Ananya';
+          document.getElementById('detailOrder').textContent = 'ORD-MDU-2026-0148';
+          document.getElementById('detailStatus').textContent = 'Ready for pickup';
+          document.getElementById('detailBalance').textContent = '₹850';
+          document.getElementById('detailWA').textContent = 'Delivered';
+        }
+      });
+    });
+
+    const search = document.getElementById('demoSearch');
+    search.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        toast.classList.add('show');
+        toast.querySelector('strong').textContent = 'Search ready';
+        toast.querySelector('div').textContent = `Showing exact matches for "${search.value || 'ORD-MDU-2026-0148'}" first, then fuzzy customer/order matches.`;
+        window.clearTimeout(window.__toastTimer);
+        window.__toastTimer = window.setTimeout(() => toast.classList.remove('show'), 3400);
+      }
+    });
+  </script>
+</body>
+</html>

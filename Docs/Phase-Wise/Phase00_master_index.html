@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TailorOS Phase-wise Implementation Master Index</title>
+  <style>
+    :root {
+      --bg: #fff9ec;
+      --bg2: #f8edcf;
+      --paper: #fffdf8;
+      --paper2: #fff7df;
+      --ink: #21170b;
+      --muted: #76684f;
+      --line: #e9d9aa;
+      --line2: #f1e6c8;
+      --gold: #b8872f;
+      --gold2: #d6a84a;
+      --gold3: #f3cf75;
+      --goldDark: #765114;
+      --teal: #0f766e;
+      --green: #15803d;
+      --red: #b91c1c;
+      --blue: #2563eb;
+      --orange: #b45309;
+      --violet: #6d28d9;
+      --shadow: 0 24px 70px rgba(118, 81, 20, .13);
+      --shadow2: 0 10px 28px rgba(33, 23, 11, .08);
+      --radius: 22px;
+      --code: #15110b;
+      --codeInk: #f8f2df;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 8% -10%, #fff3bf 0, transparent 32rem), linear-gradient(180deg, var(--bg), #fffdf8);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.62
+    }
+
+    a {
+      color: var(--goldDark);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(184, 135, 47, .35)
+    }
+
+    a:hover {
+      border-color: var(--goldDark)
+    }
+
+    .page {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 30px 22px 80px
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(232, 210, 155, .9);
+      border-radius: 32px;
+      background: linear-gradient(135deg, #21170b 0%, #5f3f0d 52%, #b8872f 100%);
+      box-shadow: var(--shadow);
+      padding: 46px;
+      color: #fff
+    }
+
+    .hero:before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at 75% 10%, rgba(255, 224, 143, .48), transparent 26%), radial-gradient(circle at 10% 80%, rgba(15, 118, 110, .26), transparent 28%);
+      pointer-events: none
+    }
+
+    .hero>* {
+      position: relative;
+      z-index: 1
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .09);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-weight: 850;
+      color: #fff7d8
+    }
+
+    .hero h1 {
+      margin: 18px 0 14px;
+      font-size: clamp(34px, 5vw, 62px);
+      letter-spacing: -.045em;
+      line-height: 1.02
+    }
+
+    .lead {
+      max-width: 930px;
+      color: #fff6dc;
+      font-size: 18px;
+      margin: 0 0 20px
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.3fr .7fr;
+      gap: 18px;
+      align-items: end
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 24px
+    }
+
+    .meta .box {
+      border: 1px solid rgba(255, 255, 255, .18);
+      background: rgba(255, 255, 255, .10);
+      border-radius: 17px;
+      padding: 13px
+    }
+
+    .meta strong {
+      display: block;
+      color: #fff
+    }
+
+    .meta span {
+      display: block;
+      color: #fff3c4;
+      font-size: 13px
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 285px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+      margin-top: 24px
+    }
+
+    .toc {
+      position: sticky;
+      top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      background: rgba(255, 253, 248, .86);
+      backdrop-filter: blur(12px);
+      padding: 16px;
+      max-height: calc(100vh - 32px);
+      overflow: auto
+    }
+
+    .toc h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .11em;
+      color: var(--muted);
+      margin: 0 0 10px
+    }
+
+    .toc a {
+      display: block;
+      border: 0;
+      color: #4a3510;
+      border-radius: 12px;
+      padding: 8px 9px;
+      font-size: 14px
+    }
+
+    .toc a:hover {
+      background: #fff2c9;
+      color: var(--goldDark)
+    }
+
+    section {
+      background: rgba(255, 253, 248, .92);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow2);
+      border-radius: var(--radius);
+      padding: 30px;
+      margin-bottom: 22px
+    }
+
+    .kicker {
+      color: var(--goldDark);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin-bottom: 9px
+    }
+
+    h2 {
+      font-size: clamp(27px, 3vw, 39px);
+      letter-spacing: -.03em;
+      line-height: 1.12;
+      margin: 0 0 16px
+    }
+
+    h3 {
+      font-size: 21px;
+      margin: 26px 0 10px;
+      letter-spacing: -.015em;
+      line-height: 1.25
+    }
+
+    h4 {
+      font-size: 16px;
+      margin: 20px 0 8px
+    }
+
+    p {
+      margin: 0 0 14px
+    }
+
+    .muted {
+      color: var(--muted)
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px
+    }
+
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px
+    }
+
+    .card {
+      border: 1px solid var(--line2);
+      border-radius: 18px;
+      background: #fffefa;
+      padding: 18px
+    }
+
+    .card.gold {
+      background: linear-gradient(180deg, #fff8dc, #fffefa);
+      border-color: #ead08c
+    }
+
+    .card.green {
+      background: #f0fbf5;
+      border-color: #c6ead5
+    }
+
+    .card.warn {
+      background: #fff7e8;
+      border-color: #efcf9d
+    }
+
+    .card.danger {
+      background: #fff4f4;
+      border-color: #f4bcbc
+    }
+
+    .callout {
+      border: 1px solid #d9bd6d;
+      border-left: 6px solid var(--gold);
+      background: linear-gradient(180deg, #fff6d9, #fffdf8);
+      border-radius: 18px;
+      padding: 18px;
+      margin: 18px 0
+    }
+
+    .success {
+      border-left-color: var(--green);
+      background: #f0fbf5;
+      border-color: #c6ead5
+    }
+
+    .danger {
+      border-left-color: var(--red);
+      background: #fff4f4;
+      border-color: #f4bcbc
+    }
+
+    .note {
+      border-left-color: var(--teal);
+      background: #effaf8;
+      border-color: #c8e7e3
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #fff2c9;
+      color: #6e4c11;
+      font-size: 12px;
+      font-weight: 800;
+      margin: 2px
+    }
+
+    .pill.green {
+      background: #dcfce7;
+      color: #166534
+    }
+
+    .pill.red {
+      background: #fee2e2;
+      color: #991b1b
+    }
+
+    .pill.blue {
+      background: #dbeafe;
+      color: #1d4ed8
+    }
+
+    .pill.violet {
+      background: #ede9fe;
+      color: #5b21b6
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: #fffefa;
+      margin: 16px 0 20px
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px
+    }
+
+    th,
+    td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line2);
+      vertical-align: top;
+      text-align: left;
+      font-size: 14px
+    }
+
+    th {
+      background: #fff3cc;
+      color: #4d350f;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .07em
+    }
+
+    tr:last-child td {
+      border-bottom: 0
+    }
+
+    ul,
+    ol {
+      margin: 8px 0 16px 22px;
+      padding: 0
+    }
+
+    li {
+      margin: 7px 0
+    }
+
+    .checklist li::marker {
+      content: "✓  ";
+      color: var(--green);
+      font-weight: 900
+    }
+
+    .risk li::marker {
+      content: "⚠  ";
+      color: var(--orange)
+    }
+
+    code {
+      background: #fff1c2;
+      color: #4c350f;
+      border-radius: 6px;
+      padding: 2px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: .92em
+    }
+
+    pre {
+      background: var(--code);
+      color: var(--codeInk);
+      border: 1px solid rgba(255, 255, 255, .08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+      padding: 18px;
+      border-radius: 18px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.55
+    }
+
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0
+    }
+
+    .diagram {
+      background: #15110b;
+      color: #fff5d5;
+      border-radius: 20px;
+      padding: 18px;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      border: 1px solid #342711
+    }
+
+    .phase-banner {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 0
+    }
+
+    .metric {
+      padding: 17px;
+      border-radius: 17px;
+      background: #fff8df;
+      border: 1px solid #edd795
+    }
+
+    .metric b {
+      display: block;
+      font-size: 25px
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 20px 0
+    }
+
+    .src-list li {
+      font-size: 14px
+    }
+
+    .kbd {
+      border: 1px solid #d7c48d;
+      border-bottom-width: 2px;
+      border-radius: 7px;
+      padding: 1px 7px;
+      background: white;
+      font-family: ui-monospace, monospace;
+      font-size: 12px
+    }
+
+    @media(max-width:980px) {
+
+      .layout,
+      .hero-grid,
+      .grid,
+      .grid3,
+      .grid4 {
+        grid-template-columns: 1fr
+      }
+
+      .toc {
+        position: relative;
+        top: 0;
+        max-height: none
+      }
+
+      .meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+      }
+
+      .hero {
+        padding: 32px 24px
+      }
+    }
+
+    @media(max-width:640px) {
+      .page {
+        padding: 16px 10px 50px
+      }
+
+      .meta {
+        grid-template-columns: 1fr
+      }
+
+      section {
+        padding: 22px 16px
+      }
+
+      .hero {
+        border-radius: 22px
+      }
+
+      .table-wrap {
+        border-radius: 12px
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff
+      }
+
+      .page {
+        max-width: none;
+        padding: 0
+      }
+
+      .toc {
+        display: none
+      }
+
+      .layout {
+        display: block
+      }
+
+      .hero,
+      section {
+        box-shadow: none;
+        break-inside: avoid
+      }
+
+      a {
+        color: #111;
+        text-decoration: underline;
+        border: 0
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <header class="hero">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">TailorOS implementation handbook · Master</p>
+          <h1>TailorOS Phase-wise Implementation Master Index</h1>
+          <p class="lead">A navigation index for the complete TailorOS + WhatsApp Connector implementation pack.</p>
+          <div class="phase-banner"><span class="pill">SOLID</span><span class="pill">DRY</span><span
+              class="pill green">Cloudflare-first</span><span class="pill blue">Fast UI</span><span
+              class="pill violet">Tenant isolated</span></div>
+        </div>
+        <aside>
+          <div class="meta">
+            <div class="box"><strong>Prepared</strong><span>July 4, 2026</span></div>
+            <div class="box"><strong>Focus</strong><span>Index</span></div>
+            <div class="box"><strong>Output</strong><span>Implementation-ready HTML report</span></div>
+            <div class="box"><strong>Quality bar</strong><span>Senior full-stack review</span></div>
+          </div>
+        </aside>
+      </div>
+    </header>
+    <div class="layout">
+      <nav class="toc">
+        <h3>Contents</h3><a href="#map">Phase map</a><a href="#sequence">Recommended build sequence</a><a
+          href="#quality">Quality principles used</a><a href="#sources">Sources</a>
+      </nav>
+      <div>
+        <section id="map">
+          <p class="kicker">Master · Index</p>
+          <h2>Phase map</h2>
+          <p class="lead">This pack converts the uploaded TailorOS PRD, WhatsApp PRD, and Cloudflare implementation
+            guide into separate senior-level implementation reports. Each phase includes architecture, structure, edge
+            cases, testing strategy, and release checklist.</p>
+          <div class="grid">
+            <div class="card gold">
+              <h3><a href="Phase01_architecture_foundation.html">Phase01 Architecture Foundation</a></h3>
+              <p class="muted">Open this phase report as a standalone implementation handoff file.</p>
+            </div>
+            <div class="card gold">
+              <h3><a href="Phase02_design_system_ui_foundation.html">Phase02 Design System Ui Foundation</a></h3>
+              <p class="muted">Open this phase report as a standalone implementation handoff file.</p>
+            </div>
+            <div class="card gold">
+              <h3><a href="Phase03_control_plane_tenant_provisioning.html">Phase03 Control Plane Tenant Provisioning</a>
+              </h3>
+              <p class="muted">Open this phase report as a standalone implementation handoff file.</p>
+            </div>
+            <div class="card gold">
+              <h3><a href="Phase04_tenant_domain_model.html">Phase04 Tenant Domain Model</a></h3>
+              <p class="muted">Open this phase report as a standalone implementation handoff file.</p>
+            </div>
+            <div class="card gold">
+              <h3><a href="Phase05_tailoros_core_modules.html">Phase05 Core Modules</a></h3>
+              <p class="muted">Open this phase report as a standalone implementation handoff file.</p>
+            </div>
+            <div class="card gold">
+              <h3><a href="Phase06_whatsapp_connector.html">Phase06 Whatsapp Connector</a></h3>
+              <p class="muted">Open this phase report as a standalone implementation handoff file.</p>
+            </div>
+            <div class="card gold">
+              <h3><a href="Phase07_global_search_performance.html">Phase07 Global Search Performance</a></h3>
+              <p class="muted">Open this phase report as a standalone implementation handoff file.</p>
+            </div>
+            <div class="card gold">
+              <h3><a href="Phase08_security_privacy_rbac.html">Phase08 Security Privacy Rbac</a></h3>
+              <p class="muted">Open this phase report as a standalone implementation handoff file.</p>
+            </div>
+            <div class="card gold">
+              <h3><a href="Phase09_testing_observability_release.html">Phase09 Testing Observability Release</a></h3>
+              <p class="muted">Open this phase report as a standalone implementation handoff file.</p>
+            </div>
+            <div class="card gold">
+              <h3><a href="Phase10_scale_reliability_roadmap.html">Phase10 Scale Reliability Roadmap</a></h3>
+              <p class="muted">Open this phase report as a standalone implementation handoff file.</p>
+            </div>
+          </div>
+        </section>
+        <section id="sequence">
+          <p class="kicker">Master · Index</p>
+          <h2>Recommended build sequence</h2>
+          <ol>
+            <li>Phase 01–02 first: engineering foundation and UI design system.</li>
+            <li>Phase 03–04 next: tenant provisioning and reliable domain model.</li>
+            <li>Phase 05 pilot: core TailorOS modules usable by one shop.</li>
+            <li>Phase 06 integrate WhatsApp after clean order/payment/status data exists.</li>
+            <li>Phase 07–09 harden speed, security, testing, observability, and release.</li>
+            <li>Phase 10 prepares scale and future architecture.</li>
+          </ol>
+        </section>
+        <section id="quality">
+          <p class="kicker">Master · Index</p>
+          <h2>Quality principles used</h2>
+          <ul class="checklist">
+            <li>SOLID boundaries: route, service, repository, adapter, and domain layers are separated.</li>
+            <li>DRY where it matters: schemas, state machines, ID rules, permissions, and UI tokens are shared.</li>
+            <li>Tenant isolation: control plane plus per-tenant D1 databases.</li>
+            <li>Reliability: outbox pattern, queues, DLQ, idempotency, and audit logs.</li>
+            <li>Premium UX: light golden theme, fast command search, reduced-motion-friendly micro-interactions.</li>
+          </ul>
+        </section>
+        <section id="sources">
+          <p class="kicker">Traceability</p>
+          <h2>Source map and documentation basis</h2>
+          <p class="muted">This phase report consolidates the uploaded TailorOS PRD, WhatsApp Connector PRD, Cloudflare
+            implementation guide, and the current official documentation listed below.</p>
+          <ul class="src-list">
+            <li><strong>TailorOS Final PRD</strong> — <span class="muted">Uploaded file: TailorOS_Final_PRD.html</span>
+            </li>
+            <li><strong>WhatsApp Chat Connector Final PRD</strong> — <span class="muted">Uploaded file:
+                Whatsapp_Chat_Final_PRD.html</span></li>
+            <li><strong>TailorOS Cloudflare Stack Implementation Guide</strong> — <span class="muted">Uploaded file:
+                TailorOS_CF_Stack_Implementation_Guide.html</span></li>
+            <li><strong>Cloudflare D1 limits</strong> — <span
+                class="muted">https://developers.cloudflare.com/d1/platform/limits/</span></li>
+            <li><strong>Cloudflare D1 FAQ / horizontal scale-out</strong> — <span
+                class="muted">https://developers.cloudflare.com/d1/reference/faq/</span></li>
+            <li><strong>Cloudflare D1 read replication</strong> — <span
+                class="muted">https://developers.cloudflare.com/d1/best-practices/read-replication/</span></li>
+            <li><strong>Cloudflare Workers best practices</strong> — <span
+                class="muted">https://developers.cloudflare.com/workers/best-practices/workers-best-practices/</span>
+            </li>
+            <li><strong>Cloudflare service bindings</strong> — <span
+                class="muted">https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/</span>
+            </li>
+            <li><strong>Cloudflare Workers for Platforms</strong> — <span
+                class="muted">https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/</span>
+            </li>
+            <li><strong>Cloudflare Next.js on Workers</strong> — <span
+                class="muted">https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/</span></li>
+            <li><strong>Cloudflare Queues DLQ/retries</strong> — <span
+                class="muted">https://developers.cloudflare.com/queues/configuration/dead-letter-queues/</span></li>
+            <li><strong>Cloudflare Workers Vitest integration</strong> — <span
+                class="muted">https://developers.cloudflare.com/workers/testing/vitest-integration/</span></li>
+            <li><strong>Hono Cloudflare Workers docs</strong> — <span
+                class="muted">https://hono.dev/docs/getting-started/cloudflare-workers</span></li>
+            <li><strong>TanStack Query docs</strong> — <span
+                class="muted">https://tanstack.com/query/latest/docs/framework/react/overview</span></li>
+            <li><strong>Zod docs</strong> — <span class="muted">https://zod.dev/</span></li>
+            <li><strong>Motion for React docs</strong> — <span class="muted">https://motion.dev/docs/react</span></li>
+            <li><strong>web.dev animation performance</strong> — <span
+                class="muted">https://web.dev/articles/animations-guide</span></li>
+            <li><strong>MDN prefers-reduced-motion</strong> — <span
+                class="muted">https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion</span>
+            </li>
+            <li><strong>Meta WhatsApp Business Platform pricing</strong> — <span
+                class="muted">https://whatsappbusiness.com/products/platform-pricing/</span></li>
+          </ul>
+        </section>
+        <div class="footer">TailorOS phase-wise implementation guide · Master · Generated July 4, 2026</div>
+      </div>
+    </div>
+  </main>
+</body>
+
+</html>

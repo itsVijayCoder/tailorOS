@@ -1,0 +1,1499 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WhatsApp Chat Connector - Final Production PRD</title>
+  <style>
+    :root {
+      --bg: #f5f7f8;
+      --paper: #ffffff;
+      --ink: #111827;
+      --muted: #5f6875;
+      --line: #d8dee6;
+      --soft: #eef2f6;
+      --green: #0f766e;
+      --blue: #2563eb;
+      --amber: #b45309;
+      --red: #b91c1c;
+      --purple: #6d28d9;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(37, 99, 235, 0.35);
+    }
+
+    a:hover {
+      border-bottom-color: var(--blue);
+    }
+
+    .page {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.28fr) minmax(300px, 0.72fr);
+      gap: 24px;
+      padding: 42px;
+      background: linear-gradient(135deg, #ffffff 0%, #f7fbff 52%, #eefaf7 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      margin: 0;
+      line-height: 1.16;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 900px;
+      font-size: clamp(37px, 5vw, 64px);
+    }
+
+    h2 {
+      font-size: clamp(27px, 3vw, 40px);
+      margin-bottom: 18px;
+    }
+
+    h3 {
+      font-size: 21px;
+      margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 16px;
+      margin-bottom: 7px;
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    .lead {
+      max-width: 900px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 19px;
+    }
+
+    .hero-panel {
+      padding: 22px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .stamp {
+      display: inline-flex;
+      width: fit-content;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #e6f4f1;
+      border: 1px solid #b9dfd8;
+      color: #115e59;
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .toc a {
+      padding: 7px 10px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    section {
+      margin-top: 32px;
+      padding: 34px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 8px 26px rgba(15, 23, 42, 0.04);
+    }
+
+    .section-kicker {
+      margin-bottom: 10px;
+      color: var(--amber);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .card {
+      padding: 20px;
+      background: #fbfdff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .card.alt {
+      background: #f7fcfa;
+      border-color: #c8ded9;
+    }
+
+    .card.warn {
+      background: #fff8ed;
+      border-color: #f1d4ab;
+    }
+
+    .card.danger {
+      background: #fff5f5;
+      border-color: #fecaca;
+    }
+
+    .callout {
+      padding: 20px;
+      background: #eaf7f4;
+      border: 1px solid #b9dfd8;
+      border-left: 5px solid var(--green);
+      border-radius: 14px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .pill.good {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .pill.warn {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+
+    .pill.bad {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    ul.clean {
+      margin: 12px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    ul.clean li {
+      position: relative;
+      padding-left: 20px;
+      margin: 9px 0;
+      color: var(--muted);
+    }
+
+    ul.clean li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.72em;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .number-list {
+      counter-reset: item;
+      margin: 14px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .number-list li {
+      counter-increment: item;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      margin: 12px 0;
+      color: var(--muted);
+    }
+
+    .number-list li::before {
+      content: counter(item);
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    th {
+      background: #eef2f6;
+      color: #334155;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: #eef2f7;
+      color: #334155;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.92em;
+    }
+
+    .metric {
+      padding: 18px;
+      background: #fbfdff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .metric .value {
+      display: block;
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    .metric .label {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .milestone {
+      margin-top: 18px;
+      padding: 22px;
+      background: #fbfdff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .milestone-head {
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      gap: 16px;
+      align-items: start;
+      margin-bottom: 16px;
+    }
+
+    .phase {
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .footer {
+      margin: 30px 0 8px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    @media (max-width: 980px) {
+
+      .hero,
+      .grid.two,
+      .grid.three,
+      .grid.four {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 26px;
+      }
+
+      section {
+        padding: 24px;
+      }
+
+      .page {
+        padding: 16px;
+      }
+
+      .milestone-head {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .page {
+        max-width: none;
+        padding: 0;
+      }
+
+      .hero,
+      section {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+
+      .toc {
+        display: none;
+      }
+
+      a {
+        color: inherit;
+        border-bottom: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Final production PRD</p>
+        <h1>WhatsApp Chat Connector</h1>
+        <p class="lead">WhatsApp Chat Connector is a separate multi-tenant messaging product that TailorOS uses for
+          order confirmations, receipts, trial reminders, ready-for-pickup alerts, balance reminders, delivery status,
+          and customer chat. It starts with Meta WhatsApp Cloud API direct for cost control and is designed with
+          provider adapters so Twilio, 360dialog, or Indian BSPs can be added later.</p>
+        <nav class="toc" aria-label="Report sections">
+          <a href="#decision">Decision</a>
+          <a href="#scope">Scope</a>
+          <a href="#providers">Providers</a>
+          <a href="#architecture">Architecture</a>
+          <a href="#data-model">Data model</a>
+          <a href="#flows">Flows</a>
+          <a href="#milestones">Milestones</a>
+          <a href="#readiness">Readiness</a>
+        </nav>
+      </div>
+      <aside class="hero-panel">
+        <span class="stamp">Prepared July 3, 2026</span>
+        <ul class="clean">
+          <li>Recommended v1 provider: Meta WhatsApp Cloud API direct.</li>
+          <li>Recommended architecture: reusable connector, not TailorOS-only code.</li>
+          <li>Primary messages: utility and service messages, not marketing campaigns.</li>
+          <li>Multi-client design: each tenant uses its own credentials, templates, phone number, and usage ledger.</li>
+        </ul>
+      </aside>
+    </header>
+
+    <section id="decision">
+      <p class="section-kicker">Product decision</p>
+      <h2>Build WhatsApp as a reusable connector product</h2>
+      <div class="callout">
+        <h3>Production-grade recommendation</h3>
+        <p>Do not build WhatsApp as a small feature inside TailorOS. Build WhatsApp Chat Connector as a separate
+          tenant-aware product with its own channel accounts, credential vault, template registry, message orchestrator,
+          webhook receiver, conversation router, usage ledger, and support console. TailorOS should emit business
+          events; the connector should handle WhatsApp policy, provider routing, delivery status, inbound chat, and cost
+          tracking.</p>
+      </div>
+      <div class="grid three" style="margin-top: 18px;">
+        <div class="card alt">
+          <h3>Why separate</h3>
+          <p class="muted">A separate connector can serve TailorOS first and later support SalonOS, RepairOS, ClinicOS,
+            or any other SMB product without rebuilding WhatsApp each time.</p>
+        </div>
+        <div class="card alt">
+          <h3>Why Meta direct first</h3>
+          <p class="muted">Meta direct gives the clearest long-term cost control and official Cloud API behavior. It
+            requires more setup discipline, but it avoids early provider lock-in.</p>
+        </div>
+        <div class="card alt">
+          <h3>When to add BSPs</h3>
+          <p class="muted">Add Twilio, 360dialog, WATI, Interakt, Authkey, or another BSP only when onboarding, managed
+            inbox, local support, or client preference justifies the extra layer.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="scope">
+      <p class="section-kicker">Scope boundary</p>
+      <h2>What the connector includes and excludes</h2>
+      <div class="grid two">
+        <div class="card alt">
+          <h3>In scope for v1</h3>
+          <ul class="clean">
+            <li>Multi-tenant setup for many client shops and future product installations.</li>
+            <li>Meta Cloud API direct account connection and phone number mapping.</li>
+            <li>Credential vault with secret references, token status, rotation metadata, and support audit.</li>
+            <li>Template registry for order confirmation, receipt, trial reminder, ready for pickup, payment due,
+              delivery, opt-in, and opt-out flows.</li>
+            <li>Outbound utility template sending from TailorOS events.</li>
+            <li>Inbound webhook receiver for customer messages, delivery statuses, failures, opt-outs, and provider
+              events.</li>
+            <li>Conversation routing for STATUS, RECEIPT, DUE, HELP, shared-mobile disambiguation, and staff handoff.
+            </li>
+            <li>Usage ledger by tenant, product, country, message category, provider, template, and month.</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h3>Out of scope for v1</h3>
+          <ul class="clean">
+            <li>Bulk marketing campaigns and festival promotions.</li>
+            <li>AI agent automation as the default support experience.</li>
+            <li>Voice calling, WhatsApp Business Calling, and IVR.</li>
+            <li>Full CRM inbox replacement for every sales/support use case.</li>
+            <li>Embedded Signup until manual onboarding becomes a proven bottleneck.</li>
+            <li>Provider marketplace with many adapters on day one.</li>
+            <li>Customer portal login; WhatsApp chat remains the customer-facing channel.</li>
+            <li>Exact long-term pricing guarantees because provider and Meta rates can change.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="providers">
+      <p class="section-kicker">Provider strategy</p>
+      <h2>Cost-efficient and scalable WhatsApp options</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Provider option</th>
+              <th>Best use case</th>
+              <th>Cost and ease</th>
+              <th>Strengths</th>
+              <th>Recommendation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Meta Cloud API direct</strong></td>
+              <td>Default SaaS path where you can manage setup, tokens, templates, webhooks, and support.</td>
+              <td>Most cost-efficient long term because there is no additional provider markup beyond Meta charges, but
+                setup is more operationally demanding.</td>
+              <td>Official API, direct control, best for multi-client platform architecture, strongest long-term
+                ownership.</td>
+              <td><strong>Use first.</strong> Build v1 on Meta direct with clean provider abstraction.</td>
+            </tr>
+            <tr>
+              <td><strong>Twilio WhatsApp</strong></td>
+              <td>Teams that want a developer-friendly CPaaS, possible SMS fallback, or existing Twilio stack.</td>
+              <td>Easy to use. Twilio states WhatsApp pricing includes Twilio's per-message fee plus Meta template fees
+                passed through to customers.</td>
+              <td>Strong docs, sandbox, logs, developer tooling, SMS/voice ecosystem.</td>
+              <td>Add as optional adapter after Meta direct if clients need Twilio ecosystem.</td>
+            </tr>
+            <tr>
+              <td><strong>360dialog</strong></td>
+              <td>Clients or agencies wanting WhatsApp-focused BSP onboarding and API access.</td>
+              <td>Can simplify WABA onboarding, but pricing and support terms must be rechecked during vendor selection.
+              </td>
+              <td>WhatsApp-focused provider model, potential reseller fit.</td>
+              <td>Evaluate for onboarding scale after pilot shops.</td>
+            </tr>
+            <tr>
+              <td><strong>WATI, Interakt, Authkey, Indian BSPs</strong></td>
+              <td>Non-technical SMB clients who want managed inbox, local support, campaigns, or ready-made support
+                tools.</td>
+              <td>Easier for some clients but can add subscription fees, provider lock-in, and API differences.</td>
+              <td>Local support, campaign UI, team inbox, support tooling, faster managed onboarding.</td>
+              <td>Use only when a client needs managed features more than platform control.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout" style="margin-top: 18px;">
+        <h3>Final provider choice</h3>
+        <p>For TailorOS v1, use Meta Cloud API direct. Build the connector so provider adapters are isolated. This gives
+          the lowest long-term cost path while preserving the option to add Twilio, 360dialog, or an Indian BSP later
+          for specific client segments.</p>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <p class="section-kicker">Architecture</p>
+      <h2>Connector responsibilities</h2>
+      <div class="grid two">
+        <div class="card alt">
+          <h3>Core components</h3>
+          <ul class="clean">
+            <li><strong>Channel account manager:</strong> maps tenant, product installation, provider, WABA, phone
+              number ID, display number, quality rating, and messaging limit tier.</li>
+            <li><strong>Credential vault:</strong> stores secret references, token status, app secret references, verify
+              token references, expiry, and rotation metadata.</li>
+            <li><strong>Template registry:</strong> maps internal template purposes to provider template names,
+              languages, categories, variables, approval status, and fallback instructions.</li>
+            <li><strong>Message orchestrator:</strong> checks opt-in, opt-out, quiet hours, template status, category,
+              rate limits, and idempotency before sending.</li>
+            <li><strong>Provider adapter:</strong> translates internal send requests and webhook events to Meta, Twilio,
+              360dialog, or BSP-specific behavior.</li>
+          </ul>
+        </div>
+        <div class="card alt">
+          <h3>Operational components</h3>
+          <ul class="clean">
+            <li><strong>Webhook receiver:</strong> validates provider webhooks, normalizes events, deduplicates retries,
+              and routes to the correct tenant.</li>
+            <li><strong>Conversation router:</strong> routes inbound messages to command bot, TailorOS lookup, or staff
+              handoff.</li>
+            <li><strong>Usage ledger:</strong> records delivered messages by tenant, product, country, category,
+              provider, and month.</li>
+            <li><strong>Support console:</strong> helps platform admins debug failed sends, connection status, template
+              status, and account health.</li>
+            <li><strong>Policy guard:</strong> blocks disallowed marketing, missing consent, wrong template category,
+              sensitive media, and opted-out recipients.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="data-model">
+      <p class="section-kicker">Data model</p>
+      <h2>Things the connector needs to remember</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Entity</th>
+              <th>Purpose</th>
+              <th>Key information</th>
+              <th>Relationships</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Tenant</strong></td>
+              <td>Client business account.</td>
+              <td>Tenant ID, business name, plan, billing mode, default language, status.</td>
+              <td>Owns product installations and channel accounts.</td>
+            </tr>
+            <tr>
+              <td><strong>Product installation</strong></td>
+              <td>One product using the connector for a tenant.</td>
+              <td>Product name, product ID, tenant ID, callback settings, status, allowed event types.</td>
+              <td>TailorOS first; later other products can be added.</td>
+            </tr>
+            <tr>
+              <td><strong>WhatsApp channel account</strong></td>
+              <td>WhatsApp identity used by a tenant.</td>
+              <td>Provider, business ID, WABA ID, phone number ID, display number, quality rating, messaging limit tier,
+                active status.</td>
+              <td>Belongs to tenant; uses provider credentials and templates.</td>
+            </tr>
+            <tr>
+              <td><strong>Provider credential</strong></td>
+              <td>Secret metadata without exposing raw secrets.</td>
+              <td>Secret reference, app ID, token type, expiry, last rotation, last health check, active flag.</td>
+              <td>Belongs to channel account; audited on changes.</td>
+            </tr>
+            <tr>
+              <td><strong>Template purpose</strong></td>
+              <td>Internal message purpose used across products.</td>
+              <td>Purpose key, category, allowed variables, default language, customer-visible intent.</td>
+              <td>Mapped to provider template per channel account.</td>
+            </tr>
+            <tr>
+              <td><strong>Provider template</strong></td>
+              <td>Actual approved template in Meta or provider system.</td>
+              <td>Template name, provider ID, language, category, status, variables, rejection reason, last review date.
+              </td>
+              <td>Belongs to channel account and template purpose.</td>
+            </tr>
+            <tr>
+              <td><strong>Message request</strong></td>
+              <td>Outbound request from TailorOS or another product.</td>
+              <td>Request ID, tenant, product, recipient, template purpose, language, variables, idempotency key,
+                status.</td>
+              <td>Creates provider message and usage records.</td>
+            </tr>
+            <tr>
+              <td><strong>Provider message</strong></td>
+              <td>Provider-specific message tracking.</td>
+              <td>Provider message ID, message type, category, accepted time, delivered time, failed reason, raw payload
+                reference.</td>
+              <td>Linked to message request and events.</td>
+            </tr>
+            <tr>
+              <td><strong>Message event</strong></td>
+              <td>Webhook or internal status event.</td>
+              <td>Event ID, provider event type, normalized type, timestamp, dedupe key, raw payload reference.</td>
+              <td>Updates message, conversation, and usage ledger.</td>
+            </tr>
+            <tr>
+              <td><strong>Conversation</strong></td>
+              <td>Inbound/outbound customer chat state.</td>
+              <td>Conversation ID, wa_id, phone number, customer reference, open window until, current intent, assigned
+                staff.</td>
+              <td>Routes to TailorOS, command bot, or staff.</td>
+            </tr>
+            <tr>
+              <td><strong>Consent record</strong></td>
+              <td>Opt-in and opt-out evidence.</td>
+              <td>Contact method, source, status, timestamp, captured by, opt-out keyword, proof note.</td>
+              <td>Used by message orchestrator before sending.</td>
+            </tr>
+            <tr>
+              <td><strong>Usage record</strong></td>
+              <td>Billing and reporting evidence.</td>
+              <td>Tenant, product, month, country, category, provider, template, delivered count, failed count,
+                estimated cost.</td>
+              <td>Feeds owner usage, platform billing, and cost controls.</td>
+            </tr>
+            <tr>
+              <td><strong>Audit log</strong></td>
+              <td>Security and support trace.</td>
+              <td>Actor, action, record, before summary, after summary, timestamp, support reason.</td>
+              <td>Tracks credential, template, account, and admin changes.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="flows">
+      <p class="section-kicker">Core flows</p>
+      <h2>End-to-end messaging workflows</h2>
+      <div class="grid two">
+        <div class="card">
+          <h3>Outbound order confirmation</h3>
+          <ol class="number-list">
+            <li>TailorOS emits <code>ORDER_BOOKED</code> with tenant, product, order, customer, contact method,
+              language,
+              and idempotency key.</li>
+            <li>Connector finds the tenant's channel account and approved order confirmation template.</li>
+            <li>Connector checks opt-in, opt-out, quiet hours, template status, and idempotency.</li>
+            <li>Provider adapter sends through Meta Cloud API direct in v1.</li>
+            <li>Webhook updates accepted, sent, delivered, read, or failed status in the message log.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Inbound customer status chat</h3>
+          <ol class="number-list">
+            <li>Customer sends STATUS, RECEIPT, DUE, HELP, or a free text question.</li>
+            <li>Webhook receiver validates and normalizes the inbound message.</li>
+            <li>Conversation router maps phone number to tenant and TailorOS family/customer context.</li>
+            <li>If one active order exists, connector replies with status inside the service window.</li>
+            <li>If multiple orders or family members exist, connector asks the customer to choose safely.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Template management</h3>
+          <ol class="number-list">
+            <li>Platform admin creates an internal template purpose such as ready for pickup.</li>
+            <li>Tenant maps the purpose to approved provider templates in English, Tamil, or other supported languages.
+            </li>
+            <li>Template status is tracked as draft, pending, approved, rejected, paused, or disabled.</li>
+            <li>Rejected templates require fallback actions and revised copy.</li>
+            <li>TailorOS can only trigger approved template purposes for that tenant.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Opt-out and policy safety</h3>
+          <ol class="number-list">
+            <li>Customer sends STOP or a shop-approved local opt-out phrase.</li>
+            <li>Connector records opt-out on the contact method and conversation.</li>
+            <li>Future non-required messages are blocked automatically.</li>
+            <li>Staff sees opt-out state inside TailorOS before attempting a send.</li>
+            <li>Owner can view opt-out rates and failed sends by template.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="apis">
+      <p class="section-kicker">Internal API contracts</p>
+      <h2>How TailorOS and future products call the connector</h2>
+      <p class="muted">These are product contracts, not code. They define the interface TailorOS expects from the
+        connector.</p>
+      <div class="table-wrap" style="margin-top: 16px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Internal API</th>
+              <th>Purpose</th>
+              <th>Required information</th>
+              <th>Expected behavior</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>POST /messages/template</code></td>
+              <td>Send approved template message.</td>
+              <td>tenant_id, product_id, recipient, template_purpose, language, variables, idempotency_key.</td>
+              <td>Validate consent, template status, category, and idempotency before provider send.</td>
+            </tr>
+            <tr>
+              <td><code>POST /messages/service</code></td>
+              <td>Reply inside customer service window.</td>
+              <td>tenant_id, conversation_id, recipient, message body, source product, staff user if manual.</td>
+              <td>Allow only inside open service window; otherwise recommend template path.</td>
+            </tr>
+            <tr>
+              <td><code>GET /conversations/{id}</code></td>
+              <td>Show conversation in TailorOS.</td>
+              <td>tenant_id, conversation_id, customer reference, order reference if known.</td>
+              <td>Return normalized messages, status, assigned staff, and open window timing.</td>
+            </tr>
+            <tr>
+              <td><code>POST /webhooks/{provider}</code></td>
+              <td>Receive provider events.</td>
+              <td>Provider signature, account identifiers, message ID, event type, raw payload reference.</td>
+              <td>Validate, dedupe, normalize, route, and store event history.</td>
+            </tr>
+            <tr>
+              <td><code>GET /usage</code></td>
+              <td>Show usage and cost evidence.</td>
+              <td>tenant_id, product_id, month, provider, category, country.</td>
+              <td>Return delivered count, failed count, estimated cost, billed state, and top templates.</td>
+            </tr>
+            <tr>
+              <td><code>POST /contacts/consent</code></td>
+              <td>Record opt-in or opt-out.</td>
+              <td>tenant_id, contact method, customer reference, consent state, source, timestamp.</td>
+              <td>Update message eligibility and write audit trail.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <p class="section-kicker">Pricing and cost controls</p>
+      <h2>How cost should be handled</h2>
+      <div class="grid two">
+        <div class="card alt">
+          <h3>Current platform assumptions</h3>
+          <ul class="clean">
+            <li>Meta states WhatsApp Business Platform pricing is based on delivered messages, market, and message
+              category.</li>
+            <li>Meta categories include marketing, utility, authentication, and service.</li>
+            <li>Service messages happen in a 24-hour customer service window after the user messages the business.</li>
+            <li>Utility messages sent in response to users can be favorable compared with business-initiated marketing.
+            </li>
+            <li>Rates must be rechecked before launch because pricing pages and rate cards can change.</li>
+          </ul>
+        </div>
+        <div class="card alt">
+          <h3>Connector cost controls</h3>
+          <ul class="clean">
+            <li>Default TailorOS sends: order confirmation, receipt, trial reminder, ready for pickup, payment due.</li>
+            <li>Do not send every production status change to the customer.</li>
+            <li>Show monthly usage by tenant and template purpose.</li>
+            <li>Flag tenants with rising failures, opt-outs, or provider quality issues.</li>
+            <li>Keep marketing templates disabled until the product intentionally supports campaigns.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top: 18px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Estimated monthly message volume</th>
+              <th>Cost risk</th>
+              <th>Product response</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Small tailor shop</strong></td>
+              <td>100 orders, roughly 300 to 500 order-related messages.</td>
+              <td>Support and onboarding cost may matter more than message cost.</td>
+              <td>Bundle a small allowance and show usage only when close to limit.</td>
+            </tr>
+            <tr>
+              <td><strong>Growing boutique</strong></td>
+              <td>500 orders, roughly 1,500 to 2,500 messages.</td>
+              <td>Unnecessary reminders and failed templates can create avoidable cost.</td>
+              <td>Add usage dashboard, quiet hours, and per-template controls.</td>
+            </tr>
+            <tr>
+              <td><strong>Multi-shop SaaS</strong></td>
+              <td>5,000+ messages across many tenants.</td>
+              <td>Cost evidence, tenant isolation, provider quality, and support load become important.</td>
+              <td>Use usage ledger, billing export, provider health checks, and support console.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="milestones">
+      <p class="section-kicker">Milestone plan</p>
+      <h2>Deep production milestone analysis</h2>
+      <p class="muted">Each milestone should be independently testable with TailorOS-style events and real provider
+        constraints, while avoiding early provider lock-in.</p>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M1</div>
+          <div>
+            <h3>Tenant, product installation, and channel foundation</h3>
+            <p class="muted">Create the reusable product boundary so TailorOS is only the first connected product, not
+              the only product.</p>
+          </div>
+        </div>
+        <div class="grid three">
+          <div>
+            <h4>Build scope</h4>
+            <ul class="clean">
+              <li>Tenant records and product installation records.</li>
+              <li>Channel account records for WhatsApp phone numbers.</li>
+              <li>Provider field with Meta direct as default.</li>
+              <li>Admin views for connected, pending, disabled, and failed account states.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Deep analysis</h4>
+            <ul class="clean">
+              <li>This milestone decides whether the connector can scale beyond TailorOS.</li>
+              <li>Product installation is essential because one tenant may later use multiple products.</li>
+              <li>Channel accounts must not be shared across unrelated shops.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Done when</h4>
+            <ul class="clean">
+              <li>Platform admin can create tenant and product installation.</li>
+              <li>A tenant can have one or more WhatsApp channel accounts.</li>
+              <li>Each channel shows provider, WABA, phone number, status, and owner.</li>
+              <li>TailorOS can be registered as a source product.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M2</div>
+          <div>
+            <h3>Credential vault and Meta direct connection</h3>
+            <p class="muted">Safely connect Meta Cloud API credentials without exposing tokens to frontend users or
+              other tenants.</p>
+          </div>
+        </div>
+        <div class="grid three">
+          <div>
+            <h4>Build scope</h4>
+            <ul class="clean">
+              <li>Credential metadata with secret references, not raw token display.</li>
+              <li>Meta business ID, WABA ID, phone number ID, app ID, and token status fields.</li>
+              <li>Connection health state and last check timestamp.</li>
+              <li>Audit log for credential creation, rotation, disable, and reconnect.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Deep analysis</h4>
+            <ul class="clean">
+              <li>Credential mistakes are high-risk because they can leak client communication access.</li>
+              <li>Disconnect/reconnect should not delete historical conversations or usage records.</li>
+              <li>Support staff need enough visibility to debug without seeing secrets.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Done when</h4>
+            <ul class="clean">
+              <li>Admin can store and update Meta channel credential references.</li>
+              <li>Credentials are tenant-isolated.</li>
+              <li>Raw tokens never appear in logs or normal UI.</li>
+              <li>Connection status is visible to support admins.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M3</div>
+          <div>
+            <h3>Template registry and TailorOS message catalog</h3>
+            <p class="muted">Create controlled, approved template purposes before sending customer messages.</p>
+          </div>
+        </div>
+        <div class="grid three">
+          <div>
+            <h4>Build scope</h4>
+            <ul class="clean">
+              <li>Internal template purposes for order confirmation, receipt, trial reminder, pickup alert, payment due,
+                delivery, opt-in, and opt-out.</li>
+              <li>Provider template mapping per tenant and language.</li>
+              <li>Status tracking: draft, pending, approved, rejected, paused, disabled.</li>
+              <li>Variable definition and preview screen.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Deep analysis</h4>
+            <ul class="clean">
+              <li>Template chaos creates policy failures and incorrect customer messages.</li>
+              <li>Purpose mapping keeps TailorOS independent from provider-specific template names.</li>
+              <li>Tamil and English templates should be reviewed by the shop owner before production use.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Done when</h4>
+            <ul class="clean">
+              <li>Admin can register approved template names for a tenant.</li>
+              <li>TailorOS can request a template purpose without knowing provider template name.</li>
+              <li>Unapproved templates are blocked with clear fallback reason.</li>
+              <li>Template variables are visible before go-live.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M4</div>
+          <div>
+            <h3>Outbound message orchestration</h3>
+            <p class="muted">Send approved utility templates from TailorOS events with policy and cost controls.</p>
+          </div>
+        </div>
+        <div class="grid three">
+          <div>
+            <h4>Build scope</h4>
+            <ul class="clean">
+              <li><code>POST /messages/template</code> internal API.</li>
+              <li>Opt-in, opt-out, quiet hour, template status, and idempotency checks.</li>
+              <li>Message request, provider message, and status records.</li>
+              <li>Meta direct provider adapter for outbound templates.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Deep analysis</h4>
+            <ul class="clean">
+              <li>Accepted by API is not delivered. The connector must wait for webhook status.</li>
+              <li>Idempotency prevents duplicate customer messages from retries.</li>
+              <li>Message categories should be visible so utility and marketing do not mix.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Done when</h4>
+            <ul class="clean">
+              <li>TailorOS can request order confirmation and receipt send.</li>
+              <li>Connector rejects sends missing consent or approved template.</li>
+              <li>Provider message ID is stored.</li>
+              <li>Staff can see pending, sent, delivered, failed, or blocked state.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M5</div>
+          <div>
+            <h3>Webhook receiver and delivery status normalization</h3>
+            <p class="muted">Make provider events trustworthy, deduplicated, and visible to TailorOS and support staff.
+            </p>
+          </div>
+        </div>
+        <div class="grid three">
+          <div>
+            <h4>Build scope</h4>
+            <ul class="clean">
+              <li>Provider webhook endpoint for Meta direct.</li>
+              <li>Signature validation and verify-token challenge support.</li>
+              <li>Routing by WABA, phone number ID, and tenant channel account.</li>
+              <li>Normalized event log for sent, delivered, read, failed, inbound, and opt-out.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Deep analysis</h4>
+            <ul class="clean">
+              <li>Webhooks can retry and arrive more than once; events must be idempotent.</li>
+              <li>Raw payload references are useful for support but must not expose sensitive data unnecessarily.</li>
+              <li>Tenant routing is the safety boundary that prevents cross-client leakage.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Done when</h4>
+            <ul class="clean">
+              <li>Webhook verification succeeds.</li>
+              <li>Duplicate webhook payloads do not create duplicate business events.</li>
+              <li>Message delivery status updates on the message log.</li>
+              <li>Invalid signatures are rejected and not processed.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M6</div>
+          <div>
+            <h3>Inbound conversation router and command bot</h3>
+            <p class="muted">Let customers ask for order status, receipt, and dues without requiring staff to answer
+              every message manually.</p>
+          </div>
+        </div>
+        <div class="grid three">
+          <div>
+            <h4>Build scope</h4>
+            <ul class="clean">
+              <li>Conversation records with open service window timing.</li>
+              <li>Commands: STATUS, RECEIPT, DUE, HELP.</li>
+              <li>Shared-mobile disambiguation by active order or customer choice.</li>
+              <li>Staff handoff and assigned conversation state.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Deep analysis</h4>
+            <ul class="clean">
+              <li>Shared family numbers are the main customer data risk.</li>
+              <li>Bot replies should stay deterministic in v1; avoid AI-generated answers until data permissions are
+                mature.</li>
+              <li>Service-window replies are cost-efficient and should be used for customer-initiated chat.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Done when</h4>
+            <ul class="clean">
+              <li>Customer can message STATUS and receive safe status for the right order.</li>
+              <li>Multiple matching orders trigger a choice prompt.</li>
+              <li>Unknown numbers get a helpful fallback.</li>
+              <li>Staff can take over a conversation from the support view.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M7</div>
+          <div>
+            <h3>TailorOS integration and notification timeline</h3>
+            <p class="muted">Connect business events from TailorOS to templates, conversations, and delivery status.</p>
+          </div>
+        </div>
+        <div class="grid three">
+          <div>
+            <h4>Build scope</h4>
+            <ul class="clean">
+              <li>Event intake for <code>ORDER_BOOKED</code>, <code>RECEIPT_GENERATED</code>,
+                <code>PAYMENT_RECEIVED</code>, <code>TRIAL_SCHEDULED</code>, and <code>ORDER_READY_FOR_PICKUP</code>.
+              </li>
+              <li>Template purpose mapping for each event.</li>
+              <li>Callback or status API for TailorOS notification log.</li>
+              <li>Fallback reasons for blocked or failed sends.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Deep analysis</h4>
+            <ul class="clean">
+              <li>TailorOS should not need provider knowledge. It should ask for a business message purpose.</li>
+              <li>Failures must be visible where staff work: order and customer pages.</li>
+              <li>Event payload should include idempotency key to avoid duplicate sends.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Done when</h4>
+            <ul class="clean">
+              <li>TailorOS order booking can trigger an approved WhatsApp confirmation.</li>
+              <li>Delivery status returns to TailorOS notification log.</li>
+              <li>Blocked sends show clear reasons to staff.</li>
+              <li>Customer opt-out state updates TailorOS contact method.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M8</div>
+          <div>
+            <h3>Usage ledger, cost reporting, and client billing evidence</h3>
+            <p class="muted">Give owners and the platform enough visibility to control WhatsApp cost and bill fairly.
+            </p>
+          </div>
+        </div>
+        <div class="grid three">
+          <div>
+            <h4>Build scope</h4>
+            <ul class="clean">
+              <li>Usage records by tenant, product, provider, country, category, template, and month.</li>
+              <li>Owner usage view with delivered, failed, and blocked messages.</li>
+              <li>Platform admin cost export and billing state.</li>
+              <li>Alerts for high failure rate, opt-out spike, or unusual cost growth.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Deep analysis</h4>
+            <ul class="clean">
+              <li>Usage evidence is required before charging clients for a message wallet or allowance.</li>
+              <li>Cost should be estimated but never treated as a guaranteed provider bill until reconciled.</li>
+              <li>Category-level reporting prevents marketing costs from hiding inside utility workflows.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Done when</h4>
+            <ul class="clean">
+              <li>Owner can see monthly WhatsApp usage.</li>
+              <li>Platform admin can export tenant usage.</li>
+              <li>Usage records distinguish delivered, failed, and blocked sends.</li>
+              <li>Top templates and high-cost categories are visible.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M9</div>
+          <div>
+            <h3>Admin support console and production controls</h3>
+            <p class="muted">Make onboarding and support reliable before expanding beyond the first few shops.</p>
+          </div>
+        </div>
+        <div class="grid three">
+          <div>
+            <h4>Build scope</h4>
+            <ul class="clean">
+              <li>Connection health dashboard.</li>
+              <li>Template approval and rejection tracking.</li>
+              <li>Failed message troubleshooting view.</li>
+              <li>Consent and opt-out audit.</li>
+              <li>Credential change audit and support access reasons.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Deep analysis</h4>
+            <ul class="clean">
+              <li>Support visibility reduces manual debugging and client frustration.</li>
+              <li>Credential and template changes must be auditable because they affect customer communication.</li>
+              <li>Admins should see enough to debug without exposing raw secrets or unrelated tenant data.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Done when</h4>
+            <ul class="clean">
+              <li>Support can identify why a message failed.</li>
+              <li>Support can see whether template, consent, provider, or webhook caused the issue.</li>
+              <li>Credential changes are audited.</li>
+              <li>Tenant data remains isolated during support.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M10</div>
+          <div>
+            <h3>Embedded Signup and provider adapters planning</h3>
+            <p class="muted">Prepare scale paths without delaying the first production release.</p>
+          </div>
+        </div>
+        <div class="grid three">
+          <div>
+            <h4>Build scope</h4>
+            <ul class="clean">
+              <li>Manual onboarding checklist for first shops.</li>
+              <li>Readiness assessment for Meta Embedded Signup.</li>
+              <li>Provider adapter interface documented for Twilio, 360dialog, and BSPs.</li>
+              <li>Decision matrix for when a tenant should use Meta direct versus provider adapter.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Deep analysis</h4>
+            <ul class="clean">
+              <li>Embedded Signup is useful only after manual onboarding becomes the bottleneck.</li>
+              <li>Adding too many providers early creates support complexity.</li>
+              <li>The adapter boundary should be tested with one future provider, not many partial integrations.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Done when</h4>
+            <ul class="clean">
+              <li>Platform has a clear manual onboarding process.</li>
+              <li>Future provider adapter requirements are documented.</li>
+              <li>Meta direct remains the production provider for v1.</li>
+              <li>Twilio or BSP adapter can be prioritized with a business reason.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M11</div>
+          <div>
+            <h3>Production hardening, policy, and launch readiness</h3>
+            <p class="muted">Stabilize the connector for real client use, support, compliance, and scale.</p>
+          </div>
+        </div>
+        <div class="grid three">
+          <div>
+            <h4>Build scope</h4>
+            <ul class="clean">
+              <li>Policy guardrails for marketing, utility, service, opt-out, sensitive media, and customer data
+                leakage.</li>
+              <li>Monitoring for webhook failures, provider errors, high retry volume, and usage spikes.</li>
+              <li>Retention policy for raw payloads, media, message logs, and audit logs.</li>
+              <li>Go-live checklist for each tenant.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Deep analysis</h4>
+            <ul class="clean">
+              <li>Messaging products fail in production through edge cases: duplicate events, wrong tenant routing,
+                missing consent, and unclear failures.</li>
+              <li>Retention should balance debugging needs with privacy.</li>
+              <li>Marketing should stay disabled until the connector has strong consent and category controls.</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Done when</h4>
+            <ul class="clean">
+              <li>A tenant can go live using a checklist.</li>
+              <li>Bad webhook signatures are rejected.</li>
+              <li>Opted-out customers cannot receive non-required messages.</li>
+              <li>Support can monitor delivery health and usage.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section id="readiness">
+      <p class="section-kicker">Production readiness</p>
+      <h2>Launch checklist and success metrics</h2>
+      <div class="grid four">
+        <div class="metric"><span class="value">99%+</span><span class="label">Webhook events routed to the correct
+            tenant.</span></div>
+        <div class="metric"><span class="value">0</span><span class="label">Raw access tokens exposed in app UI or
+            logs.</span></div>
+        <div class="metric"><span class="value">95%+</span><span class="label">Approved template sends get final
+            delivery or failure status.</span></div>
+        <div class="metric"><span class="value">30%+</span><span class="label">Reduction in customer status calls for
+            TailorOS pilot shops.</span></div>
+        <div class="metric"><span class="value">100%</span><span class="label">Outbound sends checked against consent
+            and opt-out state.</span></div>
+        <div class="metric"><span class="value">24h</span><span class="label">Service-window state visible for inbound
+            conversations.</span></div>
+        <div class="metric"><span class="value">5</span><span class="label">Core TailorOS templates approved before
+            first shop go-live.</span></div>
+        <div class="metric"><span class="value">1</span><span class="label">Production provider at launch: Meta
+            direct.</span></div>
+      </div>
+      <div class="grid two" style="margin-top: 18px;">
+        <div class="card danger">
+          <h3>High-risk mistakes</h3>
+          <ul class="clean">
+            <li>Putting provider tokens in frontend code or visible logs.</li>
+            <li>Routing webhook events using phone number text only instead of provider account identifiers.</li>
+            <li>Assuming provider acceptance means delivered to customer.</li>
+            <li>Sending customer data to a shared family mobile without disambiguation.</li>
+            <li>Using marketing copy inside utility templates.</li>
+            <li>Building provider-specific logic directly inside TailorOS.</li>
+          </ul>
+        </div>
+        <div class="card alt">
+          <h3>Launch controls</h3>
+          <ul class="clean">
+            <li>Backend-only credential use with audit trail.</li>
+            <li>Tenant isolation by WABA and phone number ID.</li>
+            <li>Idempotency keys for every outbound business event.</li>
+            <li>Webhook signature validation and duplicate handling.</li>
+            <li>Manual fallback paths for failed or blocked sends.</li>
+            <li>Recheck Meta and provider pricing before client billing launch.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="credentials">
+      <p class="section-kicker">Credentials and onboarding</p>
+      <h2>What each client needs before go-live</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Credential or setup item</th>
+              <th>Who provides it</th>
+              <th>Used for</th>
+              <th>Production note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Meta Business account</strong></td>
+              <td>Client or platform during onboarding.</td>
+              <td>Business verification and WABA ownership.</td>
+              <td>Prefer client-owned business identity for long-term control.</td>
+            </tr>
+            <tr>
+              <td><strong>WhatsApp Business Account ID</strong></td>
+              <td>Meta dashboard.</td>
+              <td>Tenant channel mapping.</td>
+              <td>Never reuse one WABA across unrelated shops without a deliberate provider model.</td>
+            </tr>
+            <tr>
+              <td><strong>Phone number ID</strong></td>
+              <td>Meta dashboard.</td>
+              <td>Send messages and route webhooks.</td>
+              <td>Use provider identifiers, not only visible phone number, for tenant routing.</td>
+            </tr>
+            <tr>
+              <td><strong>System user access token</strong></td>
+              <td>Meta Business settings.</td>
+              <td>Production API calls.</td>
+              <td>Store only as secret reference; rotate on staff or access changes.</td>
+            </tr>
+            <tr>
+              <td><strong>Webhook verify token</strong></td>
+              <td>Connector-generated.</td>
+              <td>Webhook verification challenge.</td>
+              <td>Keep tenant/provider scoped and never expose in public UI.</td>
+            </tr>
+            <tr>
+              <td><strong>App secret</strong></td>
+              <td>Meta app settings.</td>
+              <td>Webhook signature validation.</td>
+              <td>Required for validating that webhook POST events are authentic.</td>
+            </tr>
+            <tr>
+              <td><strong>Approved templates</strong></td>
+              <td>Client/platform through provider dashboard.</td>
+              <td>Outbound utility messages.</td>
+              <td>Prepare English and Tamil/local-language versions before go-live.</td>
+            </tr>
+            <tr>
+              <td><strong>Opt-in wording</strong></td>
+              <td>Client and platform.</td>
+              <td>Consent capture.</td>
+              <td>Use clear wording for order updates, receipts, reminders, and service messages.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="sources">
+      <p class="section-kicker">Sources checked</p>
+      <h2>Current references used for this PRD</h2>
+      <p class="muted">Provider pricing and dashboard flows can change. Recheck all provider pages before production
+        billing and before app review or client onboarding.</p>
+      <ul class="clean">
+        <li><a href="https://whatsappbusiness.com/products/platform-pricing/">WhatsApp Business Platform Pricing</a> -
+          checked July 3, 2026 for message categories, per-delivered-message model, service window, utility behavior,
+          and volume tier concepts.</li>
+        <li><a href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started">Meta WhatsApp Cloud API Get
+            Started</a> - official setup reference for Meta direct implementation path.</li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/overview/">Meta
+            WhatsApp Webhooks Overview</a> - official webhook behavior reference.</li>
+        <li><a href="https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/overview/">Meta
+            WhatsApp Templates Overview</a> - official template management reference.</li>
+        <li><a href="https://www.twilio.com/en-us/whatsapp/pricing">Twilio WhatsApp Pricing</a> - checked July 3, 2026
+          for Twilio's per-message fee plus Meta fee pass-through model.</li>
+        <li><a href="https://www.wati.io/pricing/">WATI Pricing</a> - checked July 3, 2026 as an example managed
+          WhatsApp BSP/inbox option for SMBs.</li>
+      </ul>
+    </section>
+
+    <p class="footer">WhatsApp Chat Connector Final Production PRD - generated July 3, 2026.</p>
+  </main>
+</body>
+
+</html>

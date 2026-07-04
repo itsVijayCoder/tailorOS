@@ -1,0 +1,1297 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tailor Shop WhatsApp Platform - PRD Report</title>
+  <style>
+    :root {
+      --bg: #f7f7f4;
+      --paper: #ffffff;
+      --ink: #161514;
+      --muted: #66615b;
+      --soft: #ece8de;
+      --line: #dad5c9;
+      --accent: #0f766e;
+      --accent-2: #b45309;
+      --accent-3: #334155;
+      --success: #047857;
+      --warning: #b45309;
+      --danger: #b91c1c;
+      --shadow: 0 20px 50px rgba(26, 22, 16, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(15, 118, 110, 0.35);
+    }
+
+    a:hover {
+      border-bottom-color: var(--accent);
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 28px;
+      align-items: stretch;
+      padding: 44px;
+      background: linear-gradient(135deg, #ffffff 0%, #fbfaf6 52%, #eef7f5 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 14px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, h4 {
+      margin: 0;
+      line-height: 1.16;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 850px;
+      font-size: clamp(36px, 5vw, 64px);
+    }
+
+    h2 {
+      font-size: clamp(26px, 3vw, 38px);
+      margin-bottom: 18px;
+    }
+
+    h3 {
+      font-size: 21px;
+      margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    .lead {
+      max-width: 850px;
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 19px;
+    }
+
+    .hero-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 100%;
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .stamp {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      background: #e6f4f1;
+      color: #115e59;
+      border: 1px solid #b9dfd8;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .hero-list {
+      display: grid;
+      gap: 11px;
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .hero-list li {
+      display: flex;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .tick {
+      flex: 0 0 20px;
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #dcfce7;
+      color: #166534;
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .toc {
+      margin-top: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .toc a {
+      padding: 7px 10px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--accent-3);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    section {
+      margin-top: 34px;
+      padding: 34px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 8px 30px rgba(26, 22, 16, 0.04);
+    }
+
+    .section-kicker {
+      margin-bottom: 10px;
+      color: var(--accent-2);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fffdf8;
+    }
+
+    .card.alt {
+      background: #f8fbfa;
+      border-color: #c8ded9;
+    }
+
+    .card.warn {
+      background: #fff8ed;
+      border-color: #f1d4ab;
+    }
+
+    .card strong {
+      color: var(--ink);
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tag.good {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .tag.warn {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+
+    .tag.bad {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    ul.clean {
+      margin: 12px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    ul.clean li {
+      position: relative;
+      padding-left: 20px;
+      margin: 9px 0;
+      color: var(--muted);
+    }
+
+    ul.clean li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.72em;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .number-list {
+      counter-reset: item;
+      margin: 14px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .number-list li {
+      counter-increment: item;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      margin: 12px 0;
+      color: var(--muted);
+    }
+
+    .number-list li::before {
+      content: counter(item);
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 820px;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f3f1ea;
+      color: #3f3b36;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .decision {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 18px;
+      margin-top: 16px;
+    }
+
+    .callout {
+      padding: 20px;
+      background: #eaf7f4;
+      border: 1px solid #b9dfd8;
+      border-left: 5px solid var(--accent);
+      border-radius: 14px;
+    }
+
+    .callout.warning {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      border-left-color: var(--warning);
+    }
+
+    .callout.danger {
+      background: #fef2f2;
+      border-color: #fecaca;
+      border-left-color: var(--danger);
+    }
+
+    .quote {
+      padding: 18px;
+      border-radius: 14px;
+      background: #18181b;
+      color: #fafafa;
+    }
+
+    .quote p {
+      color: #d4d4d8;
+    }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 18px;
+      background: #fbfaf6;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .metric .value {
+      font-size: 26px;
+      font-weight: 900;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .roadmap {
+      display: grid;
+      gap: 14px;
+    }
+
+    .milestone {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 16px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fffdf8;
+    }
+
+    .milestone .phase {
+      color: var(--accent);
+      font-weight: 900;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .source-list {
+      margin: 12px 0 0;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .source-list li {
+      margin: 8px 0;
+    }
+
+    .small {
+      font-size: 13px;
+    }
+
+    .footer {
+      margin: 34px 0 8px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .hero, .decision, .grid.two, .grid.three {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 26px;
+      }
+
+      section {
+        padding: 24px;
+      }
+
+      .page {
+        padding: 16px;
+      }
+
+      .milestone {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+
+      .page {
+        max-width: none;
+        padding: 0;
+      }
+
+      .hero, section {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+
+      .toc {
+        display: none;
+      }
+
+      a {
+        color: inherit;
+        border-bottom: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">PRD report and WhatsApp integration strategy</p>
+        <h1>Tailor Shop Order Platform for Tamil Nadu</h1>
+        <p class="lead">A clean product plan for a tailor shop management app with customer measurements, orders, receipts, order status, and WhatsApp-first communication. The WhatsApp capability is designed as a separate reusable messaging product that can serve multiple client apps and multiple shops with each client's own credentials.</p>
+        <div class="toc" aria-label="Report sections">
+          <a href="#recommendation">Recommendation</a>
+          <a href="#prd">PRD</a>
+          <a href="#whatsapp-options">WhatsApp options</a>
+          <a href="#messaging-hub">Messaging hub</a>
+          <a href="#cost-model">Cost model</a>
+          <a href="#roadmap">Milestones</a>
+          <a href="#growth">Growth plan</a>
+        </div>
+      </div>
+      <aside class="hero-panel">
+        <div>
+          <span class="stamp">Prepared July 2, 2026</span>
+          <ul class="hero-list">
+            <li><span class="tick">1</span><span>Default direction: build on Meta Cloud API for lowest long-term messaging cost.</span></li>
+            <li><span class="tick">2</span><span>Keep WhatsApp as a separate multi-tenant service, not hardcoded inside only the tailor app.</span></li>
+            <li><span class="tick">3</span><span>Use utility and service messages first. Delay marketing campaigns until opt-in and value are proven.</span></li>
+            <li><span class="tick">4</span><span>Sell the product as order clarity, fewer calls, faster pickups, and better repeat-customer memory.</span></li>
+          </ul>
+        </div>
+      </aside>
+    </header>
+
+    <section id="recommendation">
+      <p class="section-kicker">Executive recommendation</p>
+      <h2>Build two products, connected cleanly</h2>
+      <div class="decision">
+        <div class="callout">
+          <h3>1. Tailor shop app</h3>
+          <p>Handles customers, measurements, garments, order status, payments, receipts, staff work, and reports. This is the shop-facing product that a tailor can use daily without technical knowledge.</p>
+        </div>
+        <div class="callout">
+          <h3>2. WhatsApp Messaging Hub</h3>
+          <p>A separate reusable integration layer. Any product can call it to send WhatsApp updates, receive customer messages, fetch message status, manage templates, and meter usage per client.</p>
+        </div>
+      </div>
+      <div class="grid three" style="margin-top: 18px;">
+        <div class="metric">
+          <span class="value">Meta first</span>
+          <span class="label">Most cost-efficient when you own the product and can handle setup.</span>
+        </div>
+        <div class="metric">
+          <span class="value">Twilio fallback</span>
+          <span class="label">Fastest developer experience, but every message has an extra Twilio fee.</span>
+        </div>
+        <div class="metric">
+          <span class="value">BSP dashboards</span>
+          <span class="label">Good for one shop, weaker as a white-label backend for many clients.</span>
+        </div>
+      </div>
+      <div class="callout warning" style="margin-top: 18px;">
+        <h3>Final provider recommendation</h3>
+        <p><strong>For your stated goal, choose Meta Cloud API direct as the default production path.</strong> It gives the best long-term unit economics and keeps you in control of multi-client credentials, templates, billing, and product experience. Add a provider adapter pattern so Twilio can be used for pilots or clients who specifically need Twilio's tooling.</p>
+      </div>
+    </section>
+
+    <section id="prd">
+      <p class="section-kicker">Product requirements document</p>
+      <h2>What we are building</h2>
+      <p>The product is a simple but complete tailor shop operating system for Tamil Nadu based shops. It replaces notebooks, memory, scattered WhatsApp chats, and manual calls with a structured order book, measurement history, receipt trail, and automated WhatsApp status updates.</p>
+      <p>The first release focuses on daily tailor shop work: create an order quickly, attach measurements and garment details, track work status, collect advance and balance payments, send receipts, and let customers check their order status through WhatsApp.</p>
+
+      <div class="grid two" style="margin-top: 18px;">
+        <div class="card">
+          <h3>Primary users</h3>
+          <ul class="clean">
+            <li><strong>Shop owner:</strong> wants visibility over pending work, income, delivery promises, and customer satisfaction.</li>
+            <li><strong>Front desk staff:</strong> creates orders, collects payments, updates customers, and prints or sends receipts.</li>
+            <li><strong>Tailor or master:</strong> needs a clear work queue, fitting notes, garment details, and delivery priority.</li>
+            <li><strong>Customer:</strong> wants order status, due date, receipt, balance, fitting reminder, and pickup alert on WhatsApp.</li>
+            <li><strong>Platform admin:</strong> manages client shops, WhatsApp accounts, usage, templates, and subscription plans.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Target shop types</h3>
+          <ul class="clean">
+            <li>Local men's and women's tailoring shops.</li>
+            <li>Boutiques handling blouse, salwar, kurta, shirt, pant, uniform, wedding, and alteration orders.</li>
+            <li>Small shops with 1 to 5 staff where WhatsApp is already the main customer channel.</li>
+            <li>Growing shops that want repeat-customer records and fewer manual status calls.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 28px;">Core in-scope features</h3>
+      <div class="grid three">
+        <div class="card alt">
+          <h4>Customer profiles</h4>
+          <p class="muted">Store name, mobile number, alternate number, address, notes, consent for WhatsApp updates, and past order history.</p>
+        </div>
+        <div class="card alt">
+          <h4>Measurement history</h4>
+          <p class="muted">Save measurement sets by garment type, customer, date, and version so repeat orders do not require re-measuring every time.</p>
+        </div>
+        <div class="card alt">
+          <h4>Order creation</h4>
+          <p class="muted">Capture garment type, quantity, fabric photo, design notes, promised date, fitting date, price, advance, balance, and priority.</p>
+        </div>
+        <div class="card alt">
+          <h4>Status tracking</h4>
+          <p class="muted">Use clear stages such as new, measured, cutting, stitching, fitting, alteration, ready, delivered, cancelled, and delayed.</p>
+        </div>
+        <div class="card alt">
+          <h4>Receipts and balances</h4>
+          <p class="muted">Generate a clean receipt with order number, items, advance, balance, due date, and shop terms. Send it over WhatsApp.</p>
+        </div>
+        <div class="card alt">
+          <h4>WhatsApp notifications</h4>
+          <p class="muted">Send order confirmation, fitting reminders, ready alerts, delay notices, receipts, and balance reminders with approved templates.</p>
+        </div>
+        <div class="card alt">
+          <h4>Customer status chat</h4>
+          <p class="muted">Customers can message the shop number and choose status, receipt, balance, fitting date, pickup time, or human support.</p>
+        </div>
+        <div class="card alt">
+          <h4>Reports</h4>
+          <p class="muted">Show due today, overdue orders, pending balances, delivered orders, repeat customers, and monthly revenue.</p>
+        </div>
+        <div class="card alt">
+          <h4>Multi-client admin</h4>
+          <p class="muted">Platform owner can onboard shops, connect WhatsApp credentials, manage usage, and see integration health per client.</p>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 28px;">Out of scope for version 1</h3>
+      <div class="grid two">
+        <div class="card warn">
+          <h4>Do not build first</h4>
+          <ul class="clean">
+            <li>Native Android or iOS app. Start with responsive web.</li>
+            <li>Full accounting, GST filing, or inventory management.</li>
+            <li>Advanced payroll or tailor salary calculation.</li>
+            <li>Online ecommerce storefront or catalog checkout.</li>
+            <li>Heavy AI styling assistant or design recommendation engine.</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h4>Delay until traction</h4>
+          <ul class="clean">
+            <li>Marketing broadcast campaigns beyond opt-in customers.</li>
+            <li>Multi-branch enterprise controls.</li>
+            <li>Advanced barcode scanning and label printing.</li>
+            <li>Deep payment gateway integration.</li>
+            <li>Complex custom workflow builder for every shop.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="data-model">
+      <p class="section-kicker">Data model</p>
+      <h2>What the system needs to remember</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Entity</th>
+              <th>Purpose</th>
+              <th>Important fields</th>
+              <th>Relationships</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Client shop</strong></td>
+              <td>The business using the product.</td>
+              <td>Shop name, owner, address, phone, WhatsApp status, plan, timezone, branding, billing status.</td>
+              <td>Owns staff, customers, orders, templates, credentials, and usage.</td>
+            </tr>
+            <tr>
+              <td><strong>Staff user</strong></td>
+              <td>Someone working inside the shop.</td>
+              <td>Name, mobile, role, permissions, active status, assigned orders.</td>
+              <td>Belongs to a shop and updates orders.</td>
+            </tr>
+            <tr>
+              <td><strong>Customer</strong></td>
+              <td>A person ordering tailoring work.</td>
+              <td>Name, mobile, alternate contact, address, notes, WhatsApp opt-in, preferred language.</td>
+              <td>Has measurements, orders, payments, and chats.</td>
+            </tr>
+            <tr>
+              <td><strong>Measurement profile</strong></td>
+              <td>Reusable body or garment measurements.</td>
+              <td>Garment type, measurement values, date captured, notes, version, photo references.</td>
+              <td>Belongs to a customer and can be reused in orders.</td>
+            </tr>
+            <tr>
+              <td><strong>Order</strong></td>
+              <td>The main job card for a customer order.</td>
+              <td>Order number, customer, order date, promised date, fitting date, status, priority, total, advance, balance.</td>
+              <td>Has order items, status events, payments, receipts, messages, and files.</td>
+            </tr>
+            <tr>
+              <td><strong>Order item</strong></td>
+              <td>One garment inside an order.</td>
+              <td>Garment type, quantity, style notes, fabric notes, price, assigned tailor, item status.</td>
+              <td>Belongs to an order and may reference a measurement profile.</td>
+            </tr>
+            <tr>
+              <td><strong>Payment</strong></td>
+              <td>Money collected for an order.</td>
+              <td>Amount, mode, date, reference, staff member, notes, refund flag.</td>
+              <td>Belongs to an order and contributes to receipt history.</td>
+            </tr>
+            <tr>
+              <td><strong>Receipt</strong></td>
+              <td>The customer-facing proof of order and payment.</td>
+              <td>Receipt number, order number, item summary, paid amount, balance, link, sent status.</td>
+              <td>Belongs to an order and can be sent via WhatsApp.</td>
+            </tr>
+            <tr>
+              <td><strong>WhatsApp account</strong></td>
+              <td>The connected business number for a client.</td>
+              <td>Provider, WABA ID, phone number ID, display number, verification status, quality status.</td>
+              <td>Belongs to a shop or client tenant.</td>
+            </tr>
+            <tr>
+              <td><strong>Provider credential</strong></td>
+              <td>Client-specific access details for Meta, Twilio, or another provider.</td>
+              <td>Provider type, credential name, status, expiry, last tested date, owner client.</td>
+              <td>Used only by the messaging hub for that tenant.</td>
+            </tr>
+            <tr>
+              <td><strong>Message template</strong></td>
+              <td>Approved WhatsApp message format.</td>
+              <td>Template name, category, language, variables, approval status, provider template ID.</td>
+              <td>Belongs to a client and is used by notifications.</td>
+            </tr>
+            <tr>
+              <td><strong>Message log</strong></td>
+              <td>Audit trail of every outbound and inbound message.</td>
+              <td>Direction, customer, order, provider, template, category, delivery status, cost bucket, timestamps.</td>
+              <td>Connects customers, orders, templates, and provider events.</td>
+            </tr>
+            <tr>
+              <td><strong>Usage record</strong></td>
+              <td>Billing and cost tracking per shop or API client.</td>
+              <td>Message category, count, provider, client, period, estimated charge, invoice status.</td>
+              <td>Feeds subscription billing and client reports.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="flows">
+      <p class="section-kicker">Core workflows</p>
+      <h2>How the product should feel in daily use</h2>
+      <div class="grid two">
+        <div class="card">
+          <h3>New order flow</h3>
+          <ol class="number-list">
+            <li>Staff enters customer mobile number and selects an existing customer or creates a new one.</li>
+            <li>Staff chooses garment type, copies existing measurements or captures new measurements.</li>
+            <li>Staff adds promised date, fitting date, price, advance, balance, notes, and fabric or design photo.</li>
+            <li>System generates an order number and receipt.</li>
+            <li>Customer receives WhatsApp confirmation with order number, delivery date, amount paid, and balance.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Customer status flow</h3>
+          <ol class="number-list">
+            <li>Customer sends a message to the shop's WhatsApp number.</li>
+            <li>System identifies the customer from the mobile number.</li>
+            <li>If there are multiple active orders, customer chooses the order number.</li>
+            <li>System replies with status, expected date, balance, receipt link, and next action.</li>
+            <li>Customer can request human support if the answer is not enough.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="grid two" style="margin-top: 16px;">
+        <div class="card">
+          <h3>Staff status update flow</h3>
+          <ul class="clean">
+            <li>Staff moves an order from one status to another.</li>
+            <li>The app asks whether to notify the customer when the status is customer-facing.</li>
+            <li>Customer receives only useful updates, such as fitting reminder, ready for pickup, delay, or delivered.</li>
+            <li>The status timeline remains visible inside the order page.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Receipt and balance flow</h3>
+          <ul class="clean">
+            <li>Every payment creates a receipt event.</li>
+            <li>Staff can send the latest receipt on WhatsApp in one click.</li>
+            <li>Customer can later ask for receipt or balance through chat.</li>
+            <li>The system never exposes other customers' data when a phone number is shared or changed.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="whatsapp-options">
+      <p class="section-kicker">WhatsApp integration options</p>
+      <h2>Provider comparison for cost, ease, and scale</h2>
+      <p class="muted">The decision should be based on your real goal: a reusable multi-client integration product. Lowest friction is not the same as lowest long-term cost.</p>
+
+      <div class="table-wrap" style="margin-top: 16px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Best fit</th>
+              <th>Cost notes</th>
+              <th>Ease</th>
+              <th>Multi-client suitability</th>
+              <th>Recommendation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Meta Cloud API direct</strong></td>
+              <td>Your own SaaS platform, reusable WhatsApp gateway, long-term cost control.</td>
+              <td>Meta charges per delivered message by market and category. No extra CPaaS per-message fee. India rates must be verified before launch, but current India-focused BSP pages show utility and authentication far cheaper than marketing.</td>
+              <td>Medium to hard. You handle onboarding, templates, webhooks, quality, support, and credential management.</td>
+              <td>Excellent if built as a proper tenant-aware gateway with isolated credentials and usage tracking.</td>
+              <td><span class="tag good">Recommended default</span></td>
+            </tr>
+            <tr>
+              <td><strong>Twilio WhatsApp</strong></td>
+              <td>Fast prototype, developer-friendly APIs, companies already using Twilio.</td>
+              <td>Twilio states WhatsApp pricing is Twilio's per-message fee plus Meta's per-template message fee. Twilio's fee is USD 0.005 per message inbound or outbound.</td>
+              <td>Easy. Strong docs, logs, sandbox, support, and familiar communication APIs.</td>
+              <td>Good through subaccounts and centralized logs, but cost is higher at scale because of the extra per-message fee.</td>
+              <td><span class="tag warn">Good fallback</span></td>
+            </tr>
+            <tr>
+              <td><strong>AiSensy</strong></td>
+              <td>India SMBs that want dashboard, campaigns, chatbots, and support without building everything.</td>
+              <td>Publishes India message costs: marketing, utility, authentication, and service. Billing is prepaid and WhatsApp credits are managed separately.</td>
+              <td>Easy for a single business. Good local positioning and India-specific pricing language.</td>
+              <td>Moderate. Better as an end-client dashboard than as your invisible backend gateway unless APIs and commercial terms fit your use case.</td>
+              <td><span class="tag">Consider for managed pilots</span></td>
+            </tr>
+            <tr>
+              <td><strong>Interakt</strong></td>
+              <td>Indian SMBs wanting WhatsApp CRM, inbox, automation, campaigns, and support.</td>
+              <td>Published plans include Growth at INR 2,499 per month plus taxes and Advanced at INR 3,499 per month plus taxes. Message costs are separate.</td>
+              <td>Easy for direct shop use.</td>
+              <td>Moderate to low for white-label gateway use because each shop may need plan-level features and dashboard access.</td>
+              <td><span class="tag">Good one-shop tool</span></td>
+            </tr>
+            <tr>
+              <td><strong>WATI</strong></td>
+              <td>Campaigns, team inbox, ecommerce integrations, and no-code automation.</td>
+              <td>Has a single-user pay-as-you-go option with INR 999 one-time fee returned as message credits. Paid plans add automation, API calls, integrations, and webhooks. Message charges follow WATI rate card.</td>
+              <td>Easy for business users.</td>
+              <td>Moderate. Good product, but it is still a client-facing platform, not primarily a multi-product integration layer for your own SaaS.</td>
+              <td><span class="tag">Useful for comparison</span></td>
+            </tr>
+            <tr>
+              <td><strong>Gallabox</strong></td>
+              <td>Teams that want AI, lead qualification, inbox, forms, integrations, and managed onboarding.</td>
+              <td>Published quarterly-billed India pricing starts at INR 2,999 per month for Basic, INR 6,999 for Essential, and INR 16,999 for Advanced. Message fees are separate.</td>
+              <td>Easy for sales/support teams, more expensive for small shops.</td>
+              <td>Moderate. Full API and CRM integrations appear in higher plans, so it may be too heavy for low-cost tailoring clients.</td>
+              <td><span class="tag">Not first choice for low-cost v1</span></td>
+            </tr>
+            <tr>
+              <td><strong>Gupshup</strong></td>
+              <td>High-volume messaging, enterprise conversational AI, and large partner-led deployments.</td>
+              <td>Pricing is less transparent publicly. Better evaluated through sales once you have volume or enterprise clients.</td>
+              <td>Medium. Strong at scale, less simple for a small tailor-shop MVP.</td>
+              <td>Potentially strong at scale, but commercial terms need validation.</td>
+              <td><span class="tag">Evaluate after traction</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout" style="margin-top: 18px;">
+        <h3>Plain answer: which is most cost-efficient and easy?</h3>
+        <p><strong>Most cost-efficient long term:</strong> Meta Cloud API direct. <strong>Easiest to start quickly:</strong> Twilio or an India-focused BSP dashboard. <strong>Best fit for your multi-product, multi-client goal:</strong> Meta Cloud API direct with a provider-adapter architecture, keeping Twilio as optional.</p>
+      </div>
+    </section>
+
+    <section id="message-strategy">
+      <p class="section-kicker">Message strategy</p>
+      <h2>Use WhatsApp for trust, not noise</h2>
+      <div class="grid two">
+        <div class="card">
+          <h3>Message categories to use</h3>
+          <ul class="clean">
+            <li><strong>Service:</strong> customer messages the shop first, then the shop replies within the 24-hour service window. This is best for order-status chat.</li>
+            <li><strong>Utility:</strong> transactional updates such as order confirmation, receipt, fitting reminder, ready for pickup, delay update, and balance reminder.</li>
+            <li><strong>Authentication:</strong> not needed in v1 unless customers log into a portal with OTP.</li>
+            <li><strong>Marketing:</strong> keep out of v1 except opt-in festival campaigns later. It is more expensive and more sensitive for spam complaints.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Recommended templates</h3>
+          <ul class="clean">
+            <li>order_confirmation</li>
+            <li>payment_receipt</li>
+            <li>measurement_reminder</li>
+            <li>fitting_reminder</li>
+            <li>order_ready_pickup</li>
+            <li>delay_update</li>
+            <li>balance_due</li>
+            <li>alteration_ready</li>
+            <li>delivery_confirmation</li>
+          </ul>
+        </div>
+      </div>
+      <div class="quote" style="margin-top: 16px;">
+        <h3>Customer chat menu example</h3>
+        <p>Welcome to [Shop Name]. Choose an option: 1. Check order status, 2. View receipt, 3. Check balance, 4. Fitting or pickup date, 5. Talk to staff.</p>
+        <p class="small">For Tamil Nadu rollout, prepare templates in English and Tamil. Keep the first release bilingual, but avoid complex AI translation until the operational flow is stable.</p>
+      </div>
+    </section>
+
+    <section id="messaging-hub">
+      <p class="section-kicker">Separate WhatsApp product</p>
+      <h2>Multi-client WhatsApp Messaging Hub</h2>
+      <p>This should be its own product layer. The tailor app should not talk directly to Meta, Twilio, or any BSP. It should call your Messaging Hub, and the hub decides which provider, credential, template, and billing bucket applies for that client.</p>
+
+      <div class="grid three" style="margin-top: 18px;">
+        <div class="card alt">
+          <h3>Provider adapters</h3>
+          <p class="muted">Meta Cloud API, Twilio, and optional BSP adapters expose one normalized behavior to your apps.</p>
+        </div>
+        <div class="card alt">
+          <h3>Tenant isolation</h3>
+          <p class="muted">Each client has its own WhatsApp account, credentials, templates, message logs, usage, and billing.</p>
+        </div>
+        <div class="card alt">
+          <h3>Central webhooks</h3>
+          <p class="muted">Inbound messages, delivery receipts, failures, and reads come into one hub and are routed to the correct client app.</p>
+        </div>
+        <div class="card alt">
+          <h3>Template registry</h3>
+          <p class="muted">Store template names, languages, categories, provider IDs, approval status, and variable rules per client.</p>
+        </div>
+        <div class="card alt">
+          <h3>Usage metering</h3>
+          <p class="muted">Track sent, delivered, failed, service, utility, authentication, and marketing messages per client and period.</p>
+        </div>
+        <div class="card alt">
+          <h3>Integration API</h3>
+          <p class="muted">Other products can request messages, status lookups, and webhook subscriptions without knowing provider-specific details.</p>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 28px;">Hub capabilities in scope</h3>
+      <div class="grid two">
+        <div class="card">
+          <h4>Client onboarding</h4>
+          <ul class="clean">
+            <li>Create client tenant and product access.</li>
+            <li>Add WhatsApp provider and credentials.</li>
+            <li>Test connection and webhook health.</li>
+            <li>Register or sync templates.</li>
+            <li>Set default language and sending windows.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Messaging operations</h4>
+          <ul class="clean">
+            <li>Send approved template messages.</li>
+            <li>Send free-form replies inside service windows.</li>
+            <li>Receive inbound messages and route to the owning product.</li>
+            <li>Track sent, delivered, read, failed, and cost category.</li>
+            <li>Pause sending for a client if billing or credentials are unhealthy.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Security controls</h4>
+          <ul class="clean">
+            <li>Encrypt client credentials.</li>
+            <li>Restrict provider credentials to the owning tenant.</li>
+            <li>Record admin changes in an audit log.</li>
+            <li>Rotate keys and revoke access cleanly.</li>
+            <li>Verify incoming provider webhooks.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Billing controls</h4>
+          <ul class="clean">
+            <li>Estimate charge by message category and provider.</li>
+            <li>Support prepaid wallet, monthly invoice, or pass-through billing.</li>
+            <li>Set client-level credit limits.</li>
+            <li>Expose monthly usage reports to client admins.</li>
+            <li>Flag high marketing usage before costs surprise the shop.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout warning" style="margin-top: 18px;">
+        <h3>Credential model</h3>
+        <p>Each client should bring or authorize their own WhatsApp Business Account and phone number. The platform stores only the credentials needed to send and receive messages for that client. Never share one business number across unrelated shops, because customers will lose trust and data isolation becomes risky.</p>
+      </div>
+    </section>
+
+    <section id="cost-model">
+      <p class="section-kicker">Cost model</p>
+      <h2>Illustrative monthly cost scenario</h2>
+      <p class="muted">Assumption: one shop creates 500 orders per month. Each order gets 5 transactional WhatsApp updates: confirmation, receipt, fitting reminder, ready alert, and balance or delivery update. That equals 2,500 utility-style messages per month. Exact pricing must be verified from the provider's live rate card before charging clients.</p>
+
+      <div class="table-wrap" style="margin-top: 16px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Path</th>
+              <th>What the shop pays for</th>
+              <th>Illustrative effect</th>
+              <th>Business meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Meta direct</strong></td>
+              <td>Meta message charges only, plus your own hosting and product cost.</td>
+              <td>If utility is around INR 0.145 per delivered message for India, 2,500 messages is about INR 362.50 in message charges.</td>
+              <td>Best gross margin if you build and operate the integration correctly.</td>
+            </tr>
+            <tr>
+              <td><strong>Twilio</strong></td>
+              <td>Meta charges plus Twilio's USD 0.005 per inbound or outbound WhatsApp message.</td>
+              <td>For 2,500 outbound messages, the Twilio fee alone is USD 12.50, before Meta charges and currency conversion.</td>
+              <td>Great for speed, but unit economics become weaker for low-priced Indian SMB plans.</td>
+            </tr>
+            <tr>
+              <td><strong>India BSP dashboard</strong></td>
+              <td>Monthly software subscription plus message credits or template charges.</td>
+              <td>Published plans often start around INR 2,499 to INR 6,999 per month before message charges, depending on provider and features.</td>
+              <td>Useful when selling a managed service, but expensive if you want a low-cost white-label SaaS for many shops.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid two" style="margin-top: 18px;">
+        <div class="card">
+          <h3>Suggested client pricing</h3>
+          <ul class="clean">
+            <li><strong>Starter:</strong> INR 999 to INR 1,499 per month plus WhatsApp credits. Single shop, 2 users, order book, receipt, basic WhatsApp updates.</li>
+            <li><strong>Pro:</strong> INR 2,499 to INR 3,999 per month plus WhatsApp credits. More users, reminders, reports, customer status chat, and priority support.</li>
+            <li><strong>Setup:</strong> INR 2,999 to INR 9,999 one-time based on data entry, template setup, training, and WhatsApp onboarding.</li>
+            <li><strong>Message wallet:</strong> pass WhatsApp charges separately with a small platform margin, or include a monthly fair-use bundle.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Cost controls</h3>
+          <ul class="clean">
+            <li>Send only status changes customers actually care about.</li>
+            <li>Use customer-initiated service windows for status checks.</li>
+            <li>Keep marketing messages out of the default workflow.</li>
+            <li>Deduplicate repeated updates within the same day.</li>
+            <li>Show admins the estimated cost before bulk or scheduled sends.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <p class="section-kicker">Build milestones</p>
+      <h2>Recommended implementation sequence</h2>
+      <div class="roadmap">
+        <article class="milestone">
+          <div class="phase">Phase 1</div>
+          <div>
+            <h3>Foundation and shop setup</h3>
+            <p class="muted">Create client shop setup, staff roles, shop profile, order numbering, basic settings, and responsive admin layout.</p>
+          </div>
+        </article>
+        <article class="milestone">
+          <div class="phase">Phase 2</div>
+          <div>
+            <h3>Customers, measurements, and order book</h3>
+            <p class="muted">Build customer profiles, measurement templates, garment types, order creation, order item details, status board, and search.</p>
+          </div>
+        </article>
+        <article class="milestone">
+          <div class="phase">Phase 3</div>
+          <div>
+            <h3>Payments, receipts, and reporting basics</h3>
+            <p class="muted">Add advance, balance, payment entries, printable receipt, WhatsApp-ready receipt link, due today, overdue, and pending balance reports.</p>
+          </div>
+        </article>
+        <article class="milestone">
+          <div class="phase">Phase 4</div>
+          <div>
+            <h3>WhatsApp Messaging Hub MVP</h3>
+            <p class="muted">Create separate tenant-aware messaging service with Meta Cloud API adapter, credential setup, template registry, send log, and delivery status.</p>
+          </div>
+        </article>
+        <article class="milestone">
+          <div class="phase">Phase 5</div>
+          <div>
+            <h3>Order notifications and customer status chat</h3>
+            <p class="muted">Connect order events to WhatsApp templates and add inbound customer menu for status, receipt, balance, fitting date, and human handoff.</p>
+          </div>
+        </article>
+        <article class="milestone">
+          <div class="phase">Phase 6</div>
+          <div>
+            <h3>Multi-client operations and billing</h3>
+            <p class="muted">Add client usage dashboard, message wallet or invoice export, credential health checks, template approval status, and provider fallback support.</p>
+          </div>
+        </article>
+        <article class="milestone">
+          <div class="phase">Phase 7</div>
+          <div>
+            <h3>Pilot hardening</h3>
+            <p class="muted">Run with 2 to 5 Tamil Nadu shops, improve order-entry speed, refine Tamil and English templates, tune reports, and document onboarding.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="growth">
+      <p class="section-kicker">Scale-up suggestions</p>
+      <h2>How to make the product succeed</h2>
+      <div class="grid two">
+        <div class="card">
+          <h3>Product positioning</h3>
+          <ul class="clean">
+            <li>Sell the result: fewer customer calls, fewer missed promises, faster pickup, and better repeat orders.</li>
+            <li>Do not sell it as generic CRM. Tailor shops need order clarity, measurement memory, and delivery discipline.</li>
+            <li>Make the first screen a daily work board: due today, fitting today, ready for pickup, pending balance.</li>
+            <li>Keep order creation under two minutes, otherwise staff will return to notebooks.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Tamil Nadu market fit</h3>
+          <ul class="clean">
+            <li>Support Tamil and English customer templates.</li>
+            <li>Include blouse, salwar, kurta, shirt, pant, uniform, wedding, and alteration workflows.</li>
+            <li>Support festival-season capacity pressure: Deepavali, Pongal, wedding season, and school uniform periods.</li>
+            <li>Make WhatsApp consent simple: printed receipt note, order form checkbox, and in-shop QR code.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Go-to-market</h3>
+          <ul class="clean">
+            <li>Start with 3 pilot shops in one city or district before spreading wider.</li>
+            <li>Offer setup help: import customers, create measurement templates, connect WhatsApp, train staff.</li>
+            <li>Use a 7-day live demo with real orders, not a brochure.</li>
+            <li>Build referral incentives for boutique owners and tailoring material suppliers.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Defensibility</h3>
+          <ul class="clean">
+            <li>Your data moat is measurement history and customer repeat-order patterns.</li>
+            <li>Your workflow moat is tailoring-specific order status and reminder logic.</li>
+            <li>Your integration moat is the reusable WhatsApp hub serving multiple products and clients.</li>
+            <li>Your service moat is local onboarding, Tamil templates, and practical support.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="risks">
+      <p class="section-kicker">Risks and mitigations</p>
+      <h2>What can go wrong</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Risk</th>
+              <th>Why it matters</th>
+              <th>Mitigation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Staff do not enter orders consistently</strong></td>
+              <td>The app fails if the order book is incomplete.</td>
+              <td>Make order entry extremely fast, support repeat measurements, and keep the daily board valuable.</td>
+            </tr>
+            <tr>
+              <td><strong>WhatsApp template rejection</strong></td>
+              <td>Key notifications may not go live on time.</td>
+              <td>Write clear transactional templates, avoid promotional language, and submit templates early.</td>
+            </tr>
+            <tr>
+              <td><strong>Customer spam complaints</strong></td>
+              <td>WhatsApp number quality can degrade.</td>
+              <td>Use explicit opt-in, avoid marketing in v1, provide stop/opt-out handling, and send only useful updates.</td>
+            </tr>
+            <tr>
+              <td><strong>Client credential confusion</strong></td>
+              <td>Multi-client data or billing can become messy.</td>
+              <td>Use tenant isolation, encrypted credentials, audit logs, and clear onboarding checklists.</td>
+            </tr>
+            <tr>
+              <td><strong>Provider pricing changes</strong></td>
+              <td>Margins can change suddenly.</td>
+              <td>Keep provider adapters, pass message charges transparently, and update rate cards monthly.</td>
+            </tr>
+            <tr>
+              <td><strong>Phone number migration issues</strong></td>
+              <td>Existing WhatsApp numbers may need account deletion or migration steps.</td>
+              <td>Document number requirements and offer onboarding support before promising go-live date.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="success-metrics">
+      <p class="section-kicker">Success metrics</p>
+      <h2>How to know the product is working</h2>
+      <div class="grid three">
+        <div class="metric">
+          <span class="value">80%+</span>
+          <span class="label">New orders entered into the system during pilot week.</span>
+        </div>
+        <div class="metric">
+          <span class="value">70%+</span>
+          <span class="label">Orders with WhatsApp opt-in and customer mobile verified.</span>
+        </div>
+        <div class="metric">
+          <span class="value">30%+</span>
+          <span class="label">Reduction in manual order-status calls after the first month.</span>
+        </div>
+        <div class="metric">
+          <span class="value">95%+</span>
+          <span class="label">Transactional WhatsApp send success for approved templates.</span>
+        </div>
+        <div class="metric">
+          <span class="value">2 min</span>
+          <span class="label">Target maximum time for staff to create a normal repeat-customer order.</span>
+        </div>
+        <div class="metric">
+          <span class="value">5 shops</span>
+          <span class="label">Early proof point before expanding sales beyond the first locality.</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="next-decisions">
+      <p class="section-kicker">Decisions to lock before build</p>
+      <h2>Open questions for the founder</h2>
+      <div class="grid two">
+        <div class="card">
+          <h3>Product decisions</h3>
+          <ul class="clean">
+            <li>Will v1 target men's tailoring, women's boutiques, or both?</li>
+            <li>Which garment measurement templates are mandatory for the first city?</li>
+            <li>Should receipts be simple shop receipts or GST-style invoices?</li>
+            <li>Should customer status be WhatsApp-only, or include a web status link too?</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Business decisions</h3>
+          <ul class="clean">
+            <li>Will clients pay message charges prepaid or monthly invoice?</li>
+            <li>Will each client bring their own WhatsApp number, or will you help them buy a new number?</li>
+            <li>Will you sell as SaaS only, or SaaS plus onboarding service?</li>
+            <li>What is the minimum support promise for small shops?</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <p class="section-kicker">Sources used</p>
+      <h2>Pricing and platform references</h2>
+      <p class="muted">Pricing changes often. Re-check official provider pages before finalizing client packages or signing paid contracts.</p>
+      <ul class="source-list">
+        <li><a href="https://whatsappbusiness.com/products/platform-pricing/">WhatsApp Business Platform Pricing</a> - Meta/WhatsApp source for per-message pricing, category model, service messages, utility messages, and free entry points.</li>
+        <li><a href="https://www.twilio.com/en-us/whatsapp/pricing">Twilio WhatsApp Pricing</a> - Twilio source for the USD 0.005 per-message fee plus Meta pass-through template fees.</li>
+        <li><a href="https://aisensy.com/pricing/">AiSensy Pricing</a> - India-focused WhatsApp Business API pricing page with 2026 India message cost notes.</li>
+        <li><a href="https://www.interakt.shop/pricing">Interakt Pricing</a> - India-focused plan pricing and WhatsApp automation feature comparison.</li>
+        <li><a href="https://www.wati.io/pricing/">WATI Pricing</a> - WhatsApp Business API plan details, pay-as-you-go option, and onboarding requirements.</li>
+        <li><a href="https://gallabox.com/pricing">Gallabox Pricing</a> - India plan pricing, AI credits, API availability, and channel add-on pricing.</li>
+        <li><a href="https://www.gupshup.io/">Gupshup</a> - Enterprise conversational AI and messaging platform reference for later high-volume evaluation.</li>
+      </ul>
+    </section>
+
+    <p class="footer">Generated as a single-file PRD and strategy report for the tailor shop WhatsApp platform.</p>
+  </main>
+</body>
+</html>
