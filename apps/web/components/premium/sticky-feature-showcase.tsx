@@ -51,7 +51,7 @@ export function StickyFeatureShowcase({
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
                     {feature.eyebrow}
                   </p>
-                  <h3 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+                  <h3 className="mt-3 font-display text-3xl font-light tracking-tight text-foreground">
                     {feature.title}
                   </h3>
                   <p className="mt-3 text-sm leading-[1.65] text-muted-foreground md:text-base">

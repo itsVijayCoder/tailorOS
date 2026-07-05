@@ -33,7 +33,7 @@ export function CTASection({
               <Sparkles aria-hidden className="size-4" />
               Phase-ready foundation
             </span>
-            <h2 className="text-balance font-ui text-5xl font-semibold leading-[0.95] tracking-tight text-foreground md:text-6xl lg:text-7xl">
+            <h2 className="text-balance font-display text-5xl font-light leading-[0.95] tracking-tight text-foreground md:text-6xl lg:text-7xl">
               {title}
             </h2>
             <p className="max-w-2xl text-base leading-[1.65] text-muted-foreground md:text-lg">

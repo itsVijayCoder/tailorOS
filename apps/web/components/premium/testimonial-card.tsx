@@ -12,7 +12,7 @@ export function TestimonialCard({ body, name, role }: TestimonialCardProps) {
   return (
     <PremiumCard className="flex h-full flex-col justify-between gap-10">
       <Quote aria-hidden className="relative z-10 size-8 text-primary" />
-      <blockquote className="relative z-10 text-xl leading-[1.55] text-foreground">
+      <blockquote className="relative z-10 font-display text-3xl font-light leading-[1.15] text-foreground">
         “{body}”
       </blockquote>
       <div className="relative z-10 border-t border-border pt-5">

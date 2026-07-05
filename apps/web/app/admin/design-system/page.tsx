@@ -70,7 +70,7 @@ export default function DesignSystemPage() {
               TX
             </span>
             <span className="leading-tight">
-              <strong className="block font-ui text-sm font-semibold text-foreground">
+              <strong className="block font-display text-lg font-light text-foreground">
                 TailorOS
               </strong>
               <span className="block text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -120,7 +120,7 @@ export default function DesignSystemPage() {
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
                     Theme posture
                   </p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+                  <h2 className="mt-3 font-display text-3xl font-light tracking-tight text-foreground">
                     Dark luxury by default, light ready by token.
                   </h2>
                 </div>
@@ -174,7 +174,7 @@ export default function DesignSystemPage() {
                       <Icon aria-hidden className="size-5" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                      <h2 className="font-display text-2xl font-light tracking-tight text-foreground">
                         {principle.title}
                       </h2>
                       <p className="mt-3 text-sm leading-[1.65] text-muted-foreground">
@@ -191,7 +191,7 @@ export default function DesignSystemPage() {
             <div className="relative z-10 grid gap-8">
               <div className="flex items-center gap-3">
                 <MousePointer2 aria-hidden className="size-5 text-primary" />
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                <h2 className="font-display text-3xl font-light tracking-tight text-foreground">
                   Premium controls
                 </h2>
               </div>
@@ -206,7 +206,7 @@ export default function DesignSystemPage() {
               <div className="grid gap-5 rounded-[1.4rem] border border-border bg-secondary/35 p-5">
                 <div className="flex items-center gap-3">
                   <Type aria-hidden className="size-5 text-primary" />
-                  <h3 className="text-lg font-semibold text-foreground">
+                  <h3 className="font-display text-2xl font-light text-foreground">
                     shadcn compatibility
                   </h3>
                 </div>

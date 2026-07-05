@@ -194,7 +194,7 @@ function Header() {
             TX
           </span>
           <span className="leading-tight">
-            <strong className="block font-ui text-sm font-semibold tracking-tight text-foreground">
+            <strong className="block font-display text-lg font-light tracking-tight text-foreground">
               TailorOS
             </strong>
             <span className="block text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -239,7 +239,7 @@ function HeroSection() {
           </AnimatedBadge>
 
           <div className="flex flex-col gap-7" data-reveal>
-            <h1 className="text-balance font-ui text-6xl font-semibold leading-[0.9] tracking-tight text-foreground md:text-8xl lg:text-[7.5rem]">
+            <h1 className="text-balance font-display text-6xl font-light leading-[0.88] tracking-tight text-foreground md:text-8xl lg:text-[7.5rem]">
               The operating system for{" "}
               <span className="font-display font-light italic text-primary">
                 bespoke
@@ -269,7 +269,7 @@ function HeroSection() {
           <div className="grid gap-3 sm:grid-cols-3" data-stagger>
             {heroStats.map((stat) => (
               <GlassCard className="p-4" key={stat.label}>
-                <p className="text-3xl font-semibold tracking-tight text-foreground">
+                <p className="font-display text-4xl font-light tracking-tight text-foreground">
                   {stat.value}
                 </p>
                 <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -331,7 +331,7 @@ function VisualSystemSection() {
                     <Icon aria-hidden className="size-5" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold tracking-tight text-foreground">
+                    <h3 className="font-display text-2xl font-light tracking-tight text-foreground">
                       {card.title}
                     </h3>
                     <p className="mt-3 text-sm leading-[1.65] text-muted-foreground">
@@ -408,7 +408,7 @@ function SignalSection() {
                   {item.value}
                 </p>
                 <div>
-                  <h3 className="text-2xl font-semibold tracking-tight text-foreground">
+                  <h3 className="font-display text-3xl font-light tracking-tight text-foreground">
                     {item.title}
                   </h3>
                   <p className="mt-4 text-sm leading-[1.65] text-muted-foreground">

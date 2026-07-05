@@ -61,10 +61,10 @@ export function HorizontalScrollSection({
                     </span>
                   </div>
                   <div>
-                    <p className="text-5xl font-semibold tracking-tight text-primary">
+                    <p className="font-display text-5xl font-light tracking-tight text-primary">
                       {item.stat}
                     </p>
-                    <h3 className="mt-5 text-2xl font-semibold tracking-tight text-foreground">
+                    <h3 className="mt-5 font-display text-3xl font-light tracking-tight text-foreground">
                       {item.title}
                     </h3>
                     <p className="mt-4 text-sm leading-[1.65] text-muted-foreground">
