@@ -28,7 +28,7 @@ import {
   WhatsAppDeliveryBadge,
 } from "@/components/tailoros";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import {
   Card,
@@ -463,7 +463,9 @@ export default function DesignSystemPage() {
               <PreviewPanel title="Dialog and dropdown">
                 <div className="flex flex-wrap gap-3">
                   <Dialog>
-                    <DialogTrigger render={<Button variant="outline" />}>
+                    <DialogTrigger
+                      className={cn(buttonVariants({ variant: "outline" }))}
+                    >
                       Preview receipt
                     </DialogTrigger>
                     <DialogContent>
@@ -483,7 +485,11 @@ export default function DesignSystemPage() {
                         status="partial"
                       />
                       <DialogFooter>
-                        <DialogClose render={<Button variant="secondary" />}>
+                        <DialogClose
+                          className={cn(
+                            buttonVariants({ variant: "secondary" }),
+                          )}
+                        >
                           Close
                         </DialogClose>
                         <Button>Share receipt</Button>
@@ -492,7 +498,9 @@ export default function DesignSystemPage() {
                   </Dialog>
 
                   <DropdownMenu>
-                    <DropdownMenuTrigger render={<Button variant="secondary" />}>
+                    <DropdownMenuTrigger
+                      className={cn(buttonVariants({ variant: "secondary" }))}
+                    >
                       More actions
                       <ChevronDown aria-hidden className="size-4" />
                     </DropdownMenuTrigger>
