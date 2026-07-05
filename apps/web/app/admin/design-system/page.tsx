@@ -252,7 +252,7 @@ export default function DesignSystemPage() {
               <BadgeCheck aria-hidden className="size-3.5" />
               Phase 02 implementation reference
             </Badge>
-            <h1 className="mt-5 text-balance font-display text-5xl font-light leading-[0.95] text-ink-display sm:text-6xl lg:text-7xl">
+            <h1 className="mt-5 text-balance font-display text-5xl font-medium leading-[0.95] text-ink-display sm:text-6xl lg:text-7xl">
               Premium UI foundation for a fast tailor-shop operating desk.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-ink-body sm:text-lg">
@@ -285,7 +285,7 @@ export default function DesignSystemPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Operating pulse
                 </p>
-                <h2 className="mt-2 font-display text-3xl font-light leading-none text-ink-display">
+                <h2 className="mt-2 font-display text-3xl font-medium leading-none text-ink-display">
                   Counter-safe by design
                 </h2>
               </div>
@@ -389,7 +389,7 @@ export default function DesignSystemPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Page heading
                 </p>
-                <h2 className="mt-2 font-display text-5xl font-light leading-none text-ink-display">
+                <h2 className="mt-2 font-display text-5xl font-medium leading-none text-ink-display">
                   Today dashboard
                 </h2>
                 <p className="mt-4 max-w-2xl text-base leading-7 text-ink-body">
@@ -401,7 +401,7 @@ export default function DesignSystemPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Compact panel
                 </p>
-                <h3 className="mt-2 font-display text-3xl font-light leading-none text-ink-display">
+                <h3 className="mt-2 font-display text-3xl font-medium leading-none text-ink-display">
                   Ready for pickup
                 </h3>
                 <p className="mt-3 text-sm leading-6 text-ink-body">
@@ -745,7 +745,7 @@ function ReferenceSection({
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
             {eyebrow}
           </p>
-          <h2 className="mt-1 font-display text-3xl font-light leading-none text-ink-display sm:text-4xl">
+          <h2 className="mt-1 font-display text-3xl font-medium leading-none text-ink-display sm:text-4xl">
             {title}
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-ink-body">

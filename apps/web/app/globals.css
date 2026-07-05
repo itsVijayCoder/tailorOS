@@ -594,7 +594,7 @@ a {
 .body-content h3 {
   color: var(--ink-display);
   font-family: var(--font-heading);
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1.05;
 }
 

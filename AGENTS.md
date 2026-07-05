@@ -17,7 +17,7 @@ When implementing UI:
 
 2. Do not invent ad-hoc visual systems. Avoid raw hex values and one-off Tailwind color utilities when a semantic token exists. If a missing primitive is needed, add it to `apps/web/components/ui/` and document it on `/admin/design-system`.
 
-3. Typography is part of the design-system contract. Use Cormorant Garamond through `font-display` for page titles, section titles, card/dialog headings, and reference-document headings. Use Inter through `font-ui` or inherited body text for labels, controls, numeric values, tables, dense lists, and operational copy.
+3. Typography is part of the design-system contract. Use Cormorant Garamond through `font-display` with medium-weight hierarchy for page titles, section titles, card/dialog headings, and reference-document headings. Use Inter through `font-ui` or inherited body text for labels, controls, numeric values, tables, dense lists, and operational copy.
 
 4. Keep operational screens dense, scannable, and calm. TailorOS is a shop operating system, so prioritize fast search, clear customer/order identity, visible status, compact lists, and repeated counter workflows over marketing-style sections.
 
