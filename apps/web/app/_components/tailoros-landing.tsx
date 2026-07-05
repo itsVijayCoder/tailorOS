@@ -241,7 +241,9 @@ function HeroSection() {
           <div className="flex flex-col gap-7" data-reveal>
             <h1 className="text-balance font-ui text-6xl font-semibold leading-[0.9] tracking-tight text-foreground md:text-8xl lg:text-[7.5rem]">
               The operating system for{" "}
-              <span className="font-display italic text-primary">bespoke</span>{" "}
+              <span className="font-display font-light italic text-primary">
+                bespoke
+              </span>{" "}
               tailoring.
             </h1>
             <p className="max-w-2xl text-base leading-[1.65] text-muted-foreground md:text-lg">
@@ -402,7 +404,7 @@ function SignalSection() {
           ].map((item) => (
             <PremiumCard key={item.title}>
               <div className="relative z-10 flex h-full flex-col justify-between gap-12">
-                <p className="font-display text-5xl italic text-primary">
+                <p className="font-display text-5xl font-light italic text-primary">
                   {item.value}
                 </p>
                 <div>

@@ -39,7 +39,7 @@ export function Phase00Dashboard() {
             <Milestone aria-hidden className="size-4 text-primary" />
             TailorOS implementation handbook - Master
           </div>
-          <h1 className="max-w-5xl font-display text-5xl font-semibold leading-[0.95] text-foreground sm:text-6xl lg:text-7xl">
+          <h1 className="max-w-5xl font-display text-5xl font-light leading-[0.95] text-foreground sm:text-6xl lg:text-7xl">
             Phase-wise Implementation Master Index
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground sm:text-xl">
@@ -70,7 +70,7 @@ export function Phase00Dashboard() {
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
                   Implementation status
                 </p>
-                <h2 className="mt-3 font-display text-2xl font-semibold text-foreground">
+                <h2 className="mt-3 font-display text-2xl font-light text-foreground">
                   Ready for Phase 01 execution
                 </h2>
               </div>
@@ -84,7 +84,7 @@ export function Phase00Dashboard() {
                   className="rounded-2xl border border-border bg-card/70 p-4 shadow-raised"
                   key={stat.label}
                 >
-                  <strong className="block font-display text-3xl font-semibold text-foreground">
+                  <strong className="block font-display text-3xl font-light text-foreground">
                     {stat.value}
                   </strong>
                   <span className="mt-1 block text-sm leading-5 text-muted-foreground">
@@ -237,7 +237,7 @@ function SiteHeader() {
             TX
           </span>
           <span className="leading-tight">
-            <strong className="block font-display text-base font-semibold text-foreground">
+            <strong className="block font-display text-base font-light text-foreground">
               TailorOS
             </strong>
             <span className="block text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -278,7 +278,7 @@ function SectionHeading({
       <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
         {eyebrow}
       </p>
-      <h2 className="mt-3 font-display text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
+      <h2 className="mt-3 font-display text-3xl font-light tracking-normal text-foreground sm:text-4xl">
         {title}
       </h2>
       <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
@@ -303,7 +303,7 @@ function PhaseCard({ phase, index }: { phase: Phase; index: number }) {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               {phase.category}
             </p>
-            <h3 className="mt-1 font-display text-xl font-semibold text-foreground">
+            <h3 className="mt-1 font-display text-xl font-light text-foreground">
               {phase.shortTitle}
             </h3>
           </div>

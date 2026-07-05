@@ -40,7 +40,7 @@ export function SectionHeading({
         {titleParts ? (
           <>
             {titleParts[0]}
-            <span className="font-display italic text-primary">
+            <span className="font-display font-light italic text-primary">
               {italicTitleWord}
             </span>
             {titleParts.slice(1).join(italicTitleWord)}

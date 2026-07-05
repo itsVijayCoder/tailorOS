@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ClientProviders } from "@/components/motion/client-providers";
 
-const headingFont = Playfair_Display({
+const headingFont = Cormorant_Garamond({
   subsets: ["latin"],
+  weight: "300",
+  style: ["normal", "italic"],
   variable: "--font-heading",
   display: "swap",
 });

@@ -132,7 +132,7 @@ export function PageTransitionOverlay() {
     >
       <div className="relative flex flex-col items-center gap-5">
         <div
-          className="font-display text-2xl italic tracking-wide text-primary"
+          className="font-display text-2xl font-light italic tracking-wide text-primary"
           ref={markRef}
         >
           TailorOS
