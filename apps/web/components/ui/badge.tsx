@@ -4,19 +4,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold leading-none",
+  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold leading-none transition-colors duration-200 ease-premium",
   {
     variants: {
       variant: {
-        default: "border-primary bg-primary text-primary-foreground",
-        neutral: "border-border bg-muted text-foreground",
-        secondary: "border-secondary bg-secondary text-secondary-foreground",
-        accent: "border-border bg-accent text-accent-foreground",
-        signal: "border-warning bg-warning text-warning-foreground",
-        solid: "border-primary bg-primary text-primary-foreground",
-        outline: "border-border bg-transparent text-foreground",
+        default: "border-accent bg-accent text-accent-foreground",
+        neutral: "border-hairline bg-surface text-ink-body",
+        secondary: "border-hairline bg-secondary text-secondary-foreground",
+        accent: "border-accent bg-accent text-accent-foreground",
+        signal: "border-signal bg-signal text-signal-darker",
+        solid: "border-accent bg-accent text-accent-foreground",
+        outline: "border-hairline bg-transparent text-ink-display",
+        success: "border-state-success bg-state-success text-success-foreground",
+        warning: "border-signal bg-signal text-signal-darker",
+        info: "border-state-info bg-state-info text-primary-foreground",
+        whatsapp: "border-wa-read bg-wa-read text-primary-foreground",
         destructive:
-          "border-destructive bg-destructive text-destructive-foreground",
+          "border-state-danger bg-state-danger text-destructive-foreground",
       },
     },
     defaultVariants: {
