@@ -27,7 +27,7 @@ const navItems = [
 
 export function Phase00Dashboard() {
   return (
-    <main className="min-h-screen overflow-hidden bg-page text-ink-body">
+    <main className="min-h-screen overflow-hidden bg-background text-foreground">
       <div className="page-ambient" />
       <SiteHeader />
       <section
@@ -35,14 +35,14 @@ export function Phase00Dashboard() {
         className="relative mx-auto grid w-full max-w-7xl gap-8 px-5 pb-16 pt-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:px-10 lg:pb-24 lg:pt-12"
       >
         <div className="motion-safe:animate-[fade-up_700ms_cubic-bezier(.2,.8,.2,1)_both]">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-hairline bg-white/80 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-ink-muted shadow-sm backdrop-blur">
-            <Milestone aria-hidden className="size-4 text-accent" />
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-background/80 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground shadow-sm backdrop-blur">
+            <Milestone aria-hidden className="size-4 text-primary" />
             TailorOS implementation handbook - Master
           </div>
-          <h1 className="max-w-5xl font-display text-5xl font-semibold leading-[0.95] text-ink-display sm:text-6xl lg:text-7xl">
+          <h1 className="max-w-5xl font-display text-5xl font-semibold leading-[0.95] text-foreground sm:text-6xl lg:text-7xl">
             Phase-wise Implementation Master Index
           </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-ink-body sm:text-xl">
+          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground sm:text-xl">
             A premium command center for the complete TailorOS and WhatsApp
             Connector implementation pack, synthesized from the product PRDs and
             the phase-wise engineering reports.
@@ -67,34 +67,34 @@ export function Phase00Dashboard() {
           <div className="relative">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
                   Implementation status
                 </p>
-                <h2 className="mt-3 font-display text-2xl font-semibold text-ink-display">
+                <h2 className="mt-3 font-display text-2xl font-semibold text-foreground">
                   Ready for Phase 01 execution
                 </h2>
               </div>
-              <div className="rounded-2xl border border-accent/20 bg-accent-faded p-3 text-accent">
+              <div className="rounded-2xl border border-border bg-accent p-3 text-accent-foreground">
                 <PanelTop aria-hidden className="size-6" />
               </div>
             </div>
             <div className="mt-8 grid grid-cols-2 gap-3">
               {heroStats.map((stat) => (
                 <div
-                  className="rounded-2xl border border-hairline bg-white/70 p-4 shadow-[0_12px_34px_rgba(15,23,42,0.06)]"
+                  className="rounded-2xl border border-border bg-card/70 p-4 shadow-raised"
                   key={stat.label}
                 >
-                  <strong className="block font-display text-3xl font-semibold text-ink-display">
+                  <strong className="block font-display text-3xl font-semibold text-foreground">
                     {stat.value}
                   </strong>
-                  <span className="mt-1 block text-sm leading-5 text-ink-muted">
+                  <span className="mt-1 block text-sm leading-5 text-muted-foreground">
                     {stat.label}
                   </span>
                 </div>
               ))}
             </div>
-            <div className="mt-6 rounded-2xl border border-hairline bg-surface p-4">
-              <p className="text-sm leading-6 text-ink-body">
+            <div className="mt-6 rounded-2xl border border-border bg-muted p-4">
+              <p className="text-sm leading-6 text-foreground">
                 The build sequence is intentionally conservative: establish
                 architecture and UI foundations, lock tenant and domain
                 invariants, validate the shop OS, then connect WhatsApp.
@@ -114,7 +114,7 @@ export function Phase00Dashboard() {
                 key={insight.title}
                 style={{ "--delay": `${index * 70}ms` } as CSSProperties}
               >
-                <Icon aria-hidden className="size-5 text-accent" />
+                <Icon aria-hidden className="size-5 text-primary" />
                 <h2>{insight.title}</h2>
                 <p>{insight.body}</p>
               </article>
@@ -218,7 +218,7 @@ export function Phase00Dashboard() {
               </div>
               <ArrowUpRight
                 aria-hidden
-                className="ml-auto size-5 shrink-0 text-ink-muted transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent"
+                className="ml-auto size-5 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary"
               />
             </a>
           ))}
@@ -230,28 +230,28 @@ export function Phase00Dashboard() {
 
 function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b border-hairline/80 bg-page/86 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-border/80 bg-background/86 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8 lg:px-10">
         <a className="group flex items-center gap-3" href="#overview">
-          <span className="grid size-10 place-items-center rounded-2xl bg-ink-display text-sm font-semibold text-page shadow-[0_16px_34px_rgba(15,23,42,0.18)] transition-transform duration-300 group-hover:-rotate-3 group-hover:scale-105">
+          <span className="grid size-10 place-items-center rounded-2xl bg-primary text-sm font-semibold text-primary-foreground shadow-token transition-transform duration-300 group-hover:-rotate-3 group-hover:scale-105">
             TX
           </span>
           <span className="leading-tight">
-            <strong className="block font-display text-base font-semibold text-ink-display">
+            <strong className="block font-display text-base font-semibold text-foreground">
               TailorOS
             </strong>
-            <span className="block text-xs font-medium uppercase tracking-[0.18em] text-ink-muted">
+            <span className="block text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
               Phase 00
             </span>
           </span>
         </a>
         <nav
           aria-label="Primary sections"
-          className="hidden items-center rounded-full border border-hairline bg-white/70 p-1 shadow-sm md:flex"
+          className="hidden items-center rounded-full border border-border bg-background/70 p-1 shadow-sm md:flex"
         >
           {navItems.map((item) => (
             <a
-              className="rounded-full px-4 py-2 text-sm font-semibold text-ink-muted transition duration-200 hover:bg-accent-faded hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground transition duration-200 hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               href={item.href}
               key={item.href}
             >
@@ -275,13 +275,13 @@ function SectionHeading({
 }) {
   return (
     <div className="max-w-3xl">
-      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent">
+      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
         {eyebrow}
       </p>
-      <h2 className="mt-3 font-display text-3xl font-semibold tracking-normal text-ink-display sm:text-4xl">
+      <h2 className="mt-3 font-display text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
         {title}
       </h2>
-      <p className="mt-4 text-base leading-7 text-ink-muted sm:text-lg">
+      <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
         {body}
       </p>
     </div>
@@ -300,10 +300,10 @@ function PhaseCard({ phase, index }: { phase: Phase; index: number }) {
         <div className="flex items-center gap-3">
           <span className="phase-number">{phase.number}</span>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-muted">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               {phase.category}
             </p>
-            <h3 className="mt-1 font-display text-xl font-semibold text-ink-display">
+            <h3 className="mt-1 font-display text-xl font-semibold text-foreground">
               {phase.shortTitle}
             </h3>
           </div>
@@ -313,12 +313,12 @@ function PhaseCard({ phase, index }: { phase: Phase; index: number }) {
         </div>
       </div>
 
-      <p className="mt-5 text-sm leading-6 text-ink-body">{phase.lead}</p>
-      <div className="mt-5 rounded-2xl border border-hairline bg-surface/80 p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-muted">
+      <p className="mt-5 text-sm leading-6 text-foreground">{phase.lead}</p>
+      <div className="mt-5 rounded-2xl border border-border bg-muted/80 p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Outcome
         </p>
-        <p className="mt-2 text-sm leading-6 text-ink-display">
+        <p className="mt-2 text-sm leading-6 text-foreground">
           {phase.outcome}
         </p>
       </div>
@@ -329,12 +329,12 @@ function PhaseCard({ phase, index }: { phase: Phase; index: number }) {
           </span>
         ))}
       </div>
-      <div className="mt-6 flex items-start gap-3 border-t border-hairline pt-5">
+      <div className="mt-6 flex items-start gap-3 border-t border-border pt-5">
         <CheckCircle2
           aria-hidden
-          className="mt-0.5 size-5 shrink-0 text-accent"
+          className="mt-0.5 size-5 shrink-0 text-primary"
         />
-        <p className="text-sm leading-6 text-ink-muted">{phase.gate}</p>
+        <p className="text-sm leading-6 text-muted-foreground">{phase.gate}</p>
       </div>
       <a className="phase-report-link group/link" href={phase.href}>
         Open implementation report

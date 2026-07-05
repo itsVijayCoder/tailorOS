@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint . && pnpm theme:check",
+    "theme:check": "node scripts/check-theme-tokens.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

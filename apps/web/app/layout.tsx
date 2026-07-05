@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
-import { DM_Sans, Inter, Noto_Sans, Playfair_Display } from "next/font/google";
+import { Inter, Noto_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const playfairDisplayHeading = Playfair_Display({subsets:['latin'],variable:'--font-heading'});
-
-const notoSans = Noto_Sans({subsets:['latin'],variable:'--font-sans'});
-
-const inter = Inter({
-  variable: "--font-inter",
+const headingFont = Playfair_Display({
   subsets: ["latin"],
+  variable: "--font-heading",
   display: "swap",
 });
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const bodyFont = Noto_Sans({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const interfaceFont = Inter({
+  variable: "--font-interface",
   subsets: ["latin"],
   display: "swap",
 });
@@ -48,14 +50,19 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("h-full", "scroll-smooth", "antialiased", inter.variable, dmSans.variable, "font-sans", notoSans.variable, playfairDisplayHeading.variable)}
+      className={cn(
+        "h-full scroll-smooth font-sans antialiased",
+        bodyFont.variable,
+        headingFont.variable,
+        interfaceFont.variable,
+      )}
     >
       <head>
         {/* bm-design-system:start */}
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         {/* bm-design-system:end */}
       </head>
-      <body className="min-h-full bg-page font-sans text-ink-body">
+      <body className="min-h-full bg-background text-foreground">
         {children}
       </body>
     </html>

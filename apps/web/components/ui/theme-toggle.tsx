@@ -21,7 +21,7 @@ export function ThemeToggle({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "inline-flex rounded-full border border-hairline bg-page/80 p-1 shadow-sm backdrop-blur",
+        "inline-flex rounded-full border border-border bg-background/80 p-1 shadow-sm backdrop-blur",
         className,
       )}
     >
@@ -32,9 +32,9 @@ export function ThemeToggle({ className }: { className?: string }) {
           <button
             aria-label={`Use ${option.label.toLowerCase()} theme`}
             className={cn(
-              "grid size-8 place-items-center rounded-full text-ink-muted transition duration-200 hover:bg-surface hover:text-ink-display focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+              "grid size-8 place-items-center rounded-full text-muted-foreground transition duration-200 hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
               active &&
-                "bg-accent text-white shadow-sm hover:bg-accent hover:text-white",
+                "bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground",
             )}
             key={option.value}
             onClick={() => setTheme(option.value)}
