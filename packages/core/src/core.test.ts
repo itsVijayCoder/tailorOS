@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import {
+  calculatePaymentLedger,
+  nextVersionNumber,
+  normalizeSearchText,
+} from "./domain";
 import { createStableId } from "./ids";
 import { addMoney, moneyFromRupees, subtractMoney } from "./money";
 import { canTransitionOrder, transitionOrder } from "./order-state";
@@ -44,5 +49,34 @@ describe("TailorOS core domain utilities", () => {
     expect(() => transitionOrder({ from: "booked", to: "cancelled" })).toThrow(
       "requires a reason",
     );
+  });
+
+  it("calculates ledger balance without mutating payment history", () => {
+    expect(
+      calculatePaymentLedger({
+        finalTotalPaise: 500_00,
+        payments: [
+          { kind: "advance", amountPaise: 200_00 },
+          { kind: "balance", amountPaise: 100_00 },
+          { kind: "refund", amountPaise: 50_00 },
+          { kind: "correction", amountPaise: -25_00 },
+        ],
+      }),
+    ).toEqual({
+      chargedPaise: 500_00,
+      collectedPaise: 300_00,
+      refundedPaise: 50_00,
+      correctedPaise: -25_00,
+      netPaidPaise: 225_00,
+      balanceDuePaise: 275_00,
+    });
+  });
+
+  it("normalizes search text and advances measurement versions", () => {
+    expect(normalizeSearchText("  Meena   Ravi / ORD-1042 ")).toBe(
+      "meena ravi ord 1042",
+    );
+    expect(nextVersionNumber(null)).toBe(1);
+    expect(nextVersionNumber(3)).toBe(4);
   });
 });
