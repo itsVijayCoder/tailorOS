@@ -53,7 +53,7 @@ const navItems = [
 const metrics = [
   {
     label: "Tenant tables",
-    value: "22",
+    value: "23",
     detail: "including search, audit, outbox",
     icon: Database,
   },
@@ -132,6 +132,7 @@ const schemaGroups = [
       "garment_types",
       "measurement_profiles",
       "measurement_versions",
+      "media_assets",
       "order_measurement_snapshots",
     ],
     signal: "Historical fit records",

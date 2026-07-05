@@ -112,6 +112,22 @@ CREATE TABLE IF NOT EXISTS measurement_versions (
 CREATE INDEX IF NOT EXISTS idx_measurement_versions_profile
   ON measurement_versions(measurement_profile_id, version_no DESC);
 
+CREATE TABLE IF NOT EXISTS media_assets (
+  id TEXT PRIMARY KEY,
+  owner_type TEXT NOT NULL,
+  owner_id TEXT NOT NULL,
+  r2_key TEXT NOT NULL UNIQUE,
+  content_type TEXT NOT NULL,
+  byte_size INTEGER CHECK (byte_size IS NULL OR byte_size >= 0),
+  purpose TEXT NOT NULL,
+  metadata_json TEXT,
+  created_by_user_id TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_media_assets_owner
+  ON media_assets(owner_type, owner_id, created_at);
+
 CREATE TABLE IF NOT EXISTS orders (
   id TEXT PRIMARY KEY,
   order_code TEXT NOT NULL UNIQUE,
