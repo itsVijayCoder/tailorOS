@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, Noto_Sans, Playfair_Display } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { ClientProviders } from "@/components/motion/client-providers";
 
 const headingFont = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-heading",
-  display: "swap",
-});
-
-const bodyFont = Noto_Sans({
-  subsets: ["latin"],
-  variable: "--font-body",
   display: "swap",
 });
 
@@ -21,13 +16,19 @@ const interfaceFont = Inter({
   display: "swap",
 });
 
+const bodyFont = Inter({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: {
-    default: "TailorOS Phase-wise Implementation Master Index",
+    default: "TailorOS | Premium Tailor-Shop Operating System",
     template: "%s | TailorOS",
   },
   description:
-    "Premium implementation command center for TailorOS and the WhatsApp Chat Connector.",
+    "A premium operating platform for tailor shops, unifying orders, measurements, fittings, WhatsApp conversations, and delivery workflows.",
 };
 
 const themeBootScript = `
@@ -35,7 +36,7 @@ const themeBootScript = `
   try {
     const stored = localStorage.getItem("bm-ds-theme");
     const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const shouldUseDark = stored === "dark" || (!stored || stored === "system") && systemDark;
+    const shouldUseDark = stored === "light" ? false : stored === "system" ? systemDark : true;
     document.documentElement.classList.toggle("dark", shouldUseDark);
   } catch (_) {}
 })();
@@ -51,7 +52,7 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
       className={cn(
-        "h-full scroll-smooth font-sans antialiased",
+        "h-full font-sans antialiased",
         bodyFont.variable,
         headingFont.variable,
         interfaceFont.variable,
@@ -63,7 +64,7 @@ export default function RootLayout({
         {/* bm-design-system:end */}
       </head>
       <body className="min-h-full bg-background text-foreground">
-        {children}
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );

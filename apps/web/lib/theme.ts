@@ -8,13 +8,13 @@ export type ThemePreference = "light" | "dark" | "system";
 
 function readStoredTheme(): ThemePreference {
   if (typeof window === "undefined") {
-    return "system";
+    return "dark";
   }
 
   const stored = window.localStorage.getItem(themeStorageKey);
   return stored === "light" || stored === "dark" || stored === "system"
     ? stored
-    : "system";
+    : "dark";
 }
 
 function resolveSystemTheme() {

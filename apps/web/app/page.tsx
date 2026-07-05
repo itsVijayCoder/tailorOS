@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
-import { Phase00Dashboard } from "@/app/_components/phase00-dashboard";
+import { TailorOSLanding } from "@/app/_components/tailoros-landing";
 
 export const metadata: Metadata = {
-  title: "TailorOS Phase00 Master Index",
+  title: "TailorOS Premium Platform",
   description:
-    "Phase-wise implementation command center for TailorOS and the WhatsApp Chat Connector.",
+    "Premium design-system and motion foundation for TailorOS, the modern tailor-shop operating platform.",
 };
 
 export default function Home() {
-  return <Phase00Dashboard />;
+  return <TailorOSLanding />;
 }
