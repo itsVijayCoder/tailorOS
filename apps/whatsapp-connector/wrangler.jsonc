@@ -1,0 +1,34 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "tailoros-whatsapp-connector",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "d1_databases": [
+    {
+      "binding": "CONNECTOR_DB",
+      "database_name": "tailoros_whatsapp_connector_local",
+      "database_id": "00000000-0000-0000-0000-000000000003",
+    },
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "WHATSAPP_SEND_QUEUE",
+        "queue": "wa-send-local",
+      },
+      {
+        "binding": "WHATSAPP_WEBHOOK_QUEUE",
+        "queue": "wa-webhook-local",
+      },
+    ],
+  },
+  "vars": {
+    "ENVIRONMENT": "local",
+    "META_WEBHOOK_VERIFY_TOKEN_HASH": "local-placeholder-hash",
+  },
+}

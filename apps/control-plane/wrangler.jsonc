@@ -1,0 +1,46 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "tailoros-control-plane",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "d1_databases": [
+    {
+      "binding": "CONTROL_DB",
+      "database_name": "tailoros_control_local",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+    },
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "TENANT_PROVISION_QUEUE",
+        "queue": "tenant-provision-local",
+      },
+      {
+        "binding": "TENANT_MIGRATION_QUEUE",
+        "queue": "tenant-migration-local",
+      },
+    ],
+    "consumers": [
+      {
+        "queue": "tenant-provision-local",
+        "max_batch_size": 5,
+        "dead_letter_queue": "tenant-provision-dlq-local",
+      },
+    ],
+  },
+  "r2_buckets": [
+    {
+      "binding": "TENANT_EXPORTS_BUCKET",
+      "bucket_name": "tailoros-tenant-exports-local",
+    },
+  ],
+  "vars": {
+    "ENVIRONMENT": "local",
+  },
+}

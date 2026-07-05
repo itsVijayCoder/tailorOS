@@ -23,6 +23,17 @@ export const metadata: Metadata = {
     "Premium implementation command center for TailorOS and the WhatsApp Chat Connector.",
 };
 
+const themeBootScript = `
+(() => {
+  try {
+    const stored = localStorage.getItem("bm-ds-theme");
+    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const shouldUseDark = stored === "dark" || (!stored || stored === "system") && systemDark;
+    document.documentElement.classList.toggle("dark", shouldUseDark);
+  } catch (_) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,8 +42,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${inter.variable} ${dmSans.variable} h-full scroll-smooth antialiased`}
     >
+      <head>
+        {/* bm-design-system:start */}
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        {/* bm-design-system:end */}
+      </head>
       <body className="min-h-full bg-page font-sans text-ink-body">
         {children}
       </body>

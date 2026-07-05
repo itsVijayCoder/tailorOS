@@ -1,0 +1,39 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "tailoros-tenant-api-template",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "d1_databases": [
+    {
+      "binding": "TENANT_DB",
+      "database_name": "tailoros_tenant_local",
+      "database_id": "00000000-0000-0000-0000-000000000002",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA_BUCKET",
+      "bucket_name": "tailoros-media-local",
+    },
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "WHATSAPP_SEND_QUEUE",
+        "queue": "wa-send-local",
+      },
+      {
+        "binding": "RECEIPT_QUEUE",
+        "queue": "receipt-generate-local",
+      },
+    ],
+  },
+  "vars": {
+    "ENVIRONMENT": "local",
+  },
+}

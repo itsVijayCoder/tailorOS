@@ -52,7 +52,10 @@ export function Phase00Dashboard() {
               Explore phase map
               <ArrowUpRight aria-hidden className="size-4" />
             </a>
-            <a className="action-button secondary" href="/docs/phase-wise/Phase01_architecture_foundation.html">
+            <a
+              className="action-button secondary"
+              href="/docs/phase-wise/Phase01_architecture_foundation.html"
+            >
               Open Phase 01
               <ArrowUpRight aria-hidden className="size-4" />
             </a>
@@ -131,11 +134,7 @@ export function Phase00Dashboard() {
         />
         <div className="mt-10 grid gap-5 lg:grid-cols-2">
           {phases.map((phase, index) => (
-            <PhaseCard
-              index={index}
-              key={phase.number}
-              phase={phase}
-            />
+            <PhaseCard index={index} key={phase.number} phase={phase} />
           ))}
         </div>
       </section>
@@ -204,7 +203,11 @@ export function Phase00Dashboard() {
         />
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           {sourceDocs.map((source) => (
-            <a className="source-card group" href={source.href} key={source.title}>
+            <a
+              className="source-card group"
+              href={source.href}
+              key={source.title}
+            >
               <div className="source-icon">
                 <FileText aria-hidden className="size-5" />
               </div>
@@ -278,7 +281,9 @@ function SectionHeading({
       <h2 className="mt-3 font-display text-3xl font-semibold tracking-normal text-ink-display sm:text-4xl">
         {title}
       </h2>
-      <p className="mt-4 text-base leading-7 text-ink-muted sm:text-lg">{body}</p>
+      <p className="mt-4 text-base leading-7 text-ink-muted sm:text-lg">
+        {body}
+      </p>
     </div>
   );
 }
@@ -313,7 +318,9 @@ function PhaseCard({ phase, index }: { phase: Phase; index: number }) {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-muted">
           Outcome
         </p>
-        <p className="mt-2 text-sm leading-6 text-ink-display">{phase.outcome}</p>
+        <p className="mt-2 text-sm leading-6 text-ink-display">
+          {phase.outcome}
+        </p>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         {phase.tags.map((tag) => (
@@ -323,7 +330,10 @@ function PhaseCard({ phase, index }: { phase: Phase; index: number }) {
         ))}
       </div>
       <div className="mt-6 flex items-start gap-3 border-t border-hairline pt-5">
-        <CheckCircle2 aria-hidden className="mt-0.5 size-5 shrink-0 text-accent" />
+        <CheckCircle2
+          aria-hidden
+          className="mt-0.5 size-5 shrink-0 text-accent"
+        />
         <p className="text-sm leading-6 text-ink-muted">{phase.gate}</p>
       </div>
       <a className="phase-report-link group/link" href={phase.href}>

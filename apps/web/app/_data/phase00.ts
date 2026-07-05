@@ -77,7 +77,8 @@ export const phases: Phase[] = [
     href: "/docs/phase-wise/Phase01_architecture_foundation.html",
     icon: Network,
     lead: "Define monorepo boundaries, Cloudflare-first deployment shape, API conventions, and the rules that keep the codebase coherent as features multiply.",
-    outcome: "A deployable engineering baseline with clear app, worker, domain, adapter, and test boundaries.",
+    outcome:
+      "A deployable engineering baseline with clear app, worker, domain, adapter, and test boundaries.",
     gate: "Repo structure, coding standards, design patterns, and acceptance checks are documented and testable.",
     tags: ["SOLID", "Cloudflare", "API contracts"],
   },
@@ -89,7 +90,8 @@ export const phases: Phase[] = [
     href: "/docs/phase-wise/Phase02_design_system_ui_foundation.html",
     icon: Sparkles,
     lead: "Establish the TailorOS product language, accessible primitives, form behavior, animation rules, and performance budget before screen volume grows.",
-    outcome: "A reusable UI system for fast counter workflows, dense owner views, and high-trust operational screens.",
+    outcome:
+      "A reusable UI system for fast counter workflows, dense owner views, and high-trust operational screens.",
     gate: "Tokens, components, keyboard states, loading states, reduced motion, and accessibility checks are ready.",
     tags: ["Tokens", "A11y", "Motion"],
   },
@@ -101,7 +103,8 @@ export const phases: Phase[] = [
     href: "/docs/phase-wise/Phase03_control_plane_tenant_provisioning.html",
     icon: Route,
     lead: "Create the platform control layer for shops, branches, plans, tenant databases, migrations, seeds, and recovery states.",
-    outcome: "A repeatable tenant-provisioning flow that can onboard real shops without manual database drift.",
+    outcome:
+      "A repeatable tenant-provisioning flow that can onboard real shops without manual database drift.",
     gate: "Provisioning state machine handles retries, partial failures, tenant lookup, migration status, and audit trails.",
     tags: ["Tenant lifecycle", "D1", "State machine"],
   },
@@ -113,7 +116,8 @@ export const phases: Phase[] = [
     href: "/docs/phase-wise/Phase04_tenant_domain_model.html",
     icon: Database,
     lead: "Model family accounts, customers, measurements, order items, production states, payments, receipts, and immutable audit records.",
-    outcome: "A domain layer that protects historical measurements, order snapshots, financial corrections, and tenant-local invariants.",
+    outcome:
+      "A domain layer that protects historical measurements, order snapshots, financial corrections, and tenant-local invariants.",
     gate: "Repositories and services enforce IDs, snapshots, status rules, payment auditability, and failure handling.",
     tags: ["Domain invariants", "D1 schema", "Audit"],
   },
@@ -125,7 +129,8 @@ export const phases: Phase[] = [
     href: "/docs/phase-wise/Phase05_tailoros_core_modules.html",
     icon: Layers3,
     lead: "Build the pilot-ready shop OS: dashboard, search, family profiles, measurements, orders, production board, payments, receipts, reports, and settings.",
-    outcome: "A one-shop pilot can run daily counter and production workflows without falling back to notebooks.",
+    outcome:
+      "A one-shop pilot can run daily counter and production workflows without falling back to notebooks.",
     gate: "E2E journeys cover walk-in order, repeat family customer, production progress, payment close, and receipt sharing.",
     tags: ["Dashboard", "Orders", "Payments"],
   },
@@ -137,7 +142,8 @@ export const phases: Phase[] = [
     href: "/docs/phase-wise/Phase06_whatsapp_connector.html",
     icon: MessageCircle,
     lead: "Build the reusable connector with Meta Cloud API first, provider adapters, templates, webhooks, queues, idempotency, and safe inbound flows.",
-    outcome: "TailorOS can request business messages while the connector handles provider details, policy, and delivery evidence.",
+    outcome:
+      "TailorOS can request business messages while the connector handles provider details, policy, and delivery evidence.",
     gate: "Outbound templates, webhook normalization, shared-mobile disambiguation, opt-outs, retries, and usage ledger are verified.",
     tags: ["Meta direct", "Templates", "Webhooks"],
   },
@@ -149,7 +155,8 @@ export const phases: Phase[] = [
     href: "/docs/phase-wise/Phase07_global_search_performance.html",
     icon: Search,
     lead: "Make search and core navigation fast enough for busy counter work with tenant-local projections, indexes, FTS, and frontend discipline.",
-    outcome: "Users can find customers, orders, receipts, balances, and active work without switching context.",
+    outcome:
+      "Users can find customers, orders, receipts, balances, and active work without switching context.",
     gate: "Query budgets, index strategy, UI responsiveness, and performance tests meet the pilot-speed bar.",
     tags: ["FTS", "Indexes", "Fast UI"],
   },
@@ -161,7 +168,8 @@ export const phases: Phase[] = [
     href: "/docs/phase-wise/Phase08_security_privacy_rbac.html",
     icon: LockKeyhole,
     lead: "Harden auth, permissions, tenant boundaries, secret handling, R2 media access, support access, public endpoints, and abuse controls.",
-    outcome: "Owners, staff, tailors, and platform admins can operate with least privilege and clear audit evidence.",
+    outcome:
+      "Owners, staff, tailors, and platform admins can operate with least privilege and clear audit evidence.",
     gate: "Permission matrix, tenant isolation tests, credential safety, support audit, and public endpoint defenses pass.",
     tags: ["RBAC", "Privacy", "Secrets"],
   },
@@ -173,7 +181,8 @@ export const phases: Phase[] = [
     href: "/docs/phase-wise/Phase09_testing_observability_release.html",
     icon: ClipboardCheck,
     lead: "Create the test pyramid, fixtures, Worker runtime coverage, E2E journeys, logs, metrics, alerts, CI gates, and runbooks.",
-    outcome: "The first real shop launch has repeatable quality gates and support-ready operational visibility.",
+    outcome:
+      "The first real shop launch has repeatable quality gates and support-ready operational visibility.",
     gate: "Release checklist, go-live checklist, monitoring, alert routing, rollback path, and support playbooks are complete.",
     tags: ["Vitest", "E2E", "Runbooks"],
   },
@@ -185,7 +194,8 @@ export const phases: Phase[] = [
     href: "/docs/phase-wise/Phase10_scale_reliability_roadmap.html",
     icon: Gauge,
     lead: "Plan growth across tenant sharding, read projections, realtime chat, offline drafts, cost controls, backups, restore, and future escape hatches.",
-    outcome: "The platform can evolve beyond the pilot without prematurely bloating v1 or locking into a brittle architecture.",
+    outcome:
+      "The platform can evolve beyond the pilot without prematurely bloating v1 or locking into a brittle architecture.",
     gate: "Scale tests, cost limits, backup/restore, roadmap triggers, and future architecture decisions are explicit.",
     tags: ["Reliability", "Cost", "Roadmap"],
   },

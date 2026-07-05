@@ -1,0 +1,31 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "tailoros-api-gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "d1_databases": [
+    {
+      "binding": "CONTROL_DB",
+      "database_name": "tailoros_control_local",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+    },
+  ],
+  "services": [
+    {
+      "binding": "TENANT_API",
+      "service": "tailoros-tenant-api-template",
+    },
+    {
+      "binding": "WHATSAPP_CONNECTOR",
+      "service": "tailoros-whatsapp-connector",
+    },
+  ],
+  "vars": {
+    "ENVIRONMENT": "local",
+  },
+}
