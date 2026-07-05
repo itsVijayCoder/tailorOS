@@ -27,8 +27,6 @@ const rawTailwindPalette =
 
 const arbitraryColor = /\[(?:#|rgb|hsl|oklch|color-mix)/;
 const rawCssColor = /(?:#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\()/;
-const legacyTokenUtility =
-  /(?:^|[\s"'`])(?:bg|text|border|ring|outline)-(?:page|surface|surface-strong|hairline|ink-body|ink-display|ink-muted|accent-faded|accent-darker|signal|signal-faded|signal-darker)(?:[\s"'`:/.-]|$)/;
 
 const rules = [
   {
@@ -48,12 +46,6 @@ const rules = [
     regex: rawCssColor,
     message:
       "Raw color values are only allowed in app/globals.css theme variables.",
-  },
-  {
-    name: "legacy TailorOS token utility",
-    regex: legacyTokenUtility,
-    message:
-      "Use the shadcn token names instead of page/surface/hairline/ink/signal aliases.",
   },
 ];
 

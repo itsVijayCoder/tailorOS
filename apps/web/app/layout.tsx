@@ -38,7 +38,8 @@ const themeBootScript = `
   try {
     const stored = localStorage.getItem("bm-ds-theme");
     const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const shouldUseDark = stored === "light" ? false : stored === "system" ? systemDark : true;
+    const preference = stored === "light" || stored === "dark" || stored === "system" ? stored : "light";
+    const shouldUseDark = preference === "dark" || (preference === "system" && systemDark);
     document.documentElement.classList.toggle("dark", shouldUseDark);
   } catch (_) {}
 })();
@@ -65,7 +66,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         {/* bm-design-system:end */}
       </head>
-      <body className="min-h-full bg-background text-foreground">
+      <body className="min-h-full bg-page text-ink-body">
         <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
