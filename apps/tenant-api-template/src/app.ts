@@ -248,10 +248,7 @@ function getDomainRuntime(c: Context<TenantApiEnv>): TenantDomainRuntime {
   };
 }
 
-function domainError(
-  c: Context<TenantApiEnv>,
-  error: TenantDomainError,
-) {
+function domainError(c: Context<TenantApiEnv>, error: TenantDomainError) {
   return jsonError(c, {
     code: error.code,
     message: error.message,

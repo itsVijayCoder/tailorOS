@@ -119,11 +119,7 @@ const domainNodes = [
 const schemaGroups = [
   {
     title: "Contacts and Family",
-    tables: [
-      "customer_contacts",
-      "contact_phone_history",
-      "customer_profiles",
-    ],
+    tables: ["customer_contacts", "contact_phone_history", "customer_profiles"],
     signal: "Mobile as channel",
   },
   {
@@ -170,7 +166,8 @@ const invariants = [
   {
     title: "Measurements are historical",
     status: "covered",
-    proof: "Version insert, current pointer update, order snapshot preservation.",
+    proof:
+      "Version insert, current pointer update, order snapshot preservation.",
   },
   {
     title: "Payments are ledger-based",
@@ -483,7 +480,9 @@ export default function TenantDomainModelPage() {
                         {item.title}
                       </h3>
                       <Badge
-                        variant={item.status === "covered" ? "success" : "warning"}
+                        variant={
+                          item.status === "covered" ? "success" : "warning"
+                        }
                       >
                         {item.status}
                       </Badge>

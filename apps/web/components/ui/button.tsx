@@ -47,7 +47,18 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
   };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ children, className, disabled, isLoading = false, variant, size, ...props }, ref) => (
+  (
+    {
+      children,
+      className,
+      disabled,
+      isLoading = false,
+      variant,
+      size,
+      ...props
+    },
+    ref,
+  ) => (
     <button
       aria-busy={isLoading || undefined}
       className={cn(buttonVariants({ variant, size }), className)}

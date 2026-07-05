@@ -287,7 +287,10 @@ export type TenantDomainRepository = {
   createOrder(record: OrderCreateRecord): Promise<OrderSummary>;
   findOrderPaymentState(orderId: string): Promise<OrderPaymentState | null>;
   recordPayment(record: PaymentRecordBundle): Promise<PaymentSummary>;
-  search(input: { query: string; limit: number }): Promise<SearchResultRecord[]>;
+  search(input: {
+    query: string;
+    limit: number;
+  }): Promise<SearchResultRecord[]>;
 };
 
 const simpleServiceGarments = new Set(["alteration", "sari_fall"]);
@@ -298,11 +301,16 @@ export async function createContactWithProfilesService(input: {
   runtime: TenantDomainRuntime;
 }): Promise<ContactProfileSummary> {
   const now = toIso(input.runtime.now);
-  const primaryMobile = normalizeMobile(input.data.primaryMobile, "primaryMobile");
+  const primaryMobile = normalizeMobile(
+    input.data.primaryMobile,
+    "primaryMobile",
+  );
   const whatsappMobile = input.data.whatsappMobile
     ? normalizeMobile(input.data.whatsappMobile, "whatsappMobile")
     : null;
-  const existing = await input.repository.findContactByMobile(primaryMobile.e164);
+  const existing = await input.repository.findContactByMobile(
+    primaryMobile.e164,
+  );
 
   if (existing) {
     throw new TenantDomainError({
@@ -334,7 +342,9 @@ export async function createContactWithProfilesService(input: {
       primaryMobileNational: primaryMobile.nationalNumber,
       whatsappMobileE164: whatsappMobile?.e164 ?? null,
       whatsappOptIn: input.data.whatsappOptIn,
-      addressJson: input.data.address ? JSON.stringify(input.data.address) : null,
+      addressJson: input.data.address
+        ? JSON.stringify(input.data.address)
+        : null,
       notes: input.data.notes ?? null,
       createdAt: now,
       updatedAt: now,
@@ -380,7 +390,10 @@ export async function createContactWithProfilesService(input: {
           ...profiles.map((profile) => profile.fullName),
           ...profiles.map((profile) => profile.customerCode),
         ],
-        payload: { contactId, profileIds: profiles.map((profile) => profile.id) },
+        payload: {
+          contactId,
+          profileIds: profiles.map((profile) => profile.id),
+        },
         updatedAt: now,
       }),
       ...profiles.map((profile) =>
@@ -532,10 +545,7 @@ export async function createOrderService(input: {
     (total, item) => total + item.pricePaise * item.quantity,
     0,
   );
-  const finalTotalPaise = Math.max(
-    subtotalPaise - input.data.discountPaise,
-    0,
-  );
+  const finalTotalPaise = Math.max(subtotalPaise - input.data.discountPaise, 0);
   const initialPayment = input.data.advancePayment
     ? createPaymentRecord({
         orderId,
@@ -832,7 +842,10 @@ async function resolveMeasurementProfile(input: {
       });
 
   if (input.data.measurementProfileId && !existing) {
-    throw notFound("Measurement profile was not found.", "measurementProfileId");
+    throw notFound(
+      "Measurement profile was not found.",
+      "measurementProfileId",
+    );
   }
 
   if (existing) {
@@ -870,11 +883,16 @@ async function buildOrderItem(input: {
   runtime: TenantDomainRuntime;
 }): Promise<OrderItemCreateRecord> {
   const measurementVersion = input.item.measurementVersionId
-    ? await input.repository.findMeasurementVersion(input.item.measurementVersionId)
+    ? await input.repository.findMeasurementVersion(
+        input.item.measurementVersionId,
+      )
     : null;
 
   if (input.item.measurementVersionId && !measurementVersion) {
-    throw notFound("Measurement version was not found.", "measurementVersionId");
+    throw notFound(
+      "Measurement version was not found.",
+      "measurementVersionId",
+    );
   }
 
   if (!measurementVersion && !input.item.measurementValues) {
@@ -896,9 +914,11 @@ async function buildOrderItem(input: {
     }
   }
 
-  const values = input.item.measurementValues ?? measurementVersion?.values ?? {
-    reason: input.item.allowWithoutMeasurementReason ?? "No measurement needed",
-  };
+  const values = input.item.measurementValues ??
+    measurementVersion?.values ?? {
+      reason:
+        input.item.allowWithoutMeasurementReason ?? "No measurement needed",
+    };
   const itemId = createDomainId("ITM", input.runtime);
 
   return {
@@ -956,9 +976,7 @@ function createReceiptRecord(input: {
   runtime: TenantDomainRuntime;
   now: string;
 }): ReceiptUpsertRecord {
-  const id =
-    input.receiptId ??
-    createDomainId("RCT", input.runtime);
+  const id = input.receiptId ?? createDomainId("RCT", input.runtime);
 
   return {
     id,
@@ -1066,7 +1084,8 @@ function normalizeMobile(input: string, field: string) {
   } catch (error) {
     throw new TenantDomainError({
       code: "VALIDATION_ERROR",
-      message: error instanceof Error ? error.message : "Invalid mobile number.",
+      message:
+        error instanceof Error ? error.message : "Invalid mobile number.",
       status: 400,
       fields: { [field]: ["Enter a valid Indian mobile number."] },
     });

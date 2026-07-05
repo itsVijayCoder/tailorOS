@@ -240,7 +240,10 @@ describe("tenant D1 migration", () => {
     };
     const db = new DatabaseSync(":memory:");
     const migration = readFileSync(
-      join(process.cwd(), "apps/tenant-api-template/migrations/0001_tenant_domain.sql"),
+      join(
+        process.cwd(),
+        "apps/tenant-api-template/migrations/0001_tenant_domain.sql",
+      ),
       "utf8",
     );
 
@@ -254,9 +257,7 @@ describe("tenant D1 migration", () => {
         .get("customer_contacts"),
     ).toEqual({ name: "customer_contacts" });
     expect(
-      db
-        .prepare("SELECT COUNT(*) AS count FROM garment_types")
-        .get(),
+      db.prepare("SELECT COUNT(*) AS count FROM garment_types").get(),
     ).toEqual({ count: 8 });
     expect(
       db
@@ -301,7 +302,10 @@ class InMemoryTenantDomainRepository implements TenantDomainRepository {
   readonly orderStates = new Map<string, OrderPaymentState>();
   readonly orderSnapshots = new Map<
     string,
-    { sourceMeasurementVersionId: string | null; values: Record<string, unknown> }[]
+    {
+      sourceMeasurementVersionId: string | null;
+      values: Record<string, unknown>;
+    }[]
   >();
   readonly audits: ContactProfileCreateRecord["audit"][] = [];
   readonly outbox: OrderCreateRecord["outbox"] = [];

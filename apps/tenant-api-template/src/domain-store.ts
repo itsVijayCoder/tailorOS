@@ -845,9 +845,9 @@ function searchStatements(
         JSON.stringify(item.payload),
         item.updatedAt,
       ),
-    db.prepare("DELETE FROM search_docs_fts WHERE entity_id = ?").bind(
-      item.entityId,
-    ),
+    db
+      .prepare("DELETE FROM search_docs_fts WHERE entity_id = ?")
+      .bind(item.entityId),
     db
       .prepare(
         `INSERT INTO search_docs_fts (
@@ -873,17 +873,16 @@ function parseMeasurementValues(
 ): Record<string, string | number | boolean | null> {
   const parsed = parseJsonRecord(value);
   return Object.fromEntries(
-    Object.entries(parsed).filter((entry): entry is [
-      string,
-      string | number | boolean | null,
-    ] => {
-      const item = entry[1];
-      return (
-        typeof item === "string" ||
-        typeof item === "number" ||
-        typeof item === "boolean" ||
-        item === null
-      );
-    }),
+    Object.entries(parsed).filter(
+      (entry): entry is [string, string | number | boolean | null] => {
+        const item = entry[1];
+        return (
+          typeof item === "string" ||
+          typeof item === "number" ||
+          typeof item === "boolean" ||
+          item === null
+        );
+      },
+    ),
   );
 }

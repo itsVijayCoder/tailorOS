@@ -1,9 +1,6 @@
 import { CheckCircle2, CircleDashed } from "lucide-react";
 
-import {
-  StatusChip,
-  type TailorOSStatus,
-} from "@/components/ui/status-chip";
+import { StatusChip, type TailorOSStatus } from "@/components/ui/status-chip";
 import { cn } from "@/lib/utils";
 
 export type TimelineStep = {
@@ -29,14 +26,18 @@ export function OrderStatusTimeline({
         const Icon = step.current ? CircleDashed : CheckCircle2;
 
         return (
-          <li className="relative grid grid-cols-[2rem_1fr] gap-3" key={step.label}>
+          <li
+            className="relative grid grid-cols-[2rem_1fr] gap-3"
+            key={step.label}
+          >
             {index < steps.length - 1 ? (
               <span className="absolute left-4 top-8 h-[calc(100%-1rem)] w-px bg-hairline" />
             ) : null}
             <span
               className={cn(
                 "relative z-10 grid size-8 place-items-center rounded-full border border-hairline bg-surface text-ink-muted",
-                step.current && "border-accent bg-accent text-accent-foreground",
+                step.current &&
+                  "border-accent bg-accent text-accent-foreground",
               )}
             >
               <Icon aria-hidden className="size-4" />

@@ -194,7 +194,10 @@ export const recordPaymentSchema = z
   })
   .strict()
   .superRefine((value, ctx) => {
-    if ((value.kind === "refund" || value.kind === "correction") && !value.reason) {
+    if (
+      (value.kind === "refund" || value.kind === "correction") &&
+      !value.reason
+    ) {
       ctx.addIssue({
         code: "custom",
         path: ["reason"],
@@ -203,7 +206,9 @@ export const recordPaymentSchema = z
     }
 
     if (
-      (value.kind === "advance" || value.kind === "balance" || value.kind === "refund") &&
+      (value.kind === "advance" ||
+        value.kind === "balance" ||
+        value.kind === "refund") &&
       value.amountPaise < 0
     ) {
       ctx.addIssue({
@@ -289,9 +294,7 @@ export const paymentSummarySchema = z
 export type CreateContactWithProfiles = z.infer<
   typeof createContactWithProfilesSchema
 >;
-export type ContactProfileSummary = z.infer<
-  typeof contactProfileSummarySchema
->;
+export type ContactProfileSummary = z.infer<typeof contactProfileSummarySchema>;
 export type CreateMeasurementVersion = z.infer<
   typeof createMeasurementVersionSchema
 >;

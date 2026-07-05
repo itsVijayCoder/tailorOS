@@ -23,7 +23,9 @@ export function calculatePaymentLedger(input: {
   const totals = input.payments.reduce(
     (result, payment) => {
       if (!Number.isInteger(payment.amountPaise) || payment.amountPaise === 0) {
-        throw new Error("Payment amount must be a non-zero integer paise value.");
+        throw new Error(
+          "Payment amount must be a non-zero integer paise value.",
+        );
       }
 
       if (payment.kind === "refund") {

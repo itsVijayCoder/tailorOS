@@ -15,7 +15,8 @@ const badgeVariants = cva(
         signal: "border-signal bg-signal text-signal-darker",
         solid: "border-accent bg-accent text-accent-foreground",
         outline: "border-hairline bg-transparent text-ink-display",
-        success: "border-state-success bg-state-success text-success-foreground",
+        success:
+          "border-state-success bg-state-success text-success-foreground",
         warning: "border-signal bg-signal text-signal-darker",
         info: "border-state-info bg-state-info text-primary-foreground",
         whatsapp: "border-wa-read bg-wa-read text-primary-foreground",

@@ -1,12 +1,7 @@
 import { StatusChip } from "@/components/ui/status-chip";
 
 export type WhatsAppDeliveryState =
-  | "queued"
-  | "sent"
-  | "delivered"
-  | "read"
-  | "failed"
-  | "opted-out";
+  "queued" | "sent" | "delivered" | "read" | "failed" | "opted-out";
 
 const deliveryStatusMap = {
   queued: "queued",

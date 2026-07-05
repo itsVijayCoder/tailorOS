@@ -70,7 +70,8 @@ const statusConfig: Record<
     label: "Closed",
   },
   cancelled: {
-    className: "border-state-danger bg-state-danger text-destructive-foreground",
+    className:
+      "border-state-danger bg-state-danger text-destructive-foreground",
     icon: ShieldAlert,
     label: "Cancelled",
   },
@@ -125,7 +126,8 @@ const statusConfig: Record<
     label: "Failed",
   },
   "opted-out": {
-    className: "border-state-danger bg-state-danger text-destructive-foreground",
+    className:
+      "border-state-danger bg-state-danger text-destructive-foreground",
     icon: ShieldAlert,
     label: "Opted out",
   },

@@ -43,9 +43,7 @@ export function MeasurementField({
         <p className="mt-2 text-xs text-ink-muted">Previous {previousValue}</p>
       ) : null}
       {warning ? (
-        <p className="mt-2 text-xs font-medium text-signal-darker">
-          {warning}
-        </p>
+        <p className="mt-2 text-xs font-medium text-signal-darker">{warning}</p>
       ) : null}
     </div>
   );
