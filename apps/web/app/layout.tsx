@@ -6,7 +6,7 @@ import { ClientProviders } from "@/components/motion/client-providers";
 
 const headingFont = Cormorant_Garamond({
   subsets: ["latin"],
-  weight: "300",
+  weight: ["300", "400", "500", "600", "700"],
   style: ["normal", "italic"],
   variable: "--font-heading",
   display: "swap",

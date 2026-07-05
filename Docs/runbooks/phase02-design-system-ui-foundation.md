@@ -11,6 +11,7 @@
 - Expanded primitives under `apps/web/components/ui`: button, input, label, textarea, select, card, dialog, dropdown menu, search field, skeleton, callout, badge, status chip, and theme toggle support.
 - Added TailorOS business presentation components under `apps/web/components/tailoros`: customer profile chip, measurement field, order status timeline, receipt preview, and WhatsApp delivery badge.
 - Rebuilt `/admin/design-system` as the Phase 02 reference page with docs analysis, tokens, typography, primitives, business UI, motion rules, state rules, edge cases, and completion checklist.
+- Refreshed the typography contract so Cormorant Garamond is the display/reference heading face and Inter remains the operational body, label, control, value, and data face.
 - Updated the design-system ADR so it matches the Phase 02 token and theme contract.
 
 ## Edge Cases Covered
@@ -36,6 +37,9 @@ Existing Phase 01 UI remains functional but should be migrated gradually:
 
 - `pnpm --filter @tailoros/web typecheck`
 - `pnpm --filter @tailoros/web lint`
+- `pnpm --filter @tailoros/web build`
+- `pnpm test`
+- Visual QA screenshots: `output/playwright/design-system-cormorant-mobile.png`, `output/playwright/design-system-cormorant-typography-desktop.png`
 
 ## Next Work
 

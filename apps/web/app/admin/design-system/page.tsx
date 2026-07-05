@@ -211,7 +211,7 @@ export default function DesignSystemPage() {
               TX
             </span>
             <span className="leading-tight">
-              <strong className="block font-ui text-base font-semibold text-ink-display">
+              <strong className="block font-display text-xl font-medium leading-none text-ink-display">
                 TailorOS
               </strong>
               <span className="block text-xs font-semibold uppercase tracking-wide text-ink-muted">
@@ -252,7 +252,7 @@ export default function DesignSystemPage() {
               <BadgeCheck aria-hidden className="size-3.5" />
               Phase 02 implementation reference
             </Badge>
-            <h1 className="mt-5 text-balance font-ui text-4xl font-semibold leading-tight text-ink-display sm:text-5xl lg:text-6xl">
+            <h1 className="mt-5 text-balance font-display text-5xl font-light leading-[0.95] text-ink-display sm:text-6xl lg:text-7xl">
               Premium UI foundation for a fast tailor-shop operating desk.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-ink-body sm:text-lg">
@@ -285,7 +285,7 @@ export default function DesignSystemPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Operating pulse
                 </p>
-                <h2 className="mt-2 font-ui text-2xl font-semibold text-ink-display">
+                <h2 className="mt-2 font-display text-3xl font-light leading-none text-ink-display">
                   Counter-safe by design
                 </h2>
               </div>
@@ -364,7 +364,7 @@ export default function DesignSystemPage() {
             <div className="grid gap-5" data-stagger>
               {tokenGroups.map((group) => (
                 <section key={group.title}>
-                  <h3 className="mb-3 font-ui text-sm font-semibold uppercase tracking-wide text-ink-muted">
+                  <h3 className="mb-3 font-display text-2xl font-medium leading-none text-ink-display">
                     {group.title}
                   </h3>
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -378,7 +378,7 @@ export default function DesignSystemPage() {
           </ReferenceSection>
 
           <ReferenceSection
-            description="Operational screens use compact, readable sans-serif type. Display-scale treatment is reserved for top-level reference and marketing moments."
+            description="Cormorant Garamond is the TailorOS display and documentation-heading face. Inter remains the body, label, data, and dense-control face for operational clarity."
             eyebrow="Typography"
             icon={Type}
             id="typography"
@@ -389,7 +389,7 @@ export default function DesignSystemPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Page heading
                 </p>
-                <h2 className="mt-2 font-ui text-4xl font-semibold leading-tight text-ink-display">
+                <h2 className="mt-2 font-display text-5xl font-light leading-none text-ink-display">
                   Today dashboard
                 </h2>
                 <p className="mt-4 max-w-2xl text-base leading-7 text-ink-body">
@@ -401,7 +401,7 @@ export default function DesignSystemPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Compact panel
                 </p>
-                <h3 className="mt-2 font-ui text-xl font-semibold text-ink-display">
+                <h3 className="mt-2 font-display text-3xl font-light leading-none text-ink-display">
                   Ready for pickup
                 </h3>
                 <p className="mt-3 text-sm leading-6 text-ink-body">
@@ -566,7 +566,7 @@ export default function DesignSystemPage() {
                   status="partial"
                 />
                 <div className="rounded-xl border border-hairline bg-surface p-4">
-                  <h3 className="font-ui text-base font-semibold text-ink-display">
+                  <h3 className="font-display text-2xl font-medium leading-none text-ink-display">
                     WhatsApp delivery states
                   </h3>
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -629,7 +629,7 @@ export default function DesignSystemPage() {
                   className="rounded-xl border border-hairline bg-surface p-4 shadow-sm"
                   key={title}
                 >
-                  <h3 className="font-ui text-base font-semibold text-ink-display">
+                  <h3 className="font-display text-2xl font-medium leading-none text-ink-display">
                     {title}
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-ink-muted">{body}</p>
@@ -637,7 +637,7 @@ export default function DesignSystemPage() {
               ))}
             </div>
             <div className="mt-5 rounded-xl border border-hairline bg-surface p-4">
-              <h3 className="font-ui text-base font-semibold text-ink-display">
+              <h3 className="font-display text-2xl font-medium leading-none text-ink-display">
                 Component rules
               </h3>
               <ul className="mt-3 grid gap-2 text-sm leading-6 text-ink-body">
@@ -745,7 +745,7 @@ function ReferenceSection({
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
             {eyebrow}
           </p>
-          <h2 className="mt-1 font-ui text-2xl font-semibold text-ink-display sm:text-3xl">
+          <h2 className="mt-1 font-display text-3xl font-light leading-none text-ink-display sm:text-4xl">
             {title}
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-ink-body">
@@ -785,7 +785,7 @@ function PreviewPanel({
 }) {
   return (
     <section className="rounded-xl border border-hairline bg-surface p-5 shadow-sm">
-      <h3 className="mb-4 font-ui text-base font-semibold text-ink-display">
+      <h3 className="mb-4 font-display text-2xl font-medium leading-none text-ink-display">
         {title}
       </h3>
       {children}
