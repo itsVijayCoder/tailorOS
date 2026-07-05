@@ -37,6 +37,7 @@ const navigation = [
   { href: "#platform", label: "Platform" },
   { href: "#workflow", label: "Workflow" },
   { href: "#signals", label: "Signals" },
+  { href: "/admin/tenants", label: "Control plane" },
   { href: "/admin/design-system", label: "Design system" },
 ];
 
@@ -219,6 +220,9 @@ function Header() {
           <ThemeToggle />
           <PremiumButton href="/admin/design-system" size="md">
             Design system
+          </PremiumButton>
+          <PremiumButton href="/admin/tenants" size="md" variant="secondary">
+            Control plane
           </PremiumButton>
         </div>
 

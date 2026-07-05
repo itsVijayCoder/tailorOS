@@ -11,6 +11,10 @@ import {
 } from "@tailoros/worker-runtime";
 
 import type { ApiGatewayEnv } from "./env";
+import {
+  canDispatchTenant,
+  resolveTenantForDispatch,
+} from "./tenant-resolution";
 
 export const app = new Hono<ApiGatewayEnv>();
 
@@ -48,6 +52,27 @@ app.get("/v1/internal/whatsapp/health", async (c) => {
 app.get("/v1/tenant/:slug/health", async (c) => {
   const tenantSlug = c.req.param("slug");
   c.set("tenantSlug", tenantSlug);
+
+  const tenant = await resolveTenantForDispatch({
+    db: c.env.CONTROL_DB,
+    slug: tenantSlug,
+  });
+
+  if (!tenant) {
+    return jsonError(c, {
+      code: "NOT_FOUND",
+      message: "Tenant was not found.",
+      status: 404,
+    });
+  }
+
+  if (!canDispatchTenant(tenant)) {
+    return jsonError(c, {
+      code: "FORBIDDEN",
+      message: "Tenant is not active for dispatch.",
+      status: 403,
+    });
+  }
 
   const response = await c.env.TENANT_API.fetch(
     createInternalJsonRequest({

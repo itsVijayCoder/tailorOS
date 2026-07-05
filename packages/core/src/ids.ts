@@ -1,5 +1,18 @@
 export type EntityPrefix =
-  "TEN" | "FAM" | "CUS" | "ORD" | "ITM" | "PAY" | "RCT" | "MSG" | "JOB" | "REQ";
+  | "TEN"
+  | "TDB"
+  | "TWR"
+  | "MBR"
+  | "AUD"
+  | "FAM"
+  | "CUS"
+  | "ORD"
+  | "ITM"
+  | "PAY"
+  | "RCT"
+  | "MSG"
+  | "JOB"
+  | "REQ";
 
 const suffixPattern = /^[A-Z0-9]{3,12}$/;
 

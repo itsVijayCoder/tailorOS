@@ -13,8 +13,12 @@
       "binding": "CONTROL_DB",
       "database_name": "tailoros_control_local",
       "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "migrations",
     },
   ],
+  "secrets": {
+    "required": ["CF_API_TOKEN", "TURNSTILE_SECRET_KEY"],
+  },
   "queues": {
     "producers": [
       {
@@ -41,6 +45,11 @@
     },
   ],
   "vars": {
+    "CF_ACCOUNT_ID": "00000000000000000000000000000000",
     "ENVIRONMENT": "local",
+    "TENANT_DATABASE_PRIMARY_LOCATION": "apac",
+    "TENANT_DATABASE_READ_REPLICATION_MODE": "auto",
+    "TENANT_PROVISIONING_MODE": "simulated",
+    "TENANT_SCHEMA_VERSION": "1",
   },
 }
