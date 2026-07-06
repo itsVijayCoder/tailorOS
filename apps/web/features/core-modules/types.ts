@@ -15,6 +15,7 @@ export type ModuleKey =
   | "payments"
   | "reports"
   | "security"
+  | "release"
   | "settings";
 
 export type CoreNavItem = Readonly<{
@@ -257,6 +258,79 @@ export type ReportMetric = Readonly<{
   value: string;
   detail: string;
   trend: "up" | "down" | "flat";
+}>;
+
+export type Phase09GateState = "pass" | "warn" | "block";
+
+export type TestingPyramidLayer = Readonly<{
+  layer: string;
+  tool: string;
+  coverage: string;
+  example: string;
+  state: Phase09GateState;
+}>;
+
+export type Phase09FixtureRecord = Readonly<{
+  id: string;
+  path: string;
+  edgeCase: string;
+  assertion: string;
+  owner: "domain" | "connector" | "release";
+}>;
+
+export type ObservabilityMetric = Readonly<{
+  id: string;
+  label: string;
+  value: string;
+  threshold: string;
+  action: string;
+  state: Phase09GateState;
+}>;
+
+export type ReleaseGate = Readonly<{
+  id: string;
+  order: number;
+  label: string;
+  owner: "ci" | "staging" | "release" | "production";
+  evidence: string;
+  state: Phase09GateState;
+}>;
+
+export type ReleaseRunbook = Readonly<{
+  id: string;
+  title: string;
+  trigger: string;
+  firstAction: string;
+  owner: "platform" | "support" | "shop-owner";
+  state: Phase09GateState;
+}>;
+
+export type PilotGoLiveCheck = Readonly<{
+  id: string;
+  label: string;
+  evidence: string;
+  state: Phase09GateState;
+}>;
+
+export type WorkerRuntimeCheck = Readonly<{
+  id: string;
+  worker: string;
+  check: string;
+  evidence: string;
+  state: Phase09GateState;
+}>;
+
+export type Phase09ReleaseSignals = Readonly<{
+  testingLayers: number;
+  fixtureRecords: number;
+  structuredLogFields: number;
+  releaseGates: number;
+  passingReleaseGates: number;
+  warningReleaseGates: number;
+  blockedReleaseGates: number;
+  criticalAlerts: number;
+  runbooks: number;
+  pilotChecksReady: number;
 }>;
 
 export type SettingsItem = Readonly<{

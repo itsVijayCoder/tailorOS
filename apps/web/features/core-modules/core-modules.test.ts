@@ -4,6 +4,9 @@ import {
   calculateOrderFinancials,
   credentialVaultRecords,
   getDashboardSignals,
+  getPhase09BlockingReleaseGates,
+  getPhase09ReleaseSignals,
+  getPhase09RunbookCoverage,
   getPhase08SecuritySignals,
   getPartialDeliveryOrders,
   getWhatsAppConnectorSignals,
@@ -12,6 +15,11 @@ import {
   isWhatsAppFailureRetryable,
   isWhatsAppRequestDeadLettered,
   isWhatsAppRequestRetryable,
+  phase09FixtureRecords,
+  phase09ObservabilityMetrics,
+  phase09PilotGoLiveChecks,
+  phase09ReleaseGates,
+  phase09StructuredLogFields,
   receiptAccessCases,
   searchPilotRecordsAsync,
   searchPilotRecords,
@@ -267,5 +275,73 @@ describe("Phase 05 core modules", () => {
       "pass",
       "warn",
     ]);
+  });
+
+  it("summarizes Phase 09 release posture from gates, logs, fixtures, and runbooks", () => {
+    expect(getPhase09ReleaseSignals()).toMatchObject({
+      blockedReleaseGates: 4,
+      criticalAlerts: 1,
+      fixtureRecords: 6,
+      passingReleaseGates: 4,
+      pilotChecksReady: 1,
+      releaseGates: 12,
+      runbooks: 10,
+      structuredLogFields: 14,
+      testingLayers: 6,
+      warningReleaseGates: 4,
+    });
+  });
+
+  it("keeps Phase 09 production approval blocked until smoke and deploy gates are green", () => {
+    expect(getPhase09BlockingReleaseGates().map((gate) => gate.id)).toEqual([
+      "playwright-smoke",
+      "manual-approval",
+      "production-deploy",
+      "post-deploy-smoke",
+    ]);
+    expect(
+      phase09ReleaseGates.find((gate) => gate.id === "production-deploy"),
+    ).toMatchObject({
+      owner: "production",
+      state: "block",
+    });
+  });
+
+  it("documents the Phase 09 fixture and log-field edge cases", () => {
+    expect(phase09FixtureRecords.map((fixture) => fixture.id)).toEqual([
+      "family-one-mobile-four-profiles",
+      "duplicate-mobile-variants",
+      "partial-delivery-order",
+      "payment-correction-case",
+      "whatsapp-duplicate-webhook",
+      "whatsapp-out-of-order-status",
+    ]);
+    expect(phase09StructuredLogFields).toEqual(
+      expect.arrayContaining([
+        "requestId",
+        "tenantId",
+        "userId",
+        "entityId",
+        "d1RowsRead",
+        "d1RowsWritten",
+        "version",
+      ]),
+    );
+  });
+
+  it("keeps Phase 09 runbooks mapped to launch-critical incident families", () => {
+    expect(getPhase09RunbookCoverage()).toEqual({
+      d1Storage: true,
+      emergencyWhatsAppDisable: true,
+      rollback: true,
+      tenantMigration: true,
+      whatsappDlq: true,
+    });
+    expect(phase09ObservabilityMetrics.map((metric) => metric.id)).toContain(
+      "queue-dlq",
+    );
+    expect(phase09PilotGoLiveChecks.map((check) => check.id)).toContain(
+      "parallel-notebook",
+    );
   });
 });

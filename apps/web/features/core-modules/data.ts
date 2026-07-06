@@ -25,12 +25,20 @@ import type {
   PublicEndpointControl,
   ReceiptAccessCase,
   ReportMetric,
+  ObservabilityMetric,
+  Phase09FixtureRecord,
+  Phase09ReleaseSignals,
+  PilotGoLiveCheck,
   SecurityRoleRow,
   SettingsItem,
   ShopOrder,
+  ReleaseGate,
+  ReleaseRunbook,
   SharedMobileCase,
   SupportAccessCase,
   TenantIsolationCheck,
+  TestingPyramidLayer,
+  WorkerRuntimeCheck,
   WhatsAppChannel,
   WhatsAppFailure,
   WhatsAppMessageRequest,
@@ -108,6 +116,12 @@ export const coreNavItems = [
     href: "/shop/security",
     label: "Security",
     description: "RBAC, tenant isolation, privacy, audit, signed access.",
+  },
+  {
+    key: "release",
+    href: "/shop/release",
+    label: "Release",
+    description: "Testing pyramid, observability, CI gates, runbooks.",
   },
   {
     key: "settings",
@@ -270,6 +284,420 @@ export const measurementTemplates = [
     rangeHint: "Reason and before-state note are required.",
   },
 ] as const satisfies readonly MeasurementTemplate[];
+
+export const phase09TestingLayers = [
+  {
+    coverage: "Pure domain functions and deterministic presenters.",
+    example:
+      "ID generation, phone normalization, money ledger, order state machine.",
+    layer: "Unit",
+    state: "pass",
+    tool: "Vitest",
+  },
+  {
+    coverage: "API inputs, queue envelopes, provider webhook payloads.",
+    example:
+      "CreateOrder rejects invalid measurement; webhook status events parse safely.",
+    layer: "Schema / contract",
+    state: "pass",
+    tool: "Vitest + Zod",
+  },
+  {
+    coverage: "Hono routes, bindings, D1 writes, queues, R2 access decisions.",
+    example: "Create customer route writes tenant D1 and emits audit evidence.",
+    layer: "Worker integration",
+    state: "warn",
+    tool: "Cloudflare Workers Vitest pool",
+  },
+  {
+    coverage: "Fresh tenant DBs and old tenant DB versions.",
+    example: "v1 to v2 migration preserves measurement snapshots and audit rows.",
+    layer: "Database migration",
+    state: "warn",
+    tool: "Migration harness",
+  },
+  {
+    coverage: "Real counter and owner journeys.",
+    example:
+      "Create family, measurement, order, payment, receipt, WhatsApp send.",
+    layer: "E2E",
+    state: "block",
+    tool: "Playwright",
+  },
+  {
+    coverage: "Hot APIs and tenant search budgets.",
+    example: "10k contacts search benchmark under 400ms p95.",
+    layer: "Load / performance",
+    state: "warn",
+    tool: "k6 or custom scripts",
+  },
+] as const satisfies readonly TestingPyramidLayer[];
+
+export const phase09FixtureRecords = [
+  {
+    assertion: "One mobile returns a family first and requires exact profile selection.",
+    edgeCase: "Shared family mobile with four profiles.",
+    id: "family-one-mobile-four-profiles",
+    owner: "domain",
+    path: "packages/test-utils/fixtures/family-one-mobile-four-profiles.json",
+  },
+  {
+    assertion: "+91, leading-zero, spaced, and 0091 variants normalize together.",
+    edgeCase: "Duplicate mobile variants.",
+    id: "duplicate-mobile-variants",
+    owner: "domain",
+    path: "packages/test-utils/fixtures/duplicate-mobile-variants.json",
+  },
+  {
+    assertion: "Ready blouse and stitching salwar stay visible at item level.",
+    edgeCase: "Partial delivery order.",
+    id: "partial-delivery-order",
+    owner: "domain",
+    path: "packages/test-utils/fixtures/partial-delivery-order.json",
+  },
+  {
+    assertion: "Negative adjustment requires a correction reason and audit owner.",
+    edgeCase: "Payment correction during rush hour.",
+    id: "payment-correction-case",
+    owner: "domain",
+    path: "packages/test-utils/fixtures/payment-correction-case.json",
+  },
+  {
+    assertion: "Same provider event ID is ignored after first application.",
+    edgeCase: "Duplicate Meta webhook retry.",
+    id: "whatsapp-duplicate-webhook",
+    owner: "connector",
+    path: "packages/test-utils/fixtures/whatsapp-duplicate-webhook.json",
+  },
+  {
+    assertion: "Older sent event cannot downgrade delivered/read status.",
+    edgeCase: "Out-of-order WhatsApp status.",
+    id: "whatsapp-out-of-order-status",
+    owner: "connector",
+    path: "packages/test-utils/fixtures/whatsapp-out-of-order-status.json",
+  },
+] as const satisfies readonly Phase09FixtureRecord[];
+
+export const phase09StructuredLogFields = [
+  "timestamp",
+  "level",
+  "environment",
+  "worker",
+  "version",
+  "requestId",
+  "tenantId",
+  "userId",
+  "route",
+  "entityType",
+  "entityId",
+  "durationMs",
+  "d1RowsRead",
+  "d1RowsWritten",
+] as const;
+
+export const phase09ObservabilityMetrics = [
+  {
+    action: "Check deployment version, request logs, and D1 errors.",
+    id: "api-error-rate",
+    label: "API error rate",
+    state: "pass",
+    threshold: ">2% for 5 minutes on critical routes",
+    value: "0.8%",
+  },
+  {
+    action: "Inspect query plan, FTS freshness, and rows read.",
+    id: "search-p95",
+    label: "Tenant search p95",
+    state: "pass",
+    threshold: ">400ms",
+    value: "286ms",
+  },
+  {
+    action: "Open DLQ runbook and classify terminal vs transient failure.",
+    id: "queue-dlq",
+    label: "Critical DLQ count",
+    state: "block",
+    threshold: ">0 for WhatsApp/provisioning queues",
+    value: "1",
+  },
+  {
+    action: "Alert platform admin; put tenant in retry/manual review.",
+    id: "tenant-provisioning-failure",
+    label: "Tenant provisioning failure",
+    state: "warn",
+    threshold: "Any production failure",
+    value: "1 simulated",
+  },
+  {
+    action: "Check abuse signals, provider config, and app secret rotation.",
+    id: "invalid-signature-spike",
+    label: "Webhook invalid signature spike",
+    state: "warn",
+    threshold: "Unusual increase",
+    value: "7/hour",
+  },
+] as const satisfies readonly ObservabilityMetric[];
+
+export const phase09WorkerRuntimeChecks = [
+  {
+    check: "Wrangler observability enabled with head sampling.",
+    evidence: "All Worker configs set observability.enabled and head_sampling_rate.",
+    id: "worker-observability",
+    state: "pass",
+    worker: "all-workers",
+  },
+  {
+    check: "Node.js compatibility flag configured.",
+    evidence: "All Worker configs include nodejs_compat for library compatibility.",
+    id: "nodejs-compat",
+    state: "pass",
+    worker: "all-workers",
+  },
+  {
+    check: "Structured request error logs.",
+    evidence: "@tailoros/worker-runtime emits JSON with requestId, route, version.",
+    id: "structured-error-logs",
+    state: "pass",
+    worker: "worker-runtime",
+  },
+  {
+    check: "Queue dead-letter queues configured.",
+    evidence: "Provisioning and WhatsApp consumers declare DLQs in wrangler.jsonc.",
+    id: "queue-dlq-config",
+    state: "pass",
+    worker: "control-plane / whatsapp-consumer",
+  },
+  {
+    check: "Release version present in runtime vars.",
+    evidence: "Helper supports RELEASE_VERSION; deploy env vars still need CI injection.",
+    id: "runtime-release-version",
+    state: "warn",
+    worker: "all-workers",
+  },
+] as const satisfies readonly WorkerRuntimeCheck[];
+
+export const phase09ReleaseGates = [
+  {
+    evidence: "ESLint and design token check run before merge.",
+    id: "lint",
+    label: "Lint and theme check",
+    order: 1,
+    owner: "ci",
+    state: "pass",
+  },
+  {
+    evidence: "TypeScript runs across web, apps, and packages.",
+    id: "typecheck",
+    label: "Typecheck",
+    order: 2,
+    owner: "ci",
+    state: "pass",
+  },
+  {
+    evidence: "Vitest covers domain, schema, worker runtime, and connector rules.",
+    id: "unit-schema",
+    label: "Unit and schema tests",
+    order: 3,
+    owner: "ci",
+    state: "pass",
+  },
+  {
+    evidence: "Cloudflare Workers Vitest pool is documented but not wired yet.",
+    id: "worker-integration",
+    label: "Worker integration tests",
+    order: 4,
+    owner: "ci",
+    state: "warn",
+  },
+  {
+    evidence: "Next build and Worker TypeScript builds must pass together.",
+    id: "build",
+    label: "Build web and Workers",
+    order: 5,
+    owner: "ci",
+    state: "pass",
+  },
+  {
+    evidence: "Preview deploy target exists in release plan.",
+    id: "preview-deploy",
+    label: "Preview deploy",
+    order: 6,
+    owner: "staging",
+    state: "warn",
+  },
+  {
+    evidence: "Playwright smoke journey is planned for first shop workflow.",
+    id: "playwright-smoke",
+    label: "Playwright smoke",
+    order: 7,
+    owner: "staging",
+    state: "block",
+  },
+  {
+    evidence: "Tenant migration fan-out uses per-tenant status tracking.",
+    id: "staging-migration",
+    label: "Staging migration",
+    order: 8,
+    owner: "staging",
+    state: "warn",
+  },
+  {
+    evidence: "Manual approval requires zero blocking gates and known rollback owner.",
+    id: "manual-approval",
+    label: "Manual release approval",
+    order: 9,
+    owner: "release",
+    state: "block",
+  },
+  {
+    evidence: "Production deploy waits for post-deploy smoke and DLQ watch.",
+    id: "production-deploy",
+    label: "Production deploy",
+    order: 10,
+    owner: "production",
+    state: "block",
+  },
+  {
+    evidence: "Post-deploy smoke must validate health, tenant dispatch, and WhatsApp queues.",
+    id: "post-deploy-smoke",
+    label: "Post-deploy smoke",
+    order: 11,
+    owner: "production",
+    state: "block",
+  },
+  {
+    evidence: "Monitor error rate, latency, DLQ, invalid signatures, and provisioning failures.",
+    id: "monitor",
+    label: "Monitor error, latency, DLQ",
+    order: 12,
+    owner: "production",
+    state: "warn",
+  },
+] as const satisfies readonly ReleaseGate[];
+
+export const phase09Runbooks = [
+  {
+    firstAction: "Inspect provisioning step, last error, and queued retry status.",
+    id: "tenant-provisioning-stuck",
+    owner: "platform",
+    state: "pass",
+    title: "Tenant provisioning stuck in db_migrating",
+    trigger: "Tenant remains non-active after migration SLA.",
+  },
+  {
+    firstAction: "Freeze feature rollout and compare per-tenant schema versions.",
+    id: "tenant-migration-partial",
+    owner: "platform",
+    state: "pass",
+    title: "Tenant DB migration partially failed",
+    trigger: "Some tenant schemas move forward and others fail.",
+  },
+  {
+    firstAction: "Verify normalized mobile index and FTS projection freshness.",
+    id: "search-wrong-missing",
+    owner: "support",
+    state: "pass",
+    title: "Search shows wrong or missing customer",
+    trigger: "Counter cannot find family/customer/order during rush hour.",
+  },
+  {
+    firstAction: "Check verify-token hash, app secret, and provider callback URL.",
+    id: "webhook-verification-fails",
+    owner: "platform",
+    state: "pass",
+    title: "WhatsApp webhook verification fails",
+    trigger: "Meta verify challenge returns 401 or 400.",
+  },
+  {
+    firstAction: "Classify provider, policy, schema, or transient transport failure.",
+    id: "whatsapp-dlq",
+    owner: "platform",
+    state: "pass",
+    title: "WhatsApp messages in DLQ",
+    trigger: "wa-send or wa-webhook DLQ count rises above zero.",
+  },
+  {
+    firstAction: "Validate signed URL expiry, tenant scope, and R2 object key.",
+    id: "receipt-link",
+    owner: "support",
+    state: "warn",
+    title: "Receipt public link not opening",
+    trigger: "Customer or staff reports receipt link failure.",
+  },
+  {
+    firstAction: "Review webhook retention, media offload, and archive candidates.",
+    id: "d1-size-limit",
+    owner: "platform",
+    state: "warn",
+    title: "D1 database near storage limit",
+    trigger: "Tenant DB crosses storage growth threshold.",
+  },
+  {
+    firstAction: "Confirm active grant, tenant scope, reason, and expiry.",
+    id: "support-access",
+    owner: "support",
+    state: "pass",
+    title: "Support access request and review",
+    trigger: "Platform support needs tenant operational context.",
+  },
+  {
+    firstAction: "Roll back frontend version and watch error rate/search success.",
+    id: "frontend-rollback",
+    owner: "platform",
+    state: "warn",
+    title: "Rollback after bad frontend deployment",
+    trigger: "Post-deploy smoke or owner workflow breaks after release.",
+  },
+  {
+    firstAction: "Disable sends for tenant channel and leave inbound status visible.",
+    id: "disable-whatsapp-tenant",
+    owner: "platform",
+    state: "warn",
+    title: "Emergency disable WhatsApp sends for one tenant",
+    trigger: "Provider quality, opt-out spike, or wrong-recipient risk.",
+  },
+] as const satisfies readonly ReleaseRunbook[];
+
+export const phase09PilotGoLiveChecks = [
+  {
+    evidence: "Shop profile, garment templates, receipt branding, roles.",
+    id: "seed-shop-settings",
+    label: "Seed shop settings",
+    state: "pass",
+  },
+  {
+    evidence: "Target is 50 historical customers and 20 active orders.",
+    id: "import-pilot-data",
+    label: "Import pilot data",
+    state: "warn",
+  },
+  {
+    evidence:
+      "Owner/counter staff training covers search, family selection, payments, opt-in.",
+    id: "staff-training",
+    label: "Train staff",
+    state: "warn",
+  },
+  {
+    evidence: "Two-week notebook comparison remains a release requirement.",
+    id: "parallel-notebook",
+    label: "Parallel notebook comparison",
+    state: "block",
+  },
+  {
+    evidence:
+      "Monitor order entry time, search success, missing dates, corrections, WhatsApp failures.",
+    id: "pilot-metrics",
+    label: "Pilot metrics",
+    state: "warn",
+  },
+  {
+    evidence: "Weekly owner review before onboarding the next shops.",
+    id: "pilot-review",
+    label: "Pilot review",
+    state: "warn",
+  },
+] as const satisfies readonly PilotGoLiveCheck[];
 
 export const measurementVersions = [
   {
@@ -2096,6 +2524,54 @@ export function getSearchPerformanceSignals() {
         rawQuery: "Meena blouse",
         resultCount: ftsResults.length,
       }).latencyBudgetMs ?? 0,
+  };
+}
+
+export function getPhase09ReleaseSignals(): Phase09ReleaseSignals {
+  const warningReleaseGates = phase09ReleaseGates.filter(
+    (gate) => gate.state === "warn",
+  ).length;
+  const blockedReleaseGates = phase09ReleaseGates.filter(
+    (gate) => gate.state === "block",
+  ).length;
+
+  return {
+    blockedReleaseGates,
+    criticalAlerts: phase09ObservabilityMetrics.filter(
+      (metric) => metric.state === "block",
+    ).length,
+    fixtureRecords: phase09FixtureRecords.length,
+    passingReleaseGates: phase09ReleaseGates.filter(
+      (gate) => gate.state === "pass",
+    ).length,
+    pilotChecksReady: phase09PilotGoLiveChecks.filter(
+      (check) => check.state === "pass",
+    ).length,
+    releaseGates: phase09ReleaseGates.length,
+    runbooks: phase09Runbooks.length,
+    structuredLogFields: phase09StructuredLogFields.length,
+    testingLayers: phase09TestingLayers.length,
+    warningReleaseGates,
+  };
+}
+
+export function getPhase09BlockingReleaseGates() {
+  return phase09ReleaseGates.filter((gate) => gate.state === "block");
+}
+
+export function getPhase09RunbookCoverage() {
+  return {
+    d1Storage: phase09Runbooks.some((runbook) => runbook.id === "d1-size-limit"),
+    emergencyWhatsAppDisable: phase09Runbooks.some(
+      (runbook) => runbook.id === "disable-whatsapp-tenant",
+    ),
+    rollback: phase09Runbooks.some(
+      (runbook) => runbook.id === "frontend-rollback",
+    ),
+    tenantMigration: phase09Runbooks.some(
+      (runbook) => runbook.id === "tenant-migration-partial",
+    ),
+    whatsappDlq: phase09Runbooks.some((runbook) => runbook.id === "whatsapp-dlq"),
   };
 }
 
