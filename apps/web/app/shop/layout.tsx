@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import { CoreModulesShell } from "@/features/core-modules/components/core-modules-shell";
 
 export const metadata: Metadata = {
-  title: "Phase 05 Core Modules",
+  title: "TailorOS Shop OS",
   description:
-    "TailorOS pilot-ready shop operating system modules for dashboard, customers, measurements, orders, production, payments, reports, and settings.",
+    "TailorOS pilot-ready shop operating system modules for core workflows and WhatsApp connector operations.",
 };
 
 export default function ShopLayout({

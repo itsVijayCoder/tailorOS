@@ -10,11 +10,18 @@ import type {
   FamilyAccount,
   MeasurementTemplate,
   MeasurementVersion,
+  ConnectorPolicyCheck,
   ProductionTask,
   ReportMetric,
   SettingsItem,
   ShopOrder,
+  SharedMobileCase,
+  WhatsAppChannel,
   WhatsAppFailure,
+  WhatsAppMessageRequest,
+  WhatsAppTemplateMapping,
+  WhatsAppUsageLedgerLine,
+  WhatsAppWebhookEvent,
 } from "./types";
 
 export const coreNavItems = [
@@ -47,6 +54,12 @@ export const coreNavItems = [
     href: "/shop/production",
     label: "Production",
     description: "Status lanes, tailor ownership, exceptions, alterations.",
+  },
+  {
+    key: "whatsapp",
+    href: "/shop/whatsapp",
+    label: "WhatsApp",
+    description: "Connector health, templates, policy blocks, webhook evidence.",
   },
   {
     key: "payments",
@@ -475,6 +488,460 @@ export const whatsAppFailures = [
   },
 ] as const satisfies readonly WhatsAppFailure[];
 
+export const whatsAppChannels = [
+  {
+    id: "wa_channel_mdu",
+    tenantCode: "TEN-MDU",
+    branchLabel: "Madurai main counter",
+    provider: "meta_cloud_api",
+    wabaId: "102938475610293",
+    phoneNumberId: "123456789012345",
+    displayPhone: "+91 98765 40001",
+    status: "active",
+    qualityRating: "green",
+    messagingLimitTier: "1K conversations/day",
+    consentCoveragePct: 87,
+    credentialAgeDays: 18,
+    tokenRotationDue: "2026-07-21",
+    lastHealthCheck: "2026-07-06T09:42:00+05:30",
+    risk: null,
+  },
+  {
+    id: "wa_channel_cbe",
+    tenantCode: "TEN-CBE",
+    branchLabel: "Coimbatore school batch",
+    provider: "meta_cloud_api",
+    wabaId: "203948576120394",
+    phoneNumberId: "223456789012345",
+    displayPhone: "+91 99441 40002",
+    status: "degraded",
+    qualityRating: "yellow",
+    messagingLimitTier: "250 conversations/day",
+    consentCoveragePct: 62,
+    credentialAgeDays: 42,
+    tokenRotationDue: "2026-07-10",
+    lastHealthCheck: "2026-07-06T09:38:00+05:30",
+    risk: "Template sync is behind and quality rating dropped after three user blocks.",
+  },
+  {
+    id: "wa_channel_tnj",
+    tenantCode: "TEN-TNJ",
+    branchLabel: "Thanjavur pilot shop",
+    provider: "meta_cloud_api",
+    wabaId: "304958671230495",
+    phoneNumberId: "323456789012345",
+    displayPhone: "+91 97890 40003",
+    status: "blocked",
+    qualityRating: "red",
+    messagingLimitTier: "Paused by provider",
+    consentCoveragePct: 51,
+    credentialAgeDays: 96,
+    tokenRotationDue: "2026-07-06",
+    lastHealthCheck: "2026-07-06T08:55:00+05:30",
+    risk: "Credential rotation and provider review are both required before sends resume.",
+  },
+] as const satisfies readonly WhatsAppChannel[];
+
+export const whatsAppTemplateMappings = [
+  {
+    id: "tpl_confirm_en",
+    purpose: "order_confirmation",
+    language: "en",
+    providerTemplateName: "tailoros_order_confirm_en_v3",
+    category: "utility",
+    status: "approved",
+    variables: ["customer_name", "order_code", "item_count", "promised_date"],
+    fallback: "call",
+    lastSyncedAt: "2026-07-06T08:30:00+05:30",
+    ownerAction: "No action",
+  },
+  {
+    id: "tpl_confirm_ta",
+    purpose: "order_confirmation",
+    language: "ta",
+    providerTemplateName: "tailoros_order_confirm_ta_v2",
+    category: "utility",
+    status: "approved",
+    variables: ["customer_name", "order_code", "promised_date"],
+    fallback: "call",
+    lastSyncedAt: "2026-07-06T08:30:00+05:30",
+    ownerAction: "No action",
+  },
+  {
+    id: "tpl_trial_en",
+    purpose: "trial_reminder",
+    language: "en",
+    providerTemplateName: "tailoros_trial_reminder_en_v4",
+    category: "utility",
+    status: "approved",
+    variables: ["customer_name", "order_code", "trial_date", "trial_time"],
+    fallback: "manual_review",
+    lastSyncedAt: "2026-07-06T08:29:00+05:30",
+    ownerAction: "No action",
+  },
+  {
+    id: "tpl_ready_ta",
+    purpose: "ready_for_pickup",
+    language: "ta",
+    providerTemplateName: "tailoros_ready_pickup_ta_v3",
+    category: "utility",
+    status: "approved",
+    variables: ["customer_name", "order_code", "balance_due"],
+    fallback: "call",
+    lastSyncedAt: "2026-07-06T08:29:00+05:30",
+    ownerAction: "No action",
+  },
+  {
+    id: "tpl_ready_en",
+    purpose: "ready_for_pickup",
+    language: "en",
+    providerTemplateName: "tailoros_ready_pickup_en_v5",
+    category: "utility",
+    status: "paused",
+    variables: ["customer_name", "order_code", "balance_due"],
+    fallback: "manual_review",
+    lastSyncedAt: "2026-07-06T08:28:00+05:30",
+    ownerAction: "Unpause or remap before English pickup sends resume.",
+  },
+  {
+    id: "tpl_balance_en",
+    purpose: "balance_due",
+    language: "en",
+    providerTemplateName: "tailoros_balance_due_en_v1",
+    category: "utility",
+    status: "pending_review",
+    variables: ["customer_name", "order_code", "balance_due", "pickup_date"],
+    fallback: "call",
+    lastSyncedAt: "2026-07-05T16:10:00+05:30",
+    ownerAction: "Wait for provider review; do not send marketing copy.",
+  },
+  {
+    id: "tpl_alteration_ta",
+    purpose: "alteration_update",
+    language: "ta",
+    providerTemplateName: "tailoros_alteration_update_ta_v1",
+    category: "utility",
+    status: "missing",
+    variables: ["customer_name", "order_code", "reason"],
+    fallback: "manual_review",
+    lastSyncedAt: "2026-07-05T16:10:00+05:30",
+    ownerAction: "Create mapping and approve Tamil alteration template.",
+  },
+] as const satisfies readonly WhatsAppTemplateMapping[];
+
+export const whatsAppMessageRequests = [
+  {
+    id: "wamr_01",
+    orderCode: "ORD-MDU-000421",
+    customerName: "Meena Ravi",
+    mobileE164: "+919876543210",
+    purpose: "order_confirmation",
+    productEvent: "order.booked",
+    channelId: "wa_channel_mdu",
+    idempotencyKey: "order.booked:ORD-MDU-000421:v1",
+    status: "read",
+    reason: "Customer opened the order confirmation.",
+    retryCount: 0,
+    providerMessageId: "wamid.mdu.000421.confirm",
+    lastTransitionAt: "2026-07-04T10:18:00+05:30",
+    staffAction: null,
+  },
+  {
+    id: "wamr_02",
+    orderCode: "ORD-MDU-000421",
+    customerName: "Meena Ravi",
+    mobileE164: "+919876543210",
+    purpose: "ready_for_pickup",
+    productEvent: "item.ready_for_pickup",
+    channelId: "wa_channel_mdu",
+    idempotencyKey: "item.ready_for_pickup:ITM-MDU-000421-01:v1",
+    status: "delivered",
+    reason: "Provider delivery receipt applied after sent state.",
+    retryCount: 0,
+    providerMessageId: "wamid.mdu.000421.pickup",
+    lastTransitionAt: "2026-07-06T09:14:00+05:30",
+    staffAction: null,
+  },
+  {
+    id: "wamr_03",
+    orderCode: "ORD-CBE-000144",
+    customerName: "Ayaan Shah",
+    mobileE164: "+919944112233",
+    purpose: "ready_for_pickup",
+    productEvent: "item.ready_for_pickup",
+    channelId: "wa_channel_cbe",
+    idempotencyKey: "item.ready_for_pickup:ITM-CBE-000144-01:v1",
+    status: "blocked",
+    reason: "Customer opted out on 2026-07-03; call fallback required.",
+    retryCount: 0,
+    providerMessageId: null,
+    lastTransitionAt: "2026-07-05T19:30:00+05:30",
+    staffAction: "Call customer before pickup.",
+  },
+  {
+    id: "wamr_04",
+    orderCode: "ORD-MDU-000422",
+    customerName: "Ravi Kumar",
+    mobileE164: "+919876543210",
+    purpose: "trial_reminder",
+    productEvent: "trial.reminder_due",
+    channelId: "wa_channel_mdu",
+    idempotencyKey: "trial.reminder_due:ORD-MDU-000422:2026-07-06",
+    status: "failed",
+    reason: "Transient Meta 5xx response; retry with exponential backoff.",
+    retryCount: 2,
+    providerMessageId: null,
+    lastTransitionAt: "2026-07-06T09:10:00+05:30",
+    staffAction: "Auto retry is scheduled.",
+  },
+  {
+    id: "wamr_05",
+    orderCode: "ORD-MDU-000421",
+    customerName: "Meena Ravi",
+    mobileE164: "+919876543210",
+    purpose: "order_confirmation",
+    productEvent: "order.booked",
+    channelId: "wa_channel_mdu",
+    idempotencyKey: "order.booked:ORD-MDU-000421:v1",
+    status: "duplicate",
+    reason: "Idempotency key already produced wamid.mdu.000421.confirm.",
+    retryCount: 0,
+    providerMessageId: "wamid.mdu.000421.confirm",
+    lastTransitionAt: "2026-07-04T10:19:00+05:30",
+    staffAction: null,
+  },
+  {
+    id: "wamr_06",
+    orderCode: "ORD-CBE-000144",
+    customerName: "Ayaan Shah",
+    mobileE164: "+919944112233",
+    purpose: "alteration_update",
+    productEvent: "alteration.created",
+    channelId: "wa_channel_cbe",
+    idempotencyKey: "alteration.created:ORD-CBE-000144:v1",
+    status: "blocked",
+    reason: "Tamil alteration template mapping is missing.",
+    retryCount: 0,
+    providerMessageId: null,
+    lastTransitionAt: "2026-07-05T18:50:00+05:30",
+    staffAction: "Map the template or use counter call fallback.",
+  },
+  {
+    id: "wamr_07",
+    orderCode: "ORD-MDU-000422",
+    customerName: "Ravi Kumar",
+    mobileE164: "+919876543210",
+    purpose: "balance_due",
+    productEvent: "balance.follow_up_due",
+    channelId: "wa_channel_mdu",
+    idempotencyKey: "balance.follow_up_due:ORD-MDU-000422:2026-07-06",
+    status: "queued",
+    reason: "Waiting for approved balance template before dispatch.",
+    retryCount: 0,
+    providerMessageId: null,
+    lastTransitionAt: "2026-07-06T09:35:00+05:30",
+    staffAction: "Review pending provider template.",
+  },
+  {
+    id: "wamr_08",
+    orderCode: "ORD-TNJ-000031",
+    customerName: "Kala Devi",
+    mobileE164: "+919789012345",
+    purpose: "order_confirmation",
+    productEvent: "order.booked",
+    channelId: "wa_channel_tnj",
+    idempotencyKey: "order.booked:ORD-TNJ-000031:v1",
+    status: "failed",
+    reason: "Channel blocked by provider after credential rotation expired.",
+    retryCount: 5,
+    providerMessageId: null,
+    lastTransitionAt: "2026-07-06T08:55:00+05:30",
+    staffAction: "Escalate DLQ to platform support.",
+  },
+  {
+    id: "wamr_09",
+    orderCode: "ORD-MDU-000422",
+    customerName: "Ravi Kumar",
+    mobileE164: "+919876543210",
+    purpose: "trial_reminder",
+    productEvent: "trial.reminder_due",
+    channelId: "wa_channel_mdu",
+    idempotencyKey: "trial.reminder_due:ORD-MDU-000422:2026-07-05",
+    status: "read",
+    reason: "Older trial reminder was read; later duplicate stays blocked.",
+    retryCount: 0,
+    providerMessageId: "wamid.mdu.000422.trial",
+    lastTransitionAt: "2026-07-05T17:42:00+05:30",
+    staffAction: null,
+  },
+] as const satisfies readonly WhatsAppMessageRequest[];
+
+export const whatsAppWebhookEvents = [
+  {
+    id: "waweb_01",
+    channelId: "wa_channel_mdu",
+    providerMessageId: "wamid.mdu.000421.confirm",
+    receivedAt: "2026-07-04T10:16:20+05:30",
+    eventType: "status",
+    normalizedStatus: "sent",
+    handling: "applied",
+    detail: "Initial sent receipt accepted for order confirmation.",
+  },
+  {
+    id: "waweb_02",
+    channelId: "wa_channel_mdu",
+    providerMessageId: "wamid.mdu.000421.confirm",
+    receivedAt: "2026-07-04T10:17:01+05:30",
+    eventType: "status",
+    normalizedStatus: "delivered",
+    handling: "applied",
+    detail: "Delivery rank advanced from sent to delivered.",
+  },
+  {
+    id: "waweb_03",
+    channelId: "wa_channel_mdu",
+    providerMessageId: "wamid.mdu.000421.confirm",
+    receivedAt: "2026-07-04T10:17:08+05:30",
+    eventType: "status",
+    normalizedStatus: "delivered",
+    handling: "duplicate_ignored",
+    detail: "Duplicate provider receipt kept from mutating audit history.",
+  },
+  {
+    id: "waweb_04",
+    channelId: "wa_channel_mdu",
+    providerMessageId: "wamid.mdu.000421.confirm",
+    receivedAt: "2026-07-04T10:18:00+05:30",
+    eventType: "status",
+    normalizedStatus: "read",
+    handling: "applied",
+    detail: "Read receipt advanced the request to terminal customer-visible state.",
+  },
+  {
+    id: "waweb_05",
+    channelId: "wa_channel_mdu",
+    providerMessageId: "wamid.mdu.000421.confirm",
+    receivedAt: "2026-07-04T10:18:12+05:30",
+    eventType: "status",
+    normalizedStatus: "sent",
+    handling: "stale_ignored",
+    detail: "Out-of-order sent event arrived after read and was ignored.",
+  },
+  {
+    id: "waweb_06",
+    channelId: "wa_channel_cbe",
+    providerMessageId: "wamid.cbe.inbound.stop",
+    receivedAt: "2026-07-03T20:10:00+05:30",
+    eventType: "inbound_message",
+    normalizedStatus: "inbound",
+    handling: "profile_selection",
+    detail: "STOP arrived on a shared family number; staff must confirm profile scope.",
+  },
+  {
+    id: "waweb_07",
+    channelId: "wa_channel_cbe",
+    providerMessageId: "wamid.cbe.template.pause",
+    receivedAt: "2026-07-05T16:10:00+05:30",
+    eventType: "template_status",
+    normalizedStatus: "template_paused",
+    handling: "applied",
+    detail: "Provider paused English ready-for-pickup template.",
+  },
+] as const satisfies readonly WhatsAppWebhookEvent[];
+
+export const whatsAppUsageLedger = [
+  {
+    id: "wausage_01",
+    tenantCode: "TEN-MDU",
+    period: "2026-07",
+    utilityConversations: 42,
+    serviceConversations: 16,
+    templateMessages: 71,
+    estimatedCostPaise: 5120,
+    evidence: "Meta conversation export reconciled with message_requests.",
+  },
+  {
+    id: "wausage_02",
+    tenantCode: "TEN-CBE",
+    period: "2026-07",
+    utilityConversations: 18,
+    serviceConversations: 9,
+    templateMessages: 29,
+    estimatedCostPaise: 2280,
+    evidence: "Usage row is tenant scoped and immutable after reconciliation.",
+  },
+  {
+    id: "wausage_03",
+    tenantCode: "TEN-TNJ",
+    period: "2026-07",
+    utilityConversations: 2,
+    serviceConversations: 0,
+    templateMessages: 4,
+    estimatedCostPaise: 280,
+    evidence: "DLQ evidence remains visible while channel is blocked.",
+  },
+] as const satisfies readonly WhatsAppUsageLedgerLine[];
+
+export const sharedMobileCases = [
+  {
+    id: "shared_01",
+    mobileDisplay: "+91 98765 43210",
+    inboundText: "I will collect Ravi shirt tomorrow",
+    candidateProfiles: ["Meena Ravi", "Ravi Kumar", "Ananya Ravi", "Meena R."],
+    resolution: "auto_matched",
+    decision: "Matched to Ravi Kumar because the inbound text names Ravi and shirt.",
+  },
+  {
+    id: "shared_02",
+    mobileDisplay: "+91 98765 43210",
+    inboundText: "Stop messages",
+    candidateProfiles: ["Meena Ravi", "Ravi Kumar", "Ananya Ravi", "Meena R."],
+    resolution: "needs_staff_selection",
+    decision: "Apply opt-out only after staff chooses family-wide or profile-specific scope.",
+  },
+  {
+    id: "shared_03",
+    mobileDisplay: "+91 99441 12233",
+    inboundText: "Call me",
+    candidateProfiles: ["S. Farida", "Ayaan Shah"],
+    resolution: "blocked",
+    decision: "Automation is blocked because the profile cannot be inferred safely.",
+  },
+] as const satisfies readonly SharedMobileCase[];
+
+export const connectorPolicyChecks = [
+  {
+    id: "policy_consent",
+    label: "Consent and opt-out",
+    state: "block",
+    detail: "Ayaan Shah cannot receive template sends until staff records consent reversal.",
+  },
+  {
+    id: "policy_template",
+    label: "Template mapping",
+    state: "warn",
+    detail: "Balance-due English is pending review and Tamil alteration mapping is missing.",
+  },
+  {
+    id: "policy_idempotency",
+    label: "Idempotency",
+    state: "pass",
+    detail: "Repeated order confirmation reused the existing provider message id.",
+  },
+  {
+    id: "policy_status_rank",
+    label: "Status ranking",
+    state: "pass",
+    detail: "Out-of-order sent webhook was ignored after read state.",
+  },
+  {
+    id: "policy_provider",
+    label: "Provider health",
+    state: "block",
+    detail: "Thanjavur sends are DLQ-only while the channel is blocked.",
+  },
+] as const satisfies readonly ConnectorPolicyCheck[];
+
 export const reportMetrics = [
   {
     label: "Today collection",
@@ -590,6 +1057,124 @@ export function getDashboardSignals() {
     retryableWhatsAppFailures: whatsAppFailures.filter((failure) =>
       isWhatsAppFailureRetryable(failure),
     ).length,
+  };
+}
+
+export function isWhatsAppRequestRetryable(request: WhatsAppMessageRequest) {
+  return request.status === "failed" && request.retryCount < 3;
+}
+
+export function isWhatsAppRequestDeadLettered(request: WhatsAppMessageRequest) {
+  return request.status === "failed" && request.retryCount >= 3;
+}
+
+export function getWhatsAppTemplateReadiness() {
+  return {
+    approved: whatsAppTemplateMappings.filter(
+      (template) => template.status === "approved",
+    ).length,
+    missing: whatsAppTemplateMappings.filter(
+      (template) => template.status === "missing",
+    ).length,
+    paused: whatsAppTemplateMappings.filter(
+      (template) => template.status === "paused",
+    ).length,
+    pendingReview: whatsAppTemplateMappings.filter(
+      (template) => template.status === "pending_review",
+    ).length,
+  };
+}
+
+export function getWhatsAppWebhookReliability() {
+  const duplicateIgnored = whatsAppWebhookEvents.filter(
+    (event) => event.handling === "duplicate_ignored",
+  ).length;
+  const staleIgnored = whatsAppWebhookEvents.filter(
+    (event) => event.handling === "stale_ignored",
+  ).length;
+  const profileSelection = whatsAppWebhookEvents.filter(
+    (event) => event.handling === "profile_selection",
+  ).length;
+  const applied = whatsAppWebhookEvents.filter(
+    (event) => event.handling === "applied",
+  ).length;
+
+  return {
+    applied,
+    duplicateIgnored,
+    exceptions: duplicateIgnored + staleIgnored + profileSelection,
+    profileSelection,
+    staleIgnored,
+  };
+}
+
+export function getWhatsAppPolicyBlockBreakdown() {
+  const grouped = whatsAppMessageRequests
+    .filter((request) => request.status === "blocked")
+    .reduce<Map<string, number>>((blocks, request) => {
+      const key = request.reason.toLowerCase().includes("opted out")
+        ? "Opt-out"
+        : request.reason.toLowerCase().includes("template")
+          ? "Template"
+          : "Policy";
+
+      blocks.set(key, (blocks.get(key) ?? 0) + 1);
+      return blocks;
+    }, new Map());
+
+  return Array.from(grouped, ([label, count]) => ({ count, label }));
+}
+
+export function getWhatsAppConnectorSignals() {
+  const deliveredOrRead = whatsAppMessageRequests.filter(
+    (request) => request.status === "delivered" || request.status === "read",
+  );
+  const read = deliveredOrRead.filter((request) => request.status === "read");
+  const totalConsentCoverage = whatsAppChannels.reduce(
+    (total, channel) => total + channel.consentCoveragePct,
+    0,
+  );
+  const webhookReliability = getWhatsAppWebhookReliability();
+  const templateReadiness = getWhatsAppTemplateReadiness();
+
+  return {
+    activeChannels: whatsAppChannels.filter((channel) => channel.status === "active")
+      .length,
+    blockedRequests: whatsAppMessageRequests.filter(
+      (request) => request.status === "blocked",
+    ).length,
+    consentCoveragePct: Math.round(totalConsentCoverage / whatsAppChannels.length),
+    degradedChannels: whatsAppChannels.filter(
+      (channel) => channel.status !== "active",
+    ).length,
+    duplicateRequests: whatsAppMessageRequests.filter(
+      (request) => request.status === "duplicate",
+    ).length,
+    estimatedCostPaise: whatsAppUsageLedger.reduce(
+      (total, line) => total + line.estimatedCostPaise,
+      0,
+    ),
+    queueBacklog:
+      whatsAppMessageRequests.filter((request) => request.status === "queued")
+        .length +
+      whatsAppMessageRequests.filter((request) =>
+        isWhatsAppRequestRetryable(request),
+      ).length,
+    readRatePct:
+      deliveredOrRead.length > 0
+        ? Math.round((read.length / deliveredOrRead.length) * 100)
+        : 0,
+    deadLetteredRequests: whatsAppMessageRequests.filter((request) =>
+      isWhatsAppRequestDeadLettered(request),
+    ).length,
+    retryableFailures: whatsAppMessageRequests.filter((request) =>
+      isWhatsAppRequestRetryable(request),
+    ).length,
+    templatesNeedingReview:
+      templateReadiness.missing +
+      templateReadiness.paused +
+      templateReadiness.pendingReview,
+    webhookExceptions: webhookReliability.exceptions,
   };
 }
 
@@ -713,8 +1298,90 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         title: `${failure.purpose} - ${failure.customerName}`,
         eyebrow: failure.retryable ? "Retryable message" : "Blocked message",
         description: failure.reason,
-        href: "/shop",
+        href: "/shop/whatsapp",
         priority: failure.retryable ? 4 : 9,
+      });
+    }
+  }
+
+  for (const channel of whatsAppChannels) {
+    const channelText = normalizeSearchText(
+      [
+        channel.branchLabel,
+        channel.tenantCode,
+        channel.displayPhone,
+        channel.phoneNumberId,
+        channel.wabaId,
+        channel.status,
+        channel.risk ?? "",
+      ].join(" "),
+    );
+
+    if (channelText.includes(normalizedText)) {
+      results.push({
+        entityType: "message",
+        id: channel.id,
+        title: `${channel.branchLabel} - ${channel.displayPhone}`,
+        eyebrow: channel.status === "active" ? "Active channel" : "Channel action",
+        description: channel.risk ?? `${channel.messagingLimitTier}, ${channel.qualityRating} quality`,
+        href: "/shop/whatsapp",
+        priority: channel.status === "active" ? 6 : 3,
+      });
+    }
+  }
+
+  for (const template of whatsAppTemplateMappings) {
+    const templateText = normalizeSearchText(
+      [
+        template.purpose,
+        template.language,
+        template.providerTemplateName,
+        template.status,
+        template.ownerAction,
+      ].join(" "),
+    );
+
+    if (templateText.includes(normalizedText)) {
+      results.push({
+        entityType: "message",
+        id: template.id,
+        title: `${template.providerTemplateName} (${template.language})`,
+        eyebrow: template.status === "approved" ? "Approved template" : "Template review",
+        description: template.ownerAction,
+        href: "/shop/whatsapp",
+        priority: template.status === "approved" ? 8 : 2,
+      });
+    }
+  }
+
+  for (const request of whatsAppMessageRequests) {
+    const requestText = normalizeSearchText(
+      [
+        request.orderCode,
+        request.customerName,
+        request.mobileE164,
+        request.purpose,
+        request.productEvent,
+        request.status,
+        request.reason,
+        request.idempotencyKey,
+      ].join(" "),
+    );
+
+    if (requestText.includes(normalizedText)) {
+      results.push({
+        entityType: "message",
+        id: request.id,
+        title: `${request.purpose} - ${request.customerName}`,
+        eyebrow:
+          request.status === "blocked"
+            ? "Policy block"
+            : request.status === "failed"
+              ? "Retry evidence"
+              : "Message request",
+        description: request.reason,
+        href: "/shop/whatsapp",
+        priority: request.status === "failed" || request.status === "blocked" ? 2 : 7,
       });
     }
   }

@@ -14,7 +14,13 @@ export function statusTone(
     status === "ready_for_pickup" ||
     status === "delivered" ||
     status === "closed" ||
-    status === "ready"
+    status === "ready" ||
+    status === "active" ||
+    status === "approved" ||
+    status === "read" ||
+    status === "pass" ||
+    status === "applied" ||
+    status === "auto_matched"
   ) {
     return "success";
   }
@@ -24,12 +30,29 @@ export function statusTone(
     status === "trial_required" ||
     status === "customer_delay" ||
     status === "material_shortage" ||
-    status === "on_hold"
+    status === "on_hold" ||
+    status === "degraded" ||
+    status === "pending_review" ||
+    status === "paused" ||
+    status === "queued" ||
+    status === "duplicate" ||
+    status === "warn" ||
+    status === "duplicate_ignored" ||
+    status === "stale_ignored" ||
+    status === "profile_selection" ||
+    status === "needs_staff_selection"
   ) {
     return "warning";
   }
 
-  if (status === "cancelled" || status === "refunded" || status === "blocked") {
+  if (
+    status === "cancelled" ||
+    status === "refunded" ||
+    status === "blocked" ||
+    status === "failed" ||
+    status === "missing" ||
+    status === "block"
+  ) {
     return "danger";
   }
 
@@ -38,7 +61,11 @@ export function statusTone(
     status === "measurement_taken" ||
     status === "cutting" ||
     status === "stitching" ||
-    status === "finishing"
+    status === "finishing" ||
+    status === "accepted" ||
+    status === "sent" ||
+    status === "inbound" ||
+    status === "template_paused"
   ) {
     return "accent";
   }

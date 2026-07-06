@@ -6,6 +6,7 @@ export type ModuleKey =
   | "measurements"
   | "orders"
   | "production"
+  | "whatsapp"
   | "payments"
   | "reports"
   | "settings";
@@ -136,6 +137,112 @@ export type WhatsAppFailure = Readonly<{
   reason: string;
   retryable: boolean;
   occurredAt: string;
+}>;
+
+export type WhatsAppChannel = Readonly<{
+  id: string;
+  tenantCode: string;
+  branchLabel: string;
+  provider: "meta_cloud_api";
+  wabaId: string;
+  phoneNumberId: string;
+  displayPhone: string;
+  status: "active" | "degraded" | "blocked";
+  qualityRating: "green" | "yellow" | "red";
+  messagingLimitTier: string;
+  consentCoveragePct: number;
+  credentialAgeDays: number;
+  tokenRotationDue: string;
+  lastHealthCheck: string;
+  risk: string | null;
+}>;
+
+export type WhatsAppTemplateMapping = Readonly<{
+  id: string;
+  purpose:
+    | "order_confirmation"
+    | "trial_reminder"
+    | "ready_for_pickup"
+    | "balance_due"
+    | "alteration_update";
+  language: "en" | "ta";
+  providerTemplateName: string;
+  category: "utility" | "marketing" | "authentication";
+  status: "approved" | "pending_review" | "paused" | "missing";
+  variables: readonly string[];
+  fallback: "call" | "sms" | "manual_review";
+  lastSyncedAt: string;
+  ownerAction: string;
+}>;
+
+export type WhatsAppMessageRequest = Readonly<{
+  id: string;
+  orderCode: string;
+  customerName: string;
+  mobileE164: string;
+  purpose: WhatsAppTemplateMapping["purpose"];
+  productEvent: string;
+  channelId: string;
+  idempotencyKey: string;
+  status:
+    | "queued"
+    | "accepted"
+    | "sent"
+    | "delivered"
+    | "read"
+    | "failed"
+    | "blocked"
+    | "duplicate";
+  reason: string;
+  retryCount: number;
+  providerMessageId: string | null;
+  lastTransitionAt: string;
+  staffAction: string | null;
+}>;
+
+export type WhatsAppWebhookEvent = Readonly<{
+  id: string;
+  channelId: string;
+  providerMessageId: string;
+  receivedAt: string;
+  eventType: "status" | "inbound_message" | "template_status";
+  normalizedStatus:
+    | "accepted"
+    | "sent"
+    | "delivered"
+    | "read"
+    | "failed"
+    | "inbound"
+    | "template_paused";
+  handling: "applied" | "duplicate_ignored" | "stale_ignored" | "profile_selection";
+  detail: string;
+}>;
+
+export type WhatsAppUsageLedgerLine = Readonly<{
+  id: string;
+  tenantCode: string;
+  period: string;
+  utilityConversations: number;
+  serviceConversations: number;
+  templateMessages: number;
+  estimatedCostPaise: number;
+  evidence: string;
+}>;
+
+export type SharedMobileCase = Readonly<{
+  id: string;
+  mobileDisplay: string;
+  inboundText: string;
+  candidateProfiles: readonly string[];
+  resolution: "auto_matched" | "needs_staff_selection" | "blocked";
+  decision: string;
+}>;
+
+export type ConnectorPolicyCheck = Readonly<{
+  id: string;
+  label: string;
+  state: "pass" | "warn" | "block";
+  detail: string;
 }>;
 
 export type ReportMetric = Readonly<{

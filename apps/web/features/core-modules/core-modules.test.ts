@@ -4,10 +4,16 @@ import {
   calculateOrderFinancials,
   getDashboardSignals,
   getPartialDeliveryOrders,
+  getWhatsAppConnectorSignals,
+  getWhatsAppTemplateReadiness,
+  getWhatsAppWebhookReliability,
   isWhatsAppFailureRetryable,
+  isWhatsAppRequestDeadLettered,
+  isWhatsAppRequestRetryable,
   searchPilotRecords,
   shopOrders,
   whatsAppFailures,
+  whatsAppMessageRequests,
 } from "./data";
 
 describe("Phase 05 core modules", () => {
@@ -91,6 +97,73 @@ describe("Phase 05 core modules", () => {
       partialDeliveryCount: 1,
       readyItemCount: 1,
       retryableWhatsAppFailures: 1,
+    });
+  });
+
+  it("summarizes Phase 06 connector health from channel, template, queue, and usage data", () => {
+    expect(getWhatsAppConnectorSignals()).toMatchObject({
+      activeChannels: 1,
+      blockedRequests: 2,
+      consentCoveragePct: 67,
+      deadLetteredRequests: 1,
+      degradedChannels: 2,
+      duplicateRequests: 1,
+      estimatedCostPaise: 7680,
+      queueBacklog: 2,
+      readRatePct: 67,
+      retryableFailures: 1,
+      templatesNeedingReview: 3,
+      webhookExceptions: 3,
+    });
+  });
+
+  it("separates approved template mappings from pending, paused, and missing mappings", () => {
+    expect(getWhatsAppTemplateReadiness()).toEqual({
+      approved: 4,
+      missing: 1,
+      paused: 1,
+      pendingReview: 1,
+    });
+  });
+
+  it("classifies WhatsApp retry and dead-letter requests by retry count", () => {
+    const retryable = whatsAppMessageRequests.find(
+      (request) => request.id === "wamr_04",
+    );
+    const deadLettered = whatsAppMessageRequests.find(
+      (request) => request.id === "wamr_08",
+    );
+
+    expect(retryable).toBeDefined();
+    expect(deadLettered).toBeDefined();
+
+    if (!retryable || !deadLettered) {
+      throw new Error("Expected WhatsApp queue fixtures to exist.");
+    }
+
+    expect(isWhatsAppRequestRetryable(retryable)).toBe(true);
+    expect(isWhatsAppRequestDeadLettered(retryable)).toBe(false);
+    expect(isWhatsAppRequestRetryable(deadLettered)).toBe(false);
+    expect(isWhatsAppRequestDeadLettered(deadLettered)).toBe(true);
+  });
+
+  it("keeps duplicate, stale, and shared-mobile webhook handling visible", () => {
+    expect(getWhatsAppWebhookReliability()).toEqual({
+      applied: 4,
+      duplicateIgnored: 1,
+      exceptions: 3,
+      profileSelection: 1,
+      staleIgnored: 1,
+    });
+  });
+
+  it("routes connector search matches to the WhatsApp cockpit", () => {
+    const results = searchPilotRecords("tailoros_alteration_update_ta_v1");
+
+    expect(results[0]).toMatchObject({
+      entityType: "message",
+      href: "/shop/whatsapp",
+      id: "tpl_alteration_ta",
     });
   });
 });

@@ -3,6 +3,7 @@ import {
   ClipboardList,
   CreditCard,
   Gauge,
+  MessageCircle,
   Ruler,
   Settings2,
   Shirt,
@@ -28,6 +29,7 @@ const iconByKey: Record<ModuleKey, typeof Gauge> = {
   production: Shirt,
   reports: WalletCards,
   settings: Settings2,
+  whatsapp: MessageCircle,
 };
 
 export function CoreModulesShell({ children }: { children: ReactNode }) {
@@ -49,7 +51,7 @@ export function CoreModulesShell({ children }: { children: ReactNode }) {
             </span>
           </Link>
           <nav
-            aria-label="Phase 05 quick navigation"
+            aria-label="Shop quick navigation"
             className="hidden items-center gap-1 rounded-full border border-hairline bg-surface p-1 shadow-sm xl:flex"
           >
             {coreNavItems.slice(0, 6).map((item) => (
@@ -92,7 +94,7 @@ export function CoreModulesShell({ children }: { children: ReactNode }) {
         <aside className="hidden border-r border-hairline bg-surface/40 px-4 py-6 lg:block">
           <div className="sticky top-24 grid gap-5">
             <div className="rounded-lg border border-hairline bg-surface-strong p-4 shadow-sm">
-              <Badge variant="signal">Phase 05</Badge>
+              <Badge variant="signal">Phase 05-06</Badge>
               <h2 className="mt-3 font-display text-2xl font-medium leading-none text-ink-display">
                 Core modules
               </h2>
