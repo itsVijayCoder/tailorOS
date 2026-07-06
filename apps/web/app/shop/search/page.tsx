@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import { CoreCommandMenu } from "@/features/core-modules/components/core-command-menu";
 import {
   DataPanel,
@@ -26,9 +25,9 @@ import {
 import { searchRealRecords } from "@/features/core-modules/real-data";
 
 export const metadata: Metadata = {
-  title: "Global Search and Performance",
+  title: "Search",
   description:
-    "Phase 07 tenant-local global search, exact lookup indexes, FTS fallback, and fast command UX for TailorOS.",
+    "Tenant-local global search for customers, orders, receipts, garments, and WhatsApp evidence in TailorOS.",
 };
 
 const strategyRows = [
@@ -88,20 +87,10 @@ export default async function SearchPerformancePage() {
   return (
     <>
       <PageHeader
-        actions={
-          <>
-            <CoreCommandMenu />
-            <a
-              className={buttonVariants({ variant: "secondary", size: "lg" })}
-              href="/docs/phase-wise/Phase07_global_search_performance.html"
-            >
-              Phase 07 source
-            </a>
-          </>
-        }
-        body="Tenant-local global search now uses exact indexed paths before FTS, keeps command search responsive, and documents the speed budget that matters at the shop counter."
-        eyebrow="Phase 07 search and speed"
-        title="Find the customer, order, receipt, or WhatsApp evidence before choosing a module."
+        actions={<CoreCommandMenu />}
+        body="Search exact IDs first, then names, mobile numbers, garments, receipts, and message history."
+        eyebrow="Search"
+        title="Find work before choosing a module."
       />
 
       <div className="grid gap-8 px-4 py-8 sm:px-6 lg:px-8">

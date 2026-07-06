@@ -39,37 +39,37 @@ const iconByKey: Record<ModuleKey, typeof Gauge> = {
 };
 
 const shopName = "Sri Raja Tailors";
+const shopNavItems = coreNavItems.filter(
+  (item) => item.key !== "release" && item.key !== "security",
+);
 
 export function CoreModulesShell({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-dvh overflow-x-hidden bg-page text-ink-body lg:h-dvh lg:overflow-hidden">
-      <aside className="fixed inset-y-0 left-0 z-[70] hidden w-72 flex-col border-r border-hairline bg-surface/95 backdrop-blur-xl lg:flex">
+    <main className="shop-app-shell relative z-[60] min-h-dvh overflow-x-hidden bg-page text-ink-body">
+      <aside className="fixed inset-y-0 left-0 z-[70] hidden w-64 flex-col border-r border-hairline bg-surface/95 backdrop-blur-xl lg:flex">
         <div className="flex h-16 shrink-0 items-center border-b border-hairline px-4">
           <BrandLockup subtitle={shopName} />
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
           <nav aria-label="Shop modules" className="grid gap-1">
-            {coreNavItems.map((item) => {
+            {shopNavItems.map((item) => {
               const Icon = iconByKey[item.key];
 
               return (
                 <Link
                   className={cn(
-                    "group grid grid-cols-[2rem_minmax(0,1fr)] gap-3 rounded-lg px-3 py-2.5 text-sm transition duration-200 ease-premium hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none",
+                    "group grid grid-cols-[1.75rem_minmax(0,1fr)] items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition duration-200 ease-premium hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none",
                   )}
                   href={item.href}
                   key={item.key}
                 >
-                  <span className="grid size-8 place-items-center rounded-lg border border-hairline bg-page text-accent transition duration-200 ease-premium group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground motion-reduce:transition-none">
+                  <span className="grid size-7 place-items-center rounded-lg border border-hairline bg-page text-accent transition duration-200 ease-premium group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground motion-reduce:transition-none">
                     <Icon aria-hidden className="size-4" />
                   </span>
                   <span className="min-w-0">
                     <strong className="block font-ui text-sm text-ink-display">
                       {item.label}
                     </strong>
-                    <span className="mt-1 block text-xs leading-5 text-ink-muted">
-                      {item.description}
-                    </span>
                   </span>
                 </Link>
               );
@@ -78,25 +78,22 @@ export function CoreModulesShell({ children }: { children: ReactNode }) {
         </div>
         <div className="shrink-0 border-t border-hairline p-3">
           <Link
-            className="group grid grid-cols-[2rem_minmax(0,1fr)] gap-3 rounded-lg px-3 py-2.5 text-sm transition duration-200 ease-premium hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
+            className="group grid grid-cols-[1.75rem_minmax(0,1fr)] items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition duration-200 ease-premium hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
             href="/admin/tenants"
           >
-            <span className="grid size-8 place-items-center rounded-lg border border-hairline bg-page text-accent transition duration-200 ease-premium group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground motion-reduce:transition-none">
+            <span className="grid size-7 place-items-center rounded-lg border border-hairline bg-page text-accent transition duration-200 ease-premium group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground motion-reduce:transition-none">
               <Building2 aria-hidden className="size-4" />
             </span>
             <span className="min-w-0">
               <strong className="block font-ui text-sm text-ink-display">
                 Super admin
               </strong>
-              <span className="mt-1 block text-xs leading-5 text-ink-muted">
-                Onboard shops and issue owner credentials.
-              </span>
             </span>
           </Link>
         </div>
       </aside>
 
-      <section className="min-h-dvh min-w-0 lg:h-dvh lg:pl-72">
+      <section className="min-h-dvh min-w-0 lg:pl-64">
         <header className="sticky top-0 z-[60] border-b border-hairline bg-page/94 backdrop-blur-xl">
           <div className="flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
             <div className="lg:hidden">
@@ -114,7 +111,7 @@ export function CoreModulesShell({ children }: { children: ReactNode }) {
               aria-label="Shop quick navigation"
               className="hidden items-center gap-1 rounded-full border border-hairline bg-surface p-1 shadow-sm xl:flex"
             >
-              {coreNavItems.slice(0, 6).map((item) => (
+              {shopNavItems.slice(0, 5).map((item) => (
                 <Link
                   className="rounded-full px-3 py-1.5 text-sm font-semibold text-ink-muted transition duration-200 ease-premium hover:bg-accent-faded hover:text-ink-display focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
                   href={item.href}
@@ -142,7 +139,7 @@ export function CoreModulesShell({ children }: { children: ReactNode }) {
           className="sticky top-16 z-[55] overflow-hidden border-b border-hairline bg-page/94 px-3 py-2 backdrop-blur-xl lg:hidden"
         >
           <div className="flex max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1">
-            {coreNavItems.map((item) => {
+            {shopNavItems.map((item) => {
               const Icon = iconByKey[item.key];
               return (
                 <Link
@@ -164,9 +161,7 @@ export function CoreModulesShell({ children }: { children: ReactNode }) {
             </Link>
           </div>
         </nav>
-        <div className="min-w-0 lg:h-[calc(100dvh-4rem)] lg:overflow-y-auto">
-          {children}
-        </div>
+        <div className="min-w-0">{children}</div>
       </section>
     </main>
   );

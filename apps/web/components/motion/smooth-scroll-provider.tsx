@@ -1,13 +1,20 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 type SmoothScrollProviderProps = {
   children: ReactNode;
 };
 
 export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
+  const pathname = usePathname();
+
   useEffect(() => {
+    if (pathname.startsWith("/shop")) {
+      return;
+    }
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
     }
@@ -61,7 +68,7 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
       disposed = true;
       cleanup();
     };
-  }, []);
+  }, [pathname]);
 
   return children;
 }

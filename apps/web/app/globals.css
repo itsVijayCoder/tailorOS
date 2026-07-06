@@ -589,9 +589,19 @@ a {
   min-height: 100%;
 }
 
+.route-shell:has(.shop-app-shell) {
+  min-height: 100dvh;
+  animation: none;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .route-shell {
     animation: route-enter var(--motion-route) var(--ease-premium) both;
+  }
+
+  .route-shell:has(.shop-app-shell) {
+    animation: none;
   }
 }
 
