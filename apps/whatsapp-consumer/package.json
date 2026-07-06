@@ -12,7 +12,9 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
-    "@tailoros/schemas": "workspace:*"
+    "@tailoros/message-policy": "workspace:*",
+    "@tailoros/schemas": "workspace:*",
+    "@tailoros/whatsapp": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5",

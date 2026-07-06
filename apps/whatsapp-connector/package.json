@@ -12,7 +12,9 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@tailoros/message-policy": "workspace:*",
     "@tailoros/schemas": "workspace:*",
+    "@tailoros/whatsapp": "workspace:*",
     "@tailoros/worker-runtime": "workspace:*",
     "hono": "^4.11.1",
     "zod": "^4.1.12"

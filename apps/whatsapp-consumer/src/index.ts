@@ -1,49 +1,54 @@
 import { queueEnvelopeSchema } from "@tailoros/schemas";
 
+import {
+  D1WhatsAppConsumerRepository,
+  processWhatsAppQueueEnvelope,
+} from "./processor";
+
 export default {
   async fetch() {
     return Response.json({
-      ok: true,
       data: {
-        service: "whatsapp-consumer",
         boundary: "messaging-queues",
+        service: "whatsapp-consumer",
         status: "ok",
       },
+      ok: true,
       requestId: "queue-consumer-health",
     });
   },
 
-  async queue(batch, _env, ctx) {
+  async queue(batch, env) {
+    const repository = new D1WhatsAppConsumerRepository(env.CONNECTOR_DB);
+
     for (const message of batch.messages) {
       const parsed = queueEnvelopeSchema.safeParse(message.body);
 
       if (!parsed.success) {
         console.error(
           JSON.stringify({
-            level: "error",
-            worker: "whatsapp-consumer",
-            message: "Invalid WhatsApp queue payload.",
             issues: parsed.error.issues,
+            level: "error",
+            message: "Invalid WhatsApp queue payload.",
+            worker: "whatsapp-consumer",
           }),
         );
         message.ack();
         continue;
       }
 
-      ctx.waitUntil(
-        Promise.resolve().then(() => {
-          console.log(
-            JSON.stringify({
-              level: "info",
-              worker: "whatsapp-consumer",
-              job_id: parsed.data.id,
-              job_type: parsed.data.type,
-              idempotency_key: parsed.data.idempotencyKey,
-            }),
-          );
-        }),
-      );
-      message.ack();
+      const result = await processWhatsAppQueueEnvelope({
+        attempts: message.attempts,
+        env,
+        envelope: parsed.data,
+        repository,
+      });
+
+      if (result.action === "retry") {
+        message.retry({ delaySeconds: result.delaySeconds });
+      } else {
+        message.ack();
+      }
     }
   },
 } satisfies ExportedHandler<Env, unknown>;

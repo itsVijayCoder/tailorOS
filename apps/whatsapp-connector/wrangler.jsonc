@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "tailoros-whatsapp-connector",
   "main": "src/index.ts",
-  "compatibility_date": "2026-07-05",
+  "compatibility_date": "2026-07-06",
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "enabled": true,
@@ -29,6 +29,10 @@
   },
   "vars": {
     "ENVIRONMENT": "local",
+    "META_GRAPH_API_VERSION": "v25.0",
     "META_WEBHOOK_VERIFY_TOKEN_HASH": "local-placeholder-hash",
+  },
+  "secrets": {
+    "required": ["INTERNAL_SERVICE_TOKEN", "META_APP_SECRET"],
   },
 }

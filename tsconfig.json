@@ -9,7 +9,9 @@
     { "path": "./apps/whatsapp-connector" },
     { "path": "./apps/whatsapp-consumer" },
     { "path": "./packages/core" },
+    { "path": "./packages/message-policy" },
     { "path": "./packages/schemas" },
+    { "path": "./packages/whatsapp" },
     { "path": "./packages/worker-runtime" }
   ]
 }
