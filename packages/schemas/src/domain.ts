@@ -222,7 +222,65 @@ export const recordPaymentSchema = z
 export const searchTenantDomainQuerySchema = z
   .object({
     q: z.string().trim().min(2).max(120),
-    limit: z.coerce.number().int().min(1).max(50).default(20),
+    limit: z.coerce.number().int().min(1).max(20).default(10),
+  })
+  .strict();
+
+export const tenantSearchQueryKindSchema = z.enum([
+  "empty",
+  "mobile",
+  "customer_code",
+  "order_code",
+  "receipt_code",
+  "shortcut",
+  "text",
+]);
+
+export const tenantSearchStrategySchema = z.enum([
+  "none",
+  "indexed_mobile_prefix",
+  "indexed_code_exact",
+  "indexed_status_date",
+  "fts_prefix",
+]);
+
+export const searchResultHitTypeSchema = z.enum([
+  "exact",
+  "prefix",
+  "shortcut",
+  "fts",
+]);
+
+export const searchTenantDomainResultSchema = z
+  .object({
+    entityType: z.string().trim().min(2).max(80),
+    entityId: domainIdSchema,
+    title: z.string().trim().min(1).max(160),
+    subtitle: z.string().trim().max(240).nullable(),
+    hitType: searchResultHitTypeSchema,
+    score: z.number(),
+    updatedAt: isoDateTimeSchema,
+    payload: jsonObjectSchema,
+  })
+  .strict();
+
+export const searchTenantDomainMetaSchema = z
+  .object({
+    rawQuery: z.string().max(120),
+    normalizedQuery: z.string().max(120),
+    queryKind: tenantSearchQueryKindSchema,
+    strategy: tenantSearchStrategySchema,
+    minLengthSatisfied: z.boolean(),
+    resultCount: z.number().int().nonnegative(),
+    latencyBudgetMs: z.number().int().positive().nullable(),
+    elapsedMs: z.number().nonnegative(),
+  })
+  .strict();
+
+export const searchTenantDomainResponseSchema = z
+  .object({
+    results: z.array(searchTenantDomainResultSchema),
+    meta: searchTenantDomainMetaSchema,
   })
   .strict();
 
@@ -309,3 +367,18 @@ export type PaymentSummary = z.infer<typeof paymentSummarySchema>;
 export type PaymentKind = z.infer<typeof paymentKindSchema>;
 export type PaymentMode = z.infer<typeof paymentModeSchema>;
 export type DomainOutboxEventType = z.infer<typeof domainOutboxEventTypeSchema>;
+export type SearchTenantDomainQuery = z.infer<
+  typeof searchTenantDomainQuerySchema
+>;
+export type TenantSearchQueryKind = z.infer<typeof tenantSearchQueryKindSchema>;
+export type TenantSearchStrategy = z.infer<typeof tenantSearchStrategySchema>;
+export type SearchResultHitType = z.infer<typeof searchResultHitTypeSchema>;
+export type SearchTenantDomainResult = z.infer<
+  typeof searchTenantDomainResultSchema
+>;
+export type SearchTenantDomainMeta = z.infer<
+  typeof searchTenantDomainMetaSchema
+>;
+export type SearchTenantDomainResponse = z.infer<
+  typeof searchTenantDomainResponseSchema
+>;

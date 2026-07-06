@@ -358,6 +358,41 @@ CREATE TABLE IF NOT EXISTS search_docs (
 CREATE INDEX IF NOT EXISTS idx_search_docs_entity
   ON search_docs(entity_type, entity_id);
 
+CREATE TABLE IF NOT EXISTS search_projection (
+  id TEXT PRIMARY KEY,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  subtitle TEXT,
+  mobile_e164 TEXT,
+  customer_code TEXT,
+  order_code TEXT,
+  receipt_code TEXT,
+  status TEXT,
+  delivery_date TEXT,
+  payload_json TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(entity_type, entity_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_search_projection_entity
+  ON search_projection(entity_type, entity_id);
+
+CREATE INDEX IF NOT EXISTS idx_search_projection_mobile
+  ON search_projection(mobile_e164);
+
+CREATE INDEX IF NOT EXISTS idx_search_projection_customer_code
+  ON search_projection(customer_code);
+
+CREATE INDEX IF NOT EXISTS idx_search_projection_order_code
+  ON search_projection(order_code);
+
+CREATE INDEX IF NOT EXISTS idx_search_projection_receipt_code
+  ON search_projection(receipt_code);
+
+CREATE INDEX IF NOT EXISTS idx_search_projection_status_date
+  ON search_projection(status, delivery_date);
+
 CREATE VIRTUAL TABLE IF NOT EXISTS search_docs_fts
   USING fts5(entity_id UNINDEXED, title, subtitle, search_text);
 

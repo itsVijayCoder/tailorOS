@@ -1,10 +1,12 @@
 import {
   calculatePaymentLedger,
-  normalizeIndianMobile,
   normalizeSearchText,
+  parseTenantSearchQuery,
 } from "@tailoros/core";
 
 import type {
+  CommandSearchMeta,
+  CommandSearchResponse,
   CommandSearchResult,
   CoreNavItem,
   FamilyAccount,
@@ -23,6 +25,14 @@ import type {
   WhatsAppUsageLedgerLine,
   WhatsAppWebhookEvent,
 } from "./types";
+import { formatShortDate } from "./presenters";
+
+const pilotTodayIsoDate = "2026-07-06";
+type DraftCommandSearchResult = Omit<
+  CommandSearchResult,
+  "hitType" | "matchedOn"
+> &
+  Partial<Pick<CommandSearchResult, "hitType" | "matchedOn">>;
 
 export const coreNavItems = [
   {
@@ -30,6 +40,12 @@ export const coreNavItems = [
     href: "/shop",
     label: "Dashboard",
     description: "Daily cockpit, command search, due work, balances, failures.",
+  },
+  {
+    key: "search",
+    href: "/shop/search",
+    label: "Search",
+    description: "Global command search, exact indexes, FTS, speed budgets.",
   },
   {
     key: "customers",
@@ -59,7 +75,8 @@ export const coreNavItems = [
     key: "whatsapp",
     href: "/shop/whatsapp",
     label: "WhatsApp",
-    description: "Connector health, templates, policy blocks, webhook evidence.",
+    description:
+      "Connector health, templates, policy blocks, webhook evidence.",
   },
   {
     key: "payments",
@@ -363,7 +380,8 @@ export const shopOrders = [
         recordedAt: "2026-07-03T18:35:00+05:30",
       },
     ],
-    notes: "Due today; owner action needed if cutting is not completed by noon.",
+    notes:
+      "Due today; owner action needed if cutting is not completed by noon.",
   },
   {
     id: "ord_03",
@@ -815,7 +833,8 @@ export const whatsAppWebhookEvents = [
     eventType: "status",
     normalizedStatus: "read",
     handling: "applied",
-    detail: "Read receipt advanced the request to terminal customer-visible state.",
+    detail:
+      "Read receipt advanced the request to terminal customer-visible state.",
   },
   {
     id: "waweb_05",
@@ -835,7 +854,8 @@ export const whatsAppWebhookEvents = [
     eventType: "inbound_message",
     normalizedStatus: "inbound",
     handling: "profile_selection",
-    detail: "STOP arrived on a shared family number; staff must confirm profile scope.",
+    detail:
+      "STOP arrived on a shared family number; staff must confirm profile scope.",
   },
   {
     id: "waweb_07",
@@ -889,7 +909,8 @@ export const sharedMobileCases = [
     inboundText: "I will collect Ravi shirt tomorrow",
     candidateProfiles: ["Meena Ravi", "Ravi Kumar", "Ananya Ravi", "Meena R."],
     resolution: "auto_matched",
-    decision: "Matched to Ravi Kumar because the inbound text names Ravi and shirt.",
+    decision:
+      "Matched to Ravi Kumar because the inbound text names Ravi and shirt.",
   },
   {
     id: "shared_02",
@@ -897,7 +918,8 @@ export const sharedMobileCases = [
     inboundText: "Stop messages",
     candidateProfiles: ["Meena Ravi", "Ravi Kumar", "Ananya Ravi", "Meena R."],
     resolution: "needs_staff_selection",
-    decision: "Apply opt-out only after staff chooses family-wide or profile-specific scope.",
+    decision:
+      "Apply opt-out only after staff chooses family-wide or profile-specific scope.",
   },
   {
     id: "shared_03",
@@ -905,7 +927,8 @@ export const sharedMobileCases = [
     inboundText: "Call me",
     candidateProfiles: ["S. Farida", "Ayaan Shah"],
     resolution: "blocked",
-    decision: "Automation is blocked because the profile cannot be inferred safely.",
+    decision:
+      "Automation is blocked because the profile cannot be inferred safely.",
   },
 ] as const satisfies readonly SharedMobileCase[];
 
@@ -914,19 +937,22 @@ export const connectorPolicyChecks = [
     id: "policy_consent",
     label: "Consent and opt-out",
     state: "block",
-    detail: "Ayaan Shah cannot receive template sends until staff records consent reversal.",
+    detail:
+      "Ayaan Shah cannot receive template sends until staff records consent reversal.",
   },
   {
     id: "policy_template",
     label: "Template mapping",
     state: "warn",
-    detail: "Balance-due English is pending review and Tamil alteration mapping is missing.",
+    detail:
+      "Balance-due English is pending review and Tamil alteration mapping is missing.",
   },
   {
     id: "policy_idempotency",
     label: "Idempotency",
     state: "pass",
-    detail: "Repeated order confirmation reused the existing provider message id.",
+    detail:
+      "Repeated order confirmation reused the existing provider message id.",
   },
   {
     id: "policy_status_rank",
@@ -975,28 +1001,32 @@ export const settingsItems = [
     title: "Shop and receipt identity",
     state: "ready",
     owner: "Owner",
-    detail: "Shop code MDU, branch address, receipt prefix, and terms configured.",
+    detail:
+      "Shop code MDU, branch address, receipt prefix, and terms configured.",
   },
   {
     id: "set_02",
     title: "Garment templates",
     state: "needs_review",
     owner: "Master tailor",
-    detail: "Kidswear growth warning and uniform logo fields need pilot review.",
+    detail:
+      "Kidswear growth warning and uniform logo fields need pilot review.",
   },
   {
     id: "set_03",
     title: "Roles and permissions",
     state: "ready",
     owner: "Owner",
-    detail: "Tailors can update tasks but cannot see reports or payment correction.",
+    detail:
+      "Tailors can update tasks but cannot see reports or payment correction.",
   },
   {
     id: "set_04",
     title: "WhatsApp message policy",
     state: "blocked",
     owner: "Platform support",
-    detail: "Provider templates are external; TailorOS only records consent and outbox state.",
+    detail:
+      "Provider templates are external; TailorOS only records consent and outbox state.",
   },
 ] as const satisfies readonly SettingsItem[];
 
@@ -1034,11 +1064,17 @@ export function getPartialDeliveryOrders() {
 }
 
 export function isWhatsAppFailureRetryable(failure: WhatsAppFailure) {
-  return failure.retryable && failure.status !== "blocked" && failure.status !== "opted_out";
+  return (
+    failure.retryable &&
+    failure.status !== "blocked" &&
+    failure.status !== "opted_out"
+  );
 }
 
 export function getDashboardSignals() {
-  const dueToday = shopOrders.filter((order) => order.promisedDate <= "2026-07-06");
+  const dueToday = shopOrders.filter(
+    (order) => order.promisedDate <= "2026-07-06",
+  );
   const readyItems = shopOrders.flatMap((order) =>
     order.items
       .filter((item) => isItemReady(item.status))
@@ -1138,12 +1174,15 @@ export function getWhatsAppConnectorSignals() {
   const templateReadiness = getWhatsAppTemplateReadiness();
 
   return {
-    activeChannels: whatsAppChannels.filter((channel) => channel.status === "active")
-      .length,
+    activeChannels: whatsAppChannels.filter(
+      (channel) => channel.status === "active",
+    ).length,
     blockedRequests: whatsAppMessageRequests.filter(
       (request) => request.status === "blocked",
     ).length,
-    consentCoveragePct: Math.round(totalConsentCoverage / whatsAppChannels.length),
+    consentCoveragePct: Math.round(
+      totalConsentCoverage / whatsAppChannels.length,
+    ),
     degradedChannels: whatsAppChannels.filter(
       (channel) => channel.status !== "active",
     ).length,
@@ -1179,14 +1218,45 @@ export function getWhatsAppConnectorSignals() {
 }
 
 export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
-  const normalizedText = normalizeSearchText(rawQuery);
-  if (normalizedText.length < 2) {
+  const parsed = parseTenantSearchQuery(rawQuery, {
+    todayIsoDate: pilotTodayIsoDate,
+  });
+  const normalizedText = parsed.normalizedText;
+  if (!parsed.minLengthSatisfied) {
     return [];
   }
 
-  const mobile = tryNormalizeMobile(rawQuery);
+  const allowFtsMatches = parsed.strategy === "fts_prefix";
+  const mobilePrefix = parsed.mobileE164Prefix;
   const uppercase = rawQuery.trim().toUpperCase().replace(/\s+/g, "");
-  const results: CommandSearchResult[] = [];
+  const results: DraftCommandSearchResult[] = [];
+
+  if (parsed.shortcut) {
+    for (const order of shopOrders) {
+      const isDueToday =
+        parsed.shortcut.name === "today_delivery" &&
+        order.promisedDate === parsed.shortcut.deliveryDate &&
+        !["delivered", "closed", "cancelled"].includes(order.status);
+      const isOverdue =
+        parsed.shortcut.name === "overdue_delivery" &&
+        order.promisedDate < parsed.shortcut.beforeDate &&
+        !["delivered", "closed", "cancelled"].includes(order.status);
+
+      if (isDueToday || isOverdue) {
+        results.push({
+          entityType: "order",
+          id: order.id,
+          title: `${order.orderCode} - ${order.customerName}`,
+          eyebrow: isDueToday ? "Due today" : "Overdue delivery",
+          description: `${order.items.length} item(s), promised ${formatShortDate(order.promisedDate)}`,
+          href: "/shop/orders",
+          priority: 0,
+          hitType: "shortcut",
+          matchedOn: "status + promised delivery date index",
+        });
+      }
+    }
+  }
 
   for (const family of familyAccounts) {
     const familyText = normalizeSearchText(
@@ -1198,9 +1268,14 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         family.address,
       ].join(" "),
     );
-    const mobileMatches = mobile !== null && family.primaryMobileE164 === mobile;
+    const mobileMatches =
+      mobilePrefix !== null &&
+      family.primaryMobileE164.startsWith(mobilePrefix);
 
-    if (mobileMatches || familyText.includes(normalizedText)) {
+    if (
+      mobileMatches ||
+      (allowFtsMatches && familyText.includes(normalizedText))
+    ) {
       results.push({
         entityType: "family",
         id: family.id,
@@ -1209,6 +1284,15 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         description: `${family.profiles.length} profiles in ${family.city}`,
         href: "/shop/customers",
         priority: mobileMatches ? 1 : 5,
+        hitType:
+          mobileMatches && family.primaryMobileE164 === parsed.mobileE164
+            ? "exact"
+            : mobileMatches
+              ? "prefix"
+              : "fts",
+        matchedOn: mobileMatches
+          ? "normalized mobile index"
+          : "family projection text",
       });
     }
 
@@ -1224,7 +1308,11 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
       );
       const exactCode = profile.customerCode === uppercase;
 
-      if (exactCode || mobileMatches || profileText.includes(normalizedText)) {
+      if (
+        exactCode ||
+        mobileMatches ||
+        (allowFtsMatches && profileText.includes(normalizedText))
+      ) {
         results.push({
           entityType: "customer",
           id: profile.id,
@@ -1233,6 +1321,18 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
           description: `${profile.relationLabel} - ${profile.lastMeasurement}`,
           href: "/shop/customers",
           priority: exactCode ? 0 : mobileMatches ? 2 : 6,
+          hitType: exactCode
+            ? "exact"
+            : mobileMatches
+              ? family.primaryMobileE164 === parsed.mobileE164
+                ? "exact"
+                : "prefix"
+              : "fts",
+          matchedOn: exactCode
+            ? "customer_code unique index"
+            : mobileMatches
+              ? "profile mobile projection"
+              : "profile FTS text",
         });
       }
     }
@@ -1253,9 +1353,14 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
     );
     const exactOrder = order.orderCode === uppercase;
     const exactReceipt = order.receiptCode === uppercase;
-    const mobileMatches = mobile !== null && order.mobileE164 === mobile;
+    const mobileMatches =
+      mobilePrefix !== null && order.mobileE164.startsWith(mobilePrefix);
 
-    if (exactOrder || mobileMatches || orderText.includes(normalizedText)) {
+    if (
+      exactOrder ||
+      mobileMatches ||
+      (allowFtsMatches && orderText.includes(normalizedText))
+    ) {
       results.push({
         entityType: "order",
         id: order.id,
@@ -1264,10 +1369,25 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         description: `${order.items.length} item(s), balance ${formatPaise(financials.balanceDuePaise)}`,
         href: "/shop/orders",
         priority: exactOrder ? 0 : mobileMatches ? 3 : 7,
+        hitType: exactOrder
+          ? "exact"
+          : mobileMatches
+            ? order.mobileE164 === parsed.mobileE164
+              ? "exact"
+              : "prefix"
+            : "fts",
+        matchedOn: exactOrder
+          ? "order_code unique index"
+          : mobileMatches
+            ? "order mobile projection"
+            : "order FTS text",
       });
     }
 
-    if (exactReceipt || orderText.includes(normalizedText)) {
+    if (
+      exactReceipt ||
+      (allowFtsMatches && orderText.includes(normalizedText))
+    ) {
       results.push({
         entityType: "receipt",
         id: `${order.id}-receipt`,
@@ -1276,8 +1396,18 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         description: `${formatPaise(financials.netPaidPaise)} paid, ${formatPaise(financials.balanceDuePaise)} due`,
         href: "/shop/payments",
         priority: exactReceipt ? 0 : 8,
+        hitType: exactReceipt ? "exact" : "fts",
+        matchedOn: exactReceipt
+          ? "receipt_code unique index"
+          : "receipt projection text",
       });
     }
+  }
+
+  if (!allowFtsMatches) {
+    return dedupeResults(results.map(completeSearchResult))
+      .sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title))
+      .slice(0, 10);
   }
 
   for (const failure of whatsAppFailures) {
@@ -1300,6 +1430,8 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         description: failure.reason,
         href: "/shop/whatsapp",
         priority: failure.retryable ? 4 : 9,
+        hitType: "fts",
+        matchedOn: "WhatsApp failure FTS text",
       });
     }
   }
@@ -1322,10 +1454,15 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         entityType: "message",
         id: channel.id,
         title: `${channel.branchLabel} - ${channel.displayPhone}`,
-        eyebrow: channel.status === "active" ? "Active channel" : "Channel action",
-        description: channel.risk ?? `${channel.messagingLimitTier}, ${channel.qualityRating} quality`,
+        eyebrow:
+          channel.status === "active" ? "Active channel" : "Channel action",
+        description:
+          channel.risk ??
+          `${channel.messagingLimitTier}, ${channel.qualityRating} quality`,
         href: "/shop/whatsapp",
         priority: channel.status === "active" ? 6 : 3,
+        hitType: "fts",
+        matchedOn: "channel projection text",
       });
     }
   }
@@ -1346,10 +1483,15 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         entityType: "message",
         id: template.id,
         title: `${template.providerTemplateName} (${template.language})`,
-        eyebrow: template.status === "approved" ? "Approved template" : "Template review",
+        eyebrow:
+          template.status === "approved"
+            ? "Approved template"
+            : "Template review",
         description: template.ownerAction,
         href: "/shop/whatsapp",
         priority: template.status === "approved" ? 8 : 2,
+        hitType: "fts",
+        matchedOn: "template projection text",
       });
     }
   }
@@ -1381,22 +1523,107 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
               : "Message request",
         description: request.reason,
         href: "/shop/whatsapp",
-        priority: request.status === "failed" || request.status === "blocked" ? 2 : 7,
+        priority:
+          request.status === "failed" || request.status === "blocked" ? 2 : 7,
+        hitType: "fts",
+        matchedOn: "message request FTS text",
       });
     }
   }
 
-  return dedupeResults(results)
+  return dedupeResults(results.map(completeSearchResult))
     .sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title))
     .slice(0, 10);
 }
 
-function tryNormalizeMobile(input: string): string | null {
-  try {
-    return normalizeIndianMobile(input).e164;
-  } catch {
-    return null;
-  }
+export async function searchPilotRecordsAsync(
+  rawQuery: string,
+  options: { signal?: AbortSignal; delayMs?: number } = {},
+): Promise<CommandSearchResponse> {
+  const startedAt = nowMs();
+
+  await waitForPilotSearch(options.delayMs ?? 96, options.signal);
+
+  const results = searchPilotRecords(rawQuery);
+  const elapsedMs = Math.round(nowMs() - startedAt);
+
+  return {
+    results,
+    meta: createCommandSearchMeta({
+      rawQuery,
+      resultCount: results.length,
+      elapsedMs,
+    }),
+  };
+}
+
+export function createCommandSearchMeta(input: {
+  rawQuery: string;
+  resultCount: number;
+  elapsedMs?: number;
+}): CommandSearchMeta {
+  const parsed = parseTenantSearchQuery(input.rawQuery, {
+    todayIsoDate: pilotTodayIsoDate,
+  });
+
+  return {
+    rawQuery: input.rawQuery,
+    normalizedQuery: parsed.normalizedText,
+    queryKind: parsed.kind,
+    strategy: parsed.strategy,
+    minLengthSatisfied: parsed.minLengthSatisfied,
+    resultCount: input.resultCount,
+    latencyBudgetMs: parsed.latencyBudgetMs,
+    elapsedMs: input.elapsedMs ?? 0,
+    source: "pilot-fixture",
+  };
+}
+
+export function shouldApplyCommandSearchResponse(input: {
+  requestId: number;
+  latestRequestId: number;
+  aborted: boolean;
+}) {
+  return !input.aborted && input.requestId === input.latestRequestId;
+}
+
+export function getSearchPerformanceSignals() {
+  const sharedMobileResults = searchPilotRecords("98765");
+  const exactOrderResults = searchPilotRecords("ORD-MDU-000421");
+  const todayResults = searchPilotRecords("today delivery");
+  const ftsResults = searchPilotRecords("Meena blouse");
+
+  return {
+    sharedMobileResults: sharedMobileResults.length,
+    exactOrderResults: exactOrderResults.length,
+    todayShortcutResults: todayResults.length,
+    ftsResults: ftsResults.length,
+    exactOrderBudgetMs:
+      createCommandSearchMeta({
+        rawQuery: "ORD-MDU-000421",
+        resultCount: exactOrderResults.length,
+      }).latencyBudgetMs ?? 0,
+    mobileBudgetMs:
+      createCommandSearchMeta({
+        rawQuery: "98765",
+        resultCount: sharedMobileResults.length,
+      }).latencyBudgetMs ?? 0,
+    ftsBudgetMs:
+      createCommandSearchMeta({
+        rawQuery: "Meena blouse",
+        resultCount: ftsResults.length,
+      }).latencyBudgetMs ?? 0,
+  };
+}
+
+function completeSearchResult(
+  result: DraftCommandSearchResult,
+): CommandSearchResult {
+  return {
+    ...result,
+    hitType: result.hitType ?? "fts",
+    matchedOn: result.matchedOn ?? "tenant FTS projection",
+  };
 }
 
 function dedupeResults(results: CommandSearchResult[]): CommandSearchResult[] {
@@ -1410,4 +1637,27 @@ function dedupeResults(results: CommandSearchResult[]): CommandSearchResult[] {
     seen.add(key);
     return true;
   });
+}
+
+function waitForPilotSearch(delayMs: number, signal?: AbortSignal) {
+  if (signal?.aborted) {
+    return Promise.reject(new Error("Search request aborted."));
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    const timeout = globalThis.setTimeout(resolve, delayMs);
+
+    signal?.addEventListener(
+      "abort",
+      () => {
+        globalThis.clearTimeout(timeout);
+        reject(new Error("Search request aborted."));
+      },
+      { once: true },
+    );
+  });
+}
+
+function nowMs() {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
 }

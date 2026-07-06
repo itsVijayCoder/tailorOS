@@ -2,6 +2,7 @@ import type { OrderStatus } from "@tailoros/core";
 
 export type ModuleKey =
   | "dashboard"
+  | "search"
   | "customers"
   | "measurements"
   | "orders"
@@ -214,7 +215,8 @@ export type WhatsAppWebhookEvent = Readonly<{
     | "failed"
     | "inbound"
     | "template_paused";
-  handling: "applied" | "duplicate_ignored" | "stale_ignored" | "profile_selection";
+  handling:
+    "applied" | "duplicate_ignored" | "stale_ignored" | "profile_selection";
   detail: string;
 }>;
 
@@ -261,11 +263,7 @@ export type SettingsItem = Readonly<{
 }>;
 
 export type SearchEntityType =
-  | "family"
-  | "customer"
-  | "order"
-  | "receipt"
-  | "message";
+  "family" | "customer" | "order" | "receipt" | "message";
 
 export type CommandSearchResult = Readonly<{
   entityType: SearchEntityType;
@@ -275,4 +273,35 @@ export type CommandSearchResult = Readonly<{
   description: string;
   href: string;
   priority: number;
+  hitType: "exact" | "prefix" | "shortcut" | "fts";
+  matchedOn: string;
+}>;
+
+export type CommandSearchMeta = Readonly<{
+  rawQuery: string;
+  normalizedQuery: string;
+  queryKind:
+    | "empty"
+    | "mobile"
+    | "customer_code"
+    | "order_code"
+    | "receipt_code"
+    | "shortcut"
+    | "text";
+  strategy:
+    | "none"
+    | "indexed_mobile_prefix"
+    | "indexed_code_exact"
+    | "indexed_status_date"
+    | "fts_prefix";
+  minLengthSatisfied: boolean;
+  resultCount: number;
+  latencyBudgetMs: number | null;
+  elapsedMs: number;
+  source: "pilot-fixture";
+}>;
+
+export type CommandSearchResponse = Readonly<{
+  results: readonly CommandSearchResult[];
+  meta: CommandSearchMeta;
 }>;

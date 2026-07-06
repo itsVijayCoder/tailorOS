@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
+  Clock3,
   Command,
+  DatabaseZap,
   FileText,
   MessageCircleWarning,
   ReceiptText,
   Search,
+  Sparkles,
   UsersRound,
 } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,8 +27,20 @@ import {
 import { SearchField } from "@/components/ui/search-field";
 import { cn } from "@/lib/utils";
 
-import { searchPilotRecords } from "../data";
-import type { CommandSearchResult, SearchEntityType } from "../types";
+import {
+  createCommandSearchMeta,
+  searchPilotRecordsAsync,
+  shouldApplyCommandSearchResponse,
+} from "../data";
+import type {
+  CommandSearchMeta,
+  CommandSearchResponse,
+  CommandSearchResult,
+  SearchEntityType,
+} from "../types";
+
+const recentSearchKey = "tailoros-command-search-recent-v1";
+const maxRecentResults = 5;
 
 const iconByType: Record<SearchEntityType, typeof UsersRound> = {
   customer: UsersRound,
@@ -37,6 +53,13 @@ const iconByType: Record<SearchEntityType, typeof UsersRound> = {
 export function CoreCommandMenu() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [response, setResponse] = useState<CommandSearchResponse>(() =>
+    createEmptyResponse(""),
+  );
+  const [recentResults, setRecentResults] =
+    useState<readonly CommandSearchResult[]>(readRecentResults);
+  const latestRequestId = useRef(0);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -50,7 +73,67 @@ export function CoreCommandMenu() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const results = useMemo(() => searchPilotRecords(query), [query]);
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const requestId = latestRequestId.current + 1;
+    latestRequestId.current = requestId;
+    const controller = new AbortController();
+
+    const timeout = window.setTimeout(() => {
+      setIsSearching(true);
+
+      searchPilotRecordsAsync(query, {
+        signal: controller.signal,
+        delayMs: query.trim().length >= 2 ? 96 : 48,
+      })
+        .then((nextResponse) => {
+          if (
+            !shouldApplyCommandSearchResponse({
+              requestId,
+              latestRequestId: latestRequestId.current,
+              aborted: controller.signal.aborted,
+            })
+          ) {
+            return;
+          }
+
+          setResponse(nextResponse);
+
+          if (nextResponse.results.length > 0) {
+            setRecentResults((current) => {
+              const next = mergeRecentResults(nextResponse.results, current);
+              writeRecentResults(next);
+              return next;
+            });
+          }
+        })
+        .catch((error: unknown) => {
+          if (!controller.signal.aborted) {
+            void error;
+            setResponse(createEmptyResponse(query));
+          }
+        })
+        .finally(() => {
+          if (requestId === latestRequestId.current) {
+            setIsSearching(false);
+          }
+        });
+    }, 150);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [open, query]);
+
+  const showRecent =
+    !response.meta.minLengthSatisfied &&
+    recentResults.length > 0 &&
+    query.trim().length < 2;
+  const visibleResults = showRecent ? recentResults : response.results;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -64,42 +147,88 @@ export function CoreCommandMenu() {
           Ctrl K
         </span>
       </DialogTrigger>
-      <DialogContent className="gap-4 sm:max-w-2xl" size="lg">
+      <DialogContent className="gap-4 sm:max-w-3xl" size="lg">
         <DialogHeader>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="signal">
+              <DatabaseZap aria-hidden className="size-3.5" />
+              Exact indexes first
+            </Badge>
+            <Badge variant="neutral">
+              <Clock3 aria-hidden className="size-3.5" />
+              {formatBudget(response.meta)}
+            </Badge>
+          </div>
           <DialogTitle className="flex items-center gap-2">
             <Command aria-hidden className="size-5 text-accent" />
             TailorOS command search
           </DialogTitle>
           <DialogDescription>
             Search mobile, customer code, order code, receipt code, garment, or
-            WhatsApp failure reason. Exact identity matches stay first.
+            WhatsApp evidence. Pilot UI mirrors the tenant-local D1 strategy.
           </DialogDescription>
         </DialogHeader>
+
         <SearchField
           autoFocus
+          isLoading={isSearching}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Try 09876543210, CUS-MDU-000231, ORD-MDU-000421..."
+          placeholder="Try 98765, CUS-MDU-000231, ORD-MDU-000421, today delivery..."
           value={query}
         />
-        <div className="grid max-h-[22rem] gap-2 overflow-y-auto pr-1">
-          {results.length > 0 ? (
-            results.map((result) => (
-              <CommandResult
-                key={`${result.entityType}:${result.id}`}
-                onSelect={() => setOpen(false)}
-                result={result}
-              />
-            ))
+
+        <SearchTelemetry isSearching={isSearching} meta={response.meta} />
+
+        <div
+          aria-live="polite"
+          className="grid max-h-[24rem] gap-2 overflow-y-auto pr-1"
+        >
+          {visibleResults.length > 0 ? (
+            <>
+              {showRecent ? (
+                <p className="px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  Recent results
+                </p>
+              ) : null}
+              {visibleResults.map((result) => (
+                <CommandResult
+                  key={`${result.entityType}:${result.id}`}
+                  onSelect={() => setOpen(false)}
+                  result={result}
+                />
+              ))}
+            </>
           ) : (
-            <div className="rounded-lg border border-dashed border-hairline bg-surface p-5 text-sm leading-6 text-ink-muted">
-              {query.trim().length >= 2
-                ? "No pilot fixture match. In production this falls through to tenant-local D1 exact indexes and FTS."
-                : "Type at least two characters to search pilot data."}
-            </div>
+            <CommandEmptyState meta={response.meta} query={query} />
           )}
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SearchTelemetry({
+  isSearching,
+  meta,
+}: {
+  isSearching: boolean;
+  meta: CommandSearchMeta;
+}) {
+  return (
+    <div className="grid gap-2 rounded-lg border border-hairline bg-surface p-3 text-xs text-ink-muted sm:grid-cols-3">
+      <span>
+        <strong className="text-ink-display">Strategy:</strong>{" "}
+        {humanizeStrategy(meta.strategy)}
+      </span>
+      <span>
+        <strong className="text-ink-display">Results:</strong>{" "}
+        {isSearching ? "Searching" : meta.resultCount}
+      </span>
+      <span>
+        <strong className="text-ink-display">Round trip:</strong>{" "}
+        {isSearching ? "..." : `${meta.elapsedMs}ms`}
+      </span>
+    </div>
   );
 }
 
@@ -114,16 +243,21 @@ function CommandResult({
 
   return (
     <Link
-      className="group grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 rounded-lg border border-hairline bg-surface p-3 text-left transition duration-200 ease-premium hover:border-border-accent hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
+      className="group grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 rounded-lg border border-hairline bg-surface p-3 text-left transition duration-200 ease-premium hover:-translate-y-0.5 hover:border-border-accent hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
       href={result.href}
       onClick={onSelect}
     >
-      <span className="grid size-9 place-items-center rounded-lg border border-hairline bg-page text-accent">
+      <span className="grid size-9 place-items-center rounded-lg border border-hairline bg-page text-accent transition duration-200 ease-premium group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground motion-reduce:transition-none">
         <Icon aria-hidden className="size-4" />
       </span>
       <span className="min-w-0">
-        <span className="block text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          {result.eyebrow}
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            {result.eyebrow}
+          </span>
+          <span className="rounded-full border border-hairline bg-page px-2 py-0.5 text-[11px] font-semibold uppercase text-ink-muted">
+            {result.hitType}
+          </span>
         </span>
         <strong className="mt-1 block truncate font-ui text-sm font-semibold text-ink-display">
           {result.title}
@@ -131,7 +265,124 @@ function CommandResult({
         <span className="mt-1 block text-sm leading-5 text-ink-muted">
           {result.description}
         </span>
+        <span className="mt-2 block text-xs text-ink-muted">
+          Matched on {result.matchedOn}
+        </span>
       </span>
     </Link>
+  );
+}
+
+function CommandEmptyState({
+  meta,
+  query,
+}: {
+  meta: CommandSearchMeta;
+  query: string;
+}) {
+  const shortQuery = query.trim().length < 2;
+
+  return (
+    <div className="rounded-lg border border-dashed border-hairline bg-surface p-5 text-sm leading-6 text-ink-muted">
+      <div className="flex items-start gap-3">
+        <span className="grid size-9 place-items-center rounded-lg border border-hairline bg-page text-accent">
+          {shortQuery ? (
+            <Sparkles aria-hidden className="size-4" />
+          ) : (
+            <Search aria-hidden className="size-4" />
+          )}
+        </span>
+        <div>
+          <strong className="block font-ui text-sm text-ink-display">
+            {shortQuery ? "Type at least two characters" : "No pilot match"}
+          </strong>
+          <p className="mt-1">
+            {shortQuery
+              ? "One-character searches stay idle so the counter flow does not waste backend work."
+              : `No result for "${meta.rawQuery}". Production search would still return the same empty state with request metadata.`}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function createEmptyResponse(rawQuery: string): CommandSearchResponse {
+  return {
+    results: [],
+    meta: createCommandSearchMeta({ rawQuery, resultCount: 0 }),
+  };
+}
+
+function formatBudget(meta: CommandSearchMeta) {
+  return meta.latencyBudgetMs ? `<${meta.latencyBudgetMs}ms target` : "Idle";
+}
+
+function humanizeStrategy(strategy: CommandSearchMeta["strategy"]) {
+  return strategy.replaceAll("_", " ");
+}
+
+function readRecentResults(): readonly CommandSearchResult[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(
+      window.localStorage.getItem(recentSearchKey) ?? "[]",
+    ) as unknown;
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter(isCommandSearchResult).slice(0, maxRecentResults);
+  } catch {
+    return [];
+  }
+}
+
+function writeRecentResults(results: readonly CommandSearchResult[]) {
+  try {
+    window.localStorage.setItem(recentSearchKey, JSON.stringify(results));
+  } catch {
+    // Recent search cache is a convenience only.
+  }
+}
+
+function mergeRecentResults(
+  nextResults: readonly CommandSearchResult[],
+  currentResults: readonly CommandSearchResult[],
+) {
+  const seen = new Set<string>();
+  const merged: CommandSearchResult[] = [];
+
+  for (const result of [...nextResults, ...currentResults]) {
+    const key = `${result.entityType}:${result.id}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      merged.push(result);
+    }
+
+    if (merged.length === maxRecentResults) {
+      break;
+    }
+  }
+
+  return merged;
+}
+
+function isCommandSearchResult(value: unknown): value is CommandSearchResult {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.entityType === "string" &&
+    typeof candidate.id === "string" &&
+    typeof candidate.title === "string" &&
+    typeof candidate.href === "string" &&
+    typeof candidate.description === "string"
   );
 }

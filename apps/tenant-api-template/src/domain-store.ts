@@ -1,4 +1,4 @@
-import { normalizeSearchText } from "@tailoros/core";
+import { normalizeSearchText, parseTenantSearchQuery } from "@tailoros/core";
 import {
   contactProfileSummarySchema,
   measurementVersionSummarySchema,
@@ -23,6 +23,7 @@ import type {
   PaymentRecordBundle,
   ReceiptUpsertRecord,
   SearchProjectionRecord,
+  SearchResponseRecord,
   SearchResultRecord,
   TenantDomainRepository,
 } from "./domain-service";
@@ -47,6 +48,8 @@ type CustomerProfileRow = {
   fullName: string;
   relationLabel: string | null;
   genderContext: string | null;
+  primaryMobileE164: string;
+  primaryMobileNational: string;
 };
 
 type MeasurementProfileRow = {
@@ -73,6 +76,10 @@ type OrderStateRow = {
   orderCode: string;
   contactId: string;
   customerProfileId: string;
+  primaryMobileE164: string;
+  customerCode: string;
+  currentStatus: string;
+  promisedDeliveryDate: string | null;
   finalTotalPaise: number;
   balanceDuePaise: number;
   receiptId: string | null;
@@ -93,6 +100,9 @@ type SearchRow = {
   entityId: string;
   title: string;
   subtitle: string | null;
+  hitType: "exact" | "prefix" | "shortcut" | "fts";
+  score: number;
+  updatedAt: string;
   payloadJson: string;
 };
 
@@ -236,14 +246,17 @@ export class D1TenantDomainRepository implements TenantDomainRepository {
     return this.db
       .prepare(
         `SELECT
-          id,
-          contact_id AS contactId,
-          customer_code AS customerCode,
-          full_name AS fullName,
-          relation_label AS relationLabel,
-          gender_context AS genderContext
-        FROM customer_profiles
-        WHERE id = ? AND is_active = 1
+          p.id AS id,
+          p.contact_id AS contactId,
+          p.customer_code AS customerCode,
+          p.full_name AS fullName,
+          p.relation_label AS relationLabel,
+          p.gender_context AS genderContext,
+          c.primary_mobile_e164 AS primaryMobileE164,
+          c.primary_mobile_national AS primaryMobileNational
+        FROM customer_profiles p
+        INNER JOIN customer_contacts c ON c.id = p.contact_id
+        WHERE p.id = ? AND p.is_active = 1
         LIMIT 1`,
       )
       .bind(customerProfileId)
@@ -511,11 +524,17 @@ export class D1TenantDomainRepository implements TenantDomainRepository {
           o.order_code AS orderCode,
           o.contact_id AS contactId,
           o.customer_profile_id AS customerProfileId,
+          c.primary_mobile_e164 AS primaryMobileE164,
+          p.customer_code AS customerCode,
+          o.current_status AS currentStatus,
+          o.promised_delivery_date AS promisedDeliveryDate,
           o.final_total_paise AS finalTotalPaise,
           o.balance_due_paise AS balanceDuePaise,
           r.id AS receiptId,
           r.receipt_code AS receiptCode
         FROM orders o
+        INNER JOIN customer_contacts c ON c.id = o.contact_id
+        INNER JOIN customer_profiles p ON p.id = o.customer_profile_id
         LEFT JOIN receipts r ON r.order_id = o.id
         WHERE o.id = ?
         LIMIT 1`,
@@ -567,7 +586,7 @@ export class D1TenantDomainRepository implements TenantDomainRepository {
         ),
       auditStatement(this.db, record.audit),
       ...record.outbox.map((outbox) => outboxStatement(this.db, outbox)),
-      ...searchStatements(this.db, [record.search]),
+      ...searchStatements(this.db, record.search),
     ]);
 
     return paymentSummarySchema.parse({
@@ -586,17 +605,147 @@ export class D1TenantDomainRepository implements TenantDomainRepository {
   async search(input: {
     query: string;
     limit: number;
-  }): Promise<SearchResultRecord[]> {
-    const normalized = normalizeSearchText(input.query);
-    if (!normalized) {
+  }): Promise<SearchResponseRecord> {
+    const startedAt = Date.now();
+    const parsed = parseTenantSearchQuery(input.query);
+
+    if (!parsed.minLengthSatisfied) {
+      return {
+        results: [],
+        meta: {
+          rawQuery: input.query,
+          normalizedQuery: parsed.normalizedText,
+          queryKind: parsed.kind,
+          strategy: parsed.strategy,
+          minLengthSatisfied: false,
+          resultCount: 0,
+          latencyBudgetMs: parsed.latencyBudgetMs,
+          elapsedMs: Date.now() - startedAt,
+        },
+      };
+    }
+
+    const rows =
+      parsed.strategy === "indexed_mobile_prefix"
+        ? await this.searchByMobilePrefix(parsed.mobileE164Prefix!, input.limit)
+        : parsed.strategy === "indexed_code_exact"
+          ? await this.searchByCode(parsed.code!, input.limit)
+          : parsed.strategy === "indexed_status_date"
+            ? await this.searchByShortcut(parsed, input.limit)
+            : await this.searchByFts(parsed.ftsQuery, input.limit);
+    const results = rows.map(parseSearchRow);
+
+    return {
+      results,
+      meta: {
+        rawQuery: input.query,
+        normalizedQuery: parsed.normalizedText,
+        queryKind: parsed.kind,
+        strategy: parsed.strategy,
+        minLengthSatisfied: true,
+        resultCount: results.length,
+        latencyBudgetMs: parsed.latencyBudgetMs,
+        elapsedMs: Date.now() - startedAt,
+      },
+    };
+  }
+
+  private async searchByMobilePrefix(prefix: string, limit: number) {
+    const result = await this.db
+      .prepare(
+        `SELECT
+          entity_type AS entityType,
+          entity_id AS entityId,
+          title,
+          subtitle,
+          CASE WHEN mobile_e164 = ? THEN 'exact' ELSE 'prefix' END AS hitType,
+          CASE WHEN mobile_e164 = ? THEN 0 ELSE 1 END AS score,
+          updated_at AS updatedAt,
+          payload_json AS payloadJson
+        FROM search_projection
+        WHERE mobile_e164 LIKE ? || '%'
+        ORDER BY score ASC, updated_at DESC
+        LIMIT ?`,
+      )
+      .bind(prefix, prefix, prefix, limit)
+      .all<SearchRow>();
+
+    return result.results;
+  }
+
+  private async searchByCode(code: string, limit: number) {
+    const result = await this.db
+      .prepare(
+        `SELECT
+          entity_type AS entityType,
+          entity_id AS entityId,
+          title,
+          subtitle,
+          'exact' AS hitType,
+          CASE
+            WHEN order_code = ? THEN 0
+            WHEN customer_code = ? THEN 1
+            WHEN receipt_code = ? THEN 2
+            WHEN entity_id = ? THEN 3
+            ELSE 4
+          END AS score,
+          updated_at AS updatedAt,
+          payload_json AS payloadJson
+        FROM search_projection
+        WHERE order_code = ?
+           OR customer_code = ?
+           OR receipt_code = ?
+           OR entity_id = ?
+        ORDER BY score ASC, updated_at DESC
+        LIMIT ?`,
+      )
+      .bind(code, code, code, code, code, code, code, code, limit)
+      .all<SearchRow>();
+
+    return result.results;
+  }
+
+  private async searchByShortcut(
+    parsed: ReturnType<typeof parseTenantSearchQuery>,
+    limit: number,
+  ) {
+    const shortcut = parsed.shortcut;
+    if (!shortcut) {
       return [];
     }
 
-    const ftsQuery = normalized
-      .split(" ")
-      .filter(Boolean)
-      .map((token) => `${token}*`)
-      .join(" ");
+    const predicate =
+      shortcut.name === "today_delivery"
+        ? "delivery_date = ?"
+        : "delivery_date < ?";
+    const date =
+      shortcut.name === "today_delivery"
+        ? shortcut.deliveryDate
+        : shortcut.beforeDate;
+    const result = await this.db
+      .prepare(
+        `SELECT
+          entity_type AS entityType,
+          entity_id AS entityId,
+          title,
+          subtitle,
+          'shortcut' AS hitType,
+          0 AS score,
+          updated_at AS updatedAt,
+          payload_json AS payloadJson
+        FROM search_projection
+        WHERE ${predicate}
+          AND COALESCE(status, '') NOT IN ('delivered', 'closed', 'cancelled', 'void')
+        ORDER BY delivery_date ASC, updated_at DESC
+        LIMIT ?`,
+      )
+      .bind(date, limit)
+      .all<SearchRow>();
+
+    return result.results;
+  }
+
+  private async searchByFts(ftsQuery: string, limit: number) {
     const result = await this.db
       .prepare(
         `SELECT
@@ -604,23 +753,20 @@ export class D1TenantDomainRepository implements TenantDomainRepository {
           sd.entity_id AS entityId,
           sd.title AS title,
           sd.subtitle AS subtitle,
+          'fts' AS hitType,
+          bm25(search_docs_fts) AS score,
+          sd.updated_at AS updatedAt,
           sd.payload_json AS payloadJson
-        FROM search_docs_fts f
-        INNER JOIN search_docs sd ON sd.entity_id = f.entity_id
+        FROM search_docs_fts
+        INNER JOIN search_docs sd ON sd.entity_id = search_docs_fts.entity_id
         WHERE search_docs_fts MATCH ?
-        ORDER BY rank
+        ORDER BY score ASC, sd.updated_at DESC
         LIMIT ?`,
       )
-      .bind(ftsQuery, input.limit)
+      .bind(ftsQuery, limit)
       .all<SearchRow>();
 
-    return result.results.map((row) => ({
-      entityType: row.entityType,
-      entityId: row.entityId,
-      title: row.title,
-      subtitle: row.subtitle,
-      payload: parseJsonRecord(row.payloadJson),
-    }));
+    return result.results;
   }
 }
 
@@ -818,6 +964,50 @@ function searchStatements(
   return search.flatMap((item) => [
     db
       .prepare(
+        `INSERT INTO search_projection (
+          id,
+          entity_type,
+          entity_id,
+          title,
+          subtitle,
+          mobile_e164,
+          customer_code,
+          order_code,
+          receipt_code,
+          status,
+          delivery_date,
+          payload_json,
+          updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(entity_type, entity_id) DO UPDATE SET
+          title = excluded.title,
+          subtitle = excluded.subtitle,
+          mobile_e164 = excluded.mobile_e164,
+          customer_code = excluded.customer_code,
+          order_code = excluded.order_code,
+          receipt_code = excluded.receipt_code,
+          status = excluded.status,
+          delivery_date = excluded.delivery_date,
+          payload_json = excluded.payload_json,
+          updated_at = excluded.updated_at`,
+      )
+      .bind(
+        item.id,
+        item.entityType,
+        item.entityId,
+        item.title,
+        item.subtitle,
+        item.mobileE164,
+        item.customerCode,
+        item.orderCode,
+        item.receiptCode,
+        item.status,
+        item.deliveryDate,
+        JSON.stringify(item.payload),
+        item.updatedAt,
+      ),
+    db
+      .prepare(
         `INSERT INTO search_docs (
           id,
           entity_type,
@@ -859,6 +1049,19 @@ function searchStatements(
       )
       .bind(item.entityId, item.title, item.subtitle, item.searchText),
   ]);
+}
+
+function parseSearchRow(row: SearchRow): SearchResultRecord {
+  return {
+    entityType: row.entityType,
+    entityId: row.entityId,
+    title: row.title,
+    subtitle: row.subtitle,
+    hitType: row.hitType,
+    score: row.score,
+    updatedAt: row.updatedAt,
+    payload: parseJsonRecord(row.payloadJson),
+  };
 }
 
 function parseJsonRecord(value: string): Record<string, unknown> {

@@ -4,6 +4,7 @@ import {
   CreditCard,
   Gauge,
   MessageCircle,
+  Search,
   Ruler,
   Settings2,
   Shirt,
@@ -23,6 +24,7 @@ import { CoreCommandMenu } from "./core-command-menu";
 const iconByKey: Record<ModuleKey, typeof Gauge> = {
   customers: UsersRound,
   dashboard: Gauge,
+  search: Search,
   measurements: Ruler,
   orders: ClipboardList,
   payments: CreditCard,

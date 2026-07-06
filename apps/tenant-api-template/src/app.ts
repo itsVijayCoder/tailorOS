@@ -213,12 +213,12 @@ app.get("/v1/search", async (c) => {
     });
   }
 
-  const results = await new D1TenantDomainRepository(c.env.TENANT_DB).search({
+  const search = await new D1TenantDomainRepository(c.env.TENANT_DB).search({
     query: parsed.data.q,
     limit: parsed.data.limit,
   });
 
-  return jsonSuccess(c, { results });
+  return jsonSuccess(c, search);
 });
 
 app.post("/v1/orders/:orderId/notification-outbox", (c) =>

@@ -10,7 +10,9 @@ import {
   isWhatsAppFailureRetryable,
   isWhatsAppRequestDeadLettered,
   isWhatsAppRequestRetryable,
+  searchPilotRecordsAsync,
   searchPilotRecords,
+  shouldApplyCommandSearchResponse,
   shopOrders,
   whatsAppFailures,
   whatsAppMessageRequests,
@@ -20,14 +22,30 @@ describe("Phase 05 core modules", () => {
   it("normalizes shared mobile searches and returns the family before profiles", () => {
     const nationalResults = searchPilotRecords("09876543210");
     const formattedResults = searchPilotRecords("+91 98765 43210");
+    const prefixResults = searchPilotRecords("98765");
 
     expect(nationalResults[0]?.entityType).toBe("family");
     expect(nationalResults[0]?.title).toContain("FAM-MDU-00018");
-    expect(nationalResults.some((result) => result.title.includes("CUS-MDU-000231"))).toBe(
-      true,
-    );
+    expect(prefixResults[0]).toMatchObject({
+      entityType: "family",
+      hitType: "prefix",
+      matchedOn: "normalized mobile index",
+    });
+    expect(
+      nationalResults.some((result) => result.title.includes("CUS-MDU-000231")),
+    ).toBe(true);
     expect(formattedResults.map((result) => result.id)).toEqual(
       nationalResults.map((result) => result.id),
+    );
+  });
+
+  it("routes delivery shortcuts through the status/date strategy", () => {
+    const results = searchPilotRecords("today delivery");
+
+    expect(results).toHaveLength(2);
+    expect(results.every((result) => result.hitType === "shortcut")).toBe(true);
+    expect(results.map((result) => result.title)).toEqual(
+      expect.arrayContaining(["ORD-MDU-000422 - Ravi Kumar"]),
     );
   });
 
@@ -165,5 +183,31 @@ describe("Phase 05 core modules", () => {
       href: "/shop/whatsapp",
       id: "tpl_alteration_ta",
     });
+  });
+
+  it("cancels stale async command searches before applying results", async () => {
+    const controller = new AbortController();
+    const search = searchPilotRecordsAsync("Meena", {
+      signal: controller.signal,
+      delayMs: 20,
+    });
+
+    controller.abort();
+
+    await expect(search).rejects.toThrow("Search request aborted.");
+    expect(
+      shouldApplyCommandSearchResponse({
+        requestId: 1,
+        latestRequestId: 2,
+        aborted: false,
+      }),
+    ).toBe(false);
+    expect(
+      shouldApplyCommandSearchResponse({
+        requestId: 2,
+        latestRequestId: 2,
+        aborted: false,
+      }),
+    ).toBe(true);
   });
 });
