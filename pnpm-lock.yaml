@@ -285,6 +285,16 @@ importers:
         specifier: ^5
         version: 5.9.3
 
+  packages/test-utils:
+    dependencies:
+      '@tailoros/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
   packages/whatsapp:
     dependencies:
       '@tailoros/schemas':

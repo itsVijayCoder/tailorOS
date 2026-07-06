@@ -1,21 +1,44 @@
 import {
+  authorizeTenantPermission,
   calculatePaymentLedger,
-  normalizeIndianMobile,
+  createCredentialPublicView,
+  evaluateSignedAccess,
+  getDeniedPermissionsForRole,
+  getRolePermissions,
   normalizeSearchText,
+  parseTenantSearchQuery,
+  requiresSecurityAudit,
 } from "@tailoros/core";
 
 import type {
+  AuditCoverageRow,
+  CommandSearchMeta,
+  CommandSearchResponse,
   CommandSearchResult,
   CoreNavItem,
+  CredentialVaultRecord,
   FamilyAccount,
   MeasurementTemplate,
   MeasurementVersion,
   ConnectorPolicyCheck,
   ProductionTask,
+  PublicEndpointControl,
+  ReceiptAccessCase,
   ReportMetric,
+  ObservabilityMetric,
+  Phase09FixtureRecord,
+  Phase09ReleaseSignals,
+  PilotGoLiveCheck,
+  SecurityRoleRow,
   SettingsItem,
   ShopOrder,
+  ReleaseGate,
+  ReleaseRunbook,
   SharedMobileCase,
+  SupportAccessCase,
+  TenantIsolationCheck,
+  TestingPyramidLayer,
+  WorkerRuntimeCheck,
   WhatsAppChannel,
   WhatsAppFailure,
   WhatsAppMessageRequest,
@@ -23,6 +46,14 @@ import type {
   WhatsAppUsageLedgerLine,
   WhatsAppWebhookEvent,
 } from "./types";
+import { formatShortDate } from "./presenters";
+
+const pilotTodayIsoDate = "2026-07-06";
+type DraftCommandSearchResult = Omit<
+  CommandSearchResult,
+  "hitType" | "matchedOn"
+> &
+  Partial<Pick<CommandSearchResult, "hitType" | "matchedOn">>;
 
 export const coreNavItems = [
   {
@@ -30,6 +61,12 @@ export const coreNavItems = [
     href: "/shop",
     label: "Dashboard",
     description: "Daily cockpit, command search, due work, balances, failures.",
+  },
+  {
+    key: "search",
+    href: "/shop/search",
+    label: "Search",
+    description: "Global command search, exact indexes, FTS, speed budgets.",
   },
   {
     key: "customers",
@@ -59,7 +96,8 @@ export const coreNavItems = [
     key: "whatsapp",
     href: "/shop/whatsapp",
     label: "WhatsApp",
-    description: "Connector health, templates, policy blocks, webhook evidence.",
+    description:
+      "Connector health, templates, policy blocks, webhook evidence.",
   },
   {
     key: "payments",
@@ -72,6 +110,18 @@ export const coreNavItems = [
     href: "/shop/reports",
     label: "Reports",
     description: "Collections, pending balance, workload, WhatsApp failures.",
+  },
+  {
+    key: "security",
+    href: "/shop/security",
+    label: "Security",
+    description: "RBAC, tenant isolation, privacy, audit, signed access.",
+  },
+  {
+    key: "release",
+    href: "/shop/release",
+    label: "Release",
+    description: "Testing pyramid, observability, CI gates, runbooks.",
   },
   {
     key: "settings",
@@ -235,6 +285,420 @@ export const measurementTemplates = [
   },
 ] as const satisfies readonly MeasurementTemplate[];
 
+export const phase09TestingLayers = [
+  {
+    coverage: "Pure domain functions and deterministic presenters.",
+    example:
+      "ID generation, phone normalization, money ledger, order state machine.",
+    layer: "Unit",
+    state: "pass",
+    tool: "Vitest",
+  },
+  {
+    coverage: "API inputs, queue envelopes, provider webhook payloads.",
+    example:
+      "CreateOrder rejects invalid measurement; webhook status events parse safely.",
+    layer: "Schema / contract",
+    state: "pass",
+    tool: "Vitest + Zod",
+  },
+  {
+    coverage: "Hono routes, bindings, D1 writes, queues, R2 access decisions.",
+    example: "Create customer route writes tenant D1 and emits audit evidence.",
+    layer: "Worker integration",
+    state: "warn",
+    tool: "Cloudflare Workers Vitest pool",
+  },
+  {
+    coverage: "Fresh tenant DBs and old tenant DB versions.",
+    example: "v1 to v2 migration preserves measurement snapshots and audit rows.",
+    layer: "Database migration",
+    state: "warn",
+    tool: "Migration harness",
+  },
+  {
+    coverage: "Real counter and owner journeys.",
+    example:
+      "Create family, measurement, order, payment, receipt, WhatsApp send.",
+    layer: "E2E",
+    state: "block",
+    tool: "Playwright",
+  },
+  {
+    coverage: "Hot APIs and tenant search budgets.",
+    example: "10k contacts search benchmark under 400ms p95.",
+    layer: "Load / performance",
+    state: "warn",
+    tool: "k6 or custom scripts",
+  },
+] as const satisfies readonly TestingPyramidLayer[];
+
+export const phase09FixtureRecords = [
+  {
+    assertion: "One mobile returns a family first and requires exact profile selection.",
+    edgeCase: "Shared family mobile with four profiles.",
+    id: "family-one-mobile-four-profiles",
+    owner: "domain",
+    path: "packages/test-utils/fixtures/family-one-mobile-four-profiles.json",
+  },
+  {
+    assertion: "+91, leading-zero, spaced, and 0091 variants normalize together.",
+    edgeCase: "Duplicate mobile variants.",
+    id: "duplicate-mobile-variants",
+    owner: "domain",
+    path: "packages/test-utils/fixtures/duplicate-mobile-variants.json",
+  },
+  {
+    assertion: "Ready blouse and stitching salwar stay visible at item level.",
+    edgeCase: "Partial delivery order.",
+    id: "partial-delivery-order",
+    owner: "domain",
+    path: "packages/test-utils/fixtures/partial-delivery-order.json",
+  },
+  {
+    assertion: "Negative adjustment requires a correction reason and audit owner.",
+    edgeCase: "Payment correction during rush hour.",
+    id: "payment-correction-case",
+    owner: "domain",
+    path: "packages/test-utils/fixtures/payment-correction-case.json",
+  },
+  {
+    assertion: "Same provider event ID is ignored after first application.",
+    edgeCase: "Duplicate Meta webhook retry.",
+    id: "whatsapp-duplicate-webhook",
+    owner: "connector",
+    path: "packages/test-utils/fixtures/whatsapp-duplicate-webhook.json",
+  },
+  {
+    assertion: "Older sent event cannot downgrade delivered/read status.",
+    edgeCase: "Out-of-order WhatsApp status.",
+    id: "whatsapp-out-of-order-status",
+    owner: "connector",
+    path: "packages/test-utils/fixtures/whatsapp-out-of-order-status.json",
+  },
+] as const satisfies readonly Phase09FixtureRecord[];
+
+export const phase09StructuredLogFields = [
+  "timestamp",
+  "level",
+  "environment",
+  "worker",
+  "version",
+  "requestId",
+  "tenantId",
+  "userId",
+  "route",
+  "entityType",
+  "entityId",
+  "durationMs",
+  "d1RowsRead",
+  "d1RowsWritten",
+] as const;
+
+export const phase09ObservabilityMetrics = [
+  {
+    action: "Check deployment version, request logs, and D1 errors.",
+    id: "api-error-rate",
+    label: "API error rate",
+    state: "pass",
+    threshold: ">2% for 5 minutes on critical routes",
+    value: "0.8%",
+  },
+  {
+    action: "Inspect query plan, FTS freshness, and rows read.",
+    id: "search-p95",
+    label: "Tenant search p95",
+    state: "pass",
+    threshold: ">400ms",
+    value: "286ms",
+  },
+  {
+    action: "Open DLQ runbook and classify terminal vs transient failure.",
+    id: "queue-dlq",
+    label: "Critical DLQ count",
+    state: "block",
+    threshold: ">0 for WhatsApp/provisioning queues",
+    value: "1",
+  },
+  {
+    action: "Alert platform admin; put tenant in retry/manual review.",
+    id: "tenant-provisioning-failure",
+    label: "Tenant provisioning failure",
+    state: "warn",
+    threshold: "Any production failure",
+    value: "1 simulated",
+  },
+  {
+    action: "Check abuse signals, provider config, and app secret rotation.",
+    id: "invalid-signature-spike",
+    label: "Webhook invalid signature spike",
+    state: "warn",
+    threshold: "Unusual increase",
+    value: "7/hour",
+  },
+] as const satisfies readonly ObservabilityMetric[];
+
+export const phase09WorkerRuntimeChecks = [
+  {
+    check: "Wrangler observability enabled with head sampling.",
+    evidence: "All Worker configs set observability.enabled and head_sampling_rate.",
+    id: "worker-observability",
+    state: "pass",
+    worker: "all-workers",
+  },
+  {
+    check: "Node.js compatibility flag configured.",
+    evidence: "All Worker configs include nodejs_compat for library compatibility.",
+    id: "nodejs-compat",
+    state: "pass",
+    worker: "all-workers",
+  },
+  {
+    check: "Structured request error logs.",
+    evidence: "@tailoros/worker-runtime emits JSON with requestId, route, version.",
+    id: "structured-error-logs",
+    state: "pass",
+    worker: "worker-runtime",
+  },
+  {
+    check: "Queue dead-letter queues configured.",
+    evidence: "Provisioning and WhatsApp consumers declare DLQs in wrangler.jsonc.",
+    id: "queue-dlq-config",
+    state: "pass",
+    worker: "control-plane / whatsapp-consumer",
+  },
+  {
+    check: "Release version present in runtime vars.",
+    evidence: "Helper supports RELEASE_VERSION; deploy env vars still need CI injection.",
+    id: "runtime-release-version",
+    state: "warn",
+    worker: "all-workers",
+  },
+] as const satisfies readonly WorkerRuntimeCheck[];
+
+export const phase09ReleaseGates = [
+  {
+    evidence: "ESLint and design token check run before merge.",
+    id: "lint",
+    label: "Lint and theme check",
+    order: 1,
+    owner: "ci",
+    state: "pass",
+  },
+  {
+    evidence: "TypeScript runs across web, apps, and packages.",
+    id: "typecheck",
+    label: "Typecheck",
+    order: 2,
+    owner: "ci",
+    state: "pass",
+  },
+  {
+    evidence: "Vitest covers domain, schema, worker runtime, and connector rules.",
+    id: "unit-schema",
+    label: "Unit and schema tests",
+    order: 3,
+    owner: "ci",
+    state: "pass",
+  },
+  {
+    evidence: "Cloudflare Workers Vitest pool is documented but not wired yet.",
+    id: "worker-integration",
+    label: "Worker integration tests",
+    order: 4,
+    owner: "ci",
+    state: "warn",
+  },
+  {
+    evidence: "Next build and Worker TypeScript builds must pass together.",
+    id: "build",
+    label: "Build web and Workers",
+    order: 5,
+    owner: "ci",
+    state: "pass",
+  },
+  {
+    evidence: "Preview deploy target exists in release plan.",
+    id: "preview-deploy",
+    label: "Preview deploy",
+    order: 6,
+    owner: "staging",
+    state: "warn",
+  },
+  {
+    evidence: "Playwright smoke journey is planned for first shop workflow.",
+    id: "playwright-smoke",
+    label: "Playwright smoke",
+    order: 7,
+    owner: "staging",
+    state: "block",
+  },
+  {
+    evidence: "Tenant migration fan-out uses per-tenant status tracking.",
+    id: "staging-migration",
+    label: "Staging migration",
+    order: 8,
+    owner: "staging",
+    state: "warn",
+  },
+  {
+    evidence: "Manual approval requires zero blocking gates and known rollback owner.",
+    id: "manual-approval",
+    label: "Manual release approval",
+    order: 9,
+    owner: "release",
+    state: "block",
+  },
+  {
+    evidence: "Production deploy waits for post-deploy smoke and DLQ watch.",
+    id: "production-deploy",
+    label: "Production deploy",
+    order: 10,
+    owner: "production",
+    state: "block",
+  },
+  {
+    evidence: "Post-deploy smoke must validate health, tenant dispatch, and WhatsApp queues.",
+    id: "post-deploy-smoke",
+    label: "Post-deploy smoke",
+    order: 11,
+    owner: "production",
+    state: "block",
+  },
+  {
+    evidence: "Monitor error rate, latency, DLQ, invalid signatures, and provisioning failures.",
+    id: "monitor",
+    label: "Monitor error, latency, DLQ",
+    order: 12,
+    owner: "production",
+    state: "warn",
+  },
+] as const satisfies readonly ReleaseGate[];
+
+export const phase09Runbooks = [
+  {
+    firstAction: "Inspect provisioning step, last error, and queued retry status.",
+    id: "tenant-provisioning-stuck",
+    owner: "platform",
+    state: "pass",
+    title: "Tenant provisioning stuck in db_migrating",
+    trigger: "Tenant remains non-active after migration SLA.",
+  },
+  {
+    firstAction: "Freeze feature rollout and compare per-tenant schema versions.",
+    id: "tenant-migration-partial",
+    owner: "platform",
+    state: "pass",
+    title: "Tenant DB migration partially failed",
+    trigger: "Some tenant schemas move forward and others fail.",
+  },
+  {
+    firstAction: "Verify normalized mobile index and FTS projection freshness.",
+    id: "search-wrong-missing",
+    owner: "support",
+    state: "pass",
+    title: "Search shows wrong or missing customer",
+    trigger: "Counter cannot find family/customer/order during rush hour.",
+  },
+  {
+    firstAction: "Check verify-token hash, app secret, and provider callback URL.",
+    id: "webhook-verification-fails",
+    owner: "platform",
+    state: "pass",
+    title: "WhatsApp webhook verification fails",
+    trigger: "Meta verify challenge returns 401 or 400.",
+  },
+  {
+    firstAction: "Classify provider, policy, schema, or transient transport failure.",
+    id: "whatsapp-dlq",
+    owner: "platform",
+    state: "pass",
+    title: "WhatsApp messages in DLQ",
+    trigger: "wa-send or wa-webhook DLQ count rises above zero.",
+  },
+  {
+    firstAction: "Validate signed URL expiry, tenant scope, and R2 object key.",
+    id: "receipt-link",
+    owner: "support",
+    state: "warn",
+    title: "Receipt public link not opening",
+    trigger: "Customer or staff reports receipt link failure.",
+  },
+  {
+    firstAction: "Review webhook retention, media offload, and archive candidates.",
+    id: "d1-size-limit",
+    owner: "platform",
+    state: "warn",
+    title: "D1 database near storage limit",
+    trigger: "Tenant DB crosses storage growth threshold.",
+  },
+  {
+    firstAction: "Confirm active grant, tenant scope, reason, and expiry.",
+    id: "support-access",
+    owner: "support",
+    state: "pass",
+    title: "Support access request and review",
+    trigger: "Platform support needs tenant operational context.",
+  },
+  {
+    firstAction: "Roll back frontend version and watch error rate/search success.",
+    id: "frontend-rollback",
+    owner: "platform",
+    state: "warn",
+    title: "Rollback after bad frontend deployment",
+    trigger: "Post-deploy smoke or owner workflow breaks after release.",
+  },
+  {
+    firstAction: "Disable sends for tenant channel and leave inbound status visible.",
+    id: "disable-whatsapp-tenant",
+    owner: "platform",
+    state: "warn",
+    title: "Emergency disable WhatsApp sends for one tenant",
+    trigger: "Provider quality, opt-out spike, or wrong-recipient risk.",
+  },
+] as const satisfies readonly ReleaseRunbook[];
+
+export const phase09PilotGoLiveChecks = [
+  {
+    evidence: "Shop profile, garment templates, receipt branding, roles.",
+    id: "seed-shop-settings",
+    label: "Seed shop settings",
+    state: "pass",
+  },
+  {
+    evidence: "Target is 50 historical customers and 20 active orders.",
+    id: "import-pilot-data",
+    label: "Import pilot data",
+    state: "warn",
+  },
+  {
+    evidence:
+      "Owner/counter staff training covers search, family selection, payments, opt-in.",
+    id: "staff-training",
+    label: "Train staff",
+    state: "warn",
+  },
+  {
+    evidence: "Two-week notebook comparison remains a release requirement.",
+    id: "parallel-notebook",
+    label: "Parallel notebook comparison",
+    state: "block",
+  },
+  {
+    evidence:
+      "Monitor order entry time, search success, missing dates, corrections, WhatsApp failures.",
+    id: "pilot-metrics",
+    label: "Pilot metrics",
+    state: "warn",
+  },
+  {
+    evidence: "Weekly owner review before onboarding the next shops.",
+    id: "pilot-review",
+    label: "Pilot review",
+    state: "warn",
+  },
+] as const satisfies readonly PilotGoLiveCheck[];
+
 export const measurementVersions = [
   {
     id: "mv_01",
@@ -363,7 +827,8 @@ export const shopOrders = [
         recordedAt: "2026-07-03T18:35:00+05:30",
       },
     ],
-    notes: "Due today; owner action needed if cutting is not completed by noon.",
+    notes:
+      "Due today; owner action needed if cutting is not completed by noon.",
   },
   {
     id: "ord_03",
@@ -815,7 +1280,8 @@ export const whatsAppWebhookEvents = [
     eventType: "status",
     normalizedStatus: "read",
     handling: "applied",
-    detail: "Read receipt advanced the request to terminal customer-visible state.",
+    detail:
+      "Read receipt advanced the request to terminal customer-visible state.",
   },
   {
     id: "waweb_05",
@@ -835,7 +1301,8 @@ export const whatsAppWebhookEvents = [
     eventType: "inbound_message",
     normalizedStatus: "inbound",
     handling: "profile_selection",
-    detail: "STOP arrived on a shared family number; staff must confirm profile scope.",
+    detail:
+      "STOP arrived on a shared family number; staff must confirm profile scope.",
   },
   {
     id: "waweb_07",
@@ -889,7 +1356,8 @@ export const sharedMobileCases = [
     inboundText: "I will collect Ravi shirt tomorrow",
     candidateProfiles: ["Meena Ravi", "Ravi Kumar", "Ananya Ravi", "Meena R."],
     resolution: "auto_matched",
-    decision: "Matched to Ravi Kumar because the inbound text names Ravi and shirt.",
+    decision:
+      "Matched to Ravi Kumar because the inbound text names Ravi and shirt.",
   },
   {
     id: "shared_02",
@@ -897,7 +1365,8 @@ export const sharedMobileCases = [
     inboundText: "Stop messages",
     candidateProfiles: ["Meena Ravi", "Ravi Kumar", "Ananya Ravi", "Meena R."],
     resolution: "needs_staff_selection",
-    decision: "Apply opt-out only after staff chooses family-wide or profile-specific scope.",
+    decision:
+      "Apply opt-out only after staff chooses family-wide or profile-specific scope.",
   },
   {
     id: "shared_03",
@@ -905,7 +1374,8 @@ export const sharedMobileCases = [
     inboundText: "Call me",
     candidateProfiles: ["S. Farida", "Ayaan Shah"],
     resolution: "blocked",
-    decision: "Automation is blocked because the profile cannot be inferred safely.",
+    decision:
+      "Automation is blocked because the profile cannot be inferred safely.",
   },
 ] as const satisfies readonly SharedMobileCase[];
 
@@ -914,19 +1384,22 @@ export const connectorPolicyChecks = [
     id: "policy_consent",
     label: "Consent and opt-out",
     state: "block",
-    detail: "Ayaan Shah cannot receive template sends until staff records consent reversal.",
+    detail:
+      "Ayaan Shah cannot receive template sends until staff records consent reversal.",
   },
   {
     id: "policy_template",
     label: "Template mapping",
     state: "warn",
-    detail: "Balance-due English is pending review and Tamil alteration mapping is missing.",
+    detail:
+      "Balance-due English is pending review and Tamil alteration mapping is missing.",
   },
   {
     id: "policy_idempotency",
     label: "Idempotency",
     state: "pass",
-    detail: "Repeated order confirmation reused the existing provider message id.",
+    detail:
+      "Repeated order confirmation reused the existing provider message id.",
   },
   {
     id: "policy_status_rank",
@@ -975,30 +1448,463 @@ export const settingsItems = [
     title: "Shop and receipt identity",
     state: "ready",
     owner: "Owner",
-    detail: "Shop code MDU, branch address, receipt prefix, and terms configured.",
+    detail:
+      "Shop code MDU, branch address, receipt prefix, and terms configured.",
   },
   {
     id: "set_02",
     title: "Garment templates",
     state: "needs_review",
     owner: "Master tailor",
-    detail: "Kidswear growth warning and uniform logo fields need pilot review.",
+    detail:
+      "Kidswear growth warning and uniform logo fields need pilot review.",
   },
   {
     id: "set_03",
     title: "Roles and permissions",
     state: "ready",
     owner: "Owner",
-    detail: "Tailors can update tasks but cannot see reports or payment correction.",
+    detail:
+      "Tailors can update tasks but cannot see reports or payment correction.",
   },
   {
     id: "set_04",
     title: "WhatsApp message policy",
     state: "blocked",
     owner: "Platform support",
-    detail: "Provider templates are external; TailorOS only records consent and outbox state.",
+    detail:
+      "Provider templates are external; TailorOS only records consent and outbox state.",
   },
 ] as const satisfies readonly SettingsItem[];
+
+const phase08Now = new Date("2026-07-06T10:00:00.000Z");
+
+const criticalSecurityPermissions = [
+  "payments.correct",
+  "reports.read",
+  "exports.create",
+  "settings.manage",
+  "staff.manage",
+  "integrations.manage",
+  "credentials.raw.read",
+  "tenant.delete",
+] as const;
+
+export const securityRoleRows = [
+  {
+    role: "owner",
+    label: "Owner",
+    scope: "Full shop control, staff, exports, integrations, privacy requests.",
+    permissions: getRolePermissions("owner"),
+    allowedHighlights: [
+      "Exports and privacy requests",
+      "Staff and integration settings",
+      "Payment correction with audit reason",
+    ],
+    blockedHighlights: ["Raw credential values", "Unscoped platform support"],
+  },
+  {
+    role: "manager",
+    label: "Manager",
+    scope: "Daily operations across customers, orders, payments, reports.",
+    permissions: getRolePermissions("manager"),
+    allowedHighlights: [
+      "Customer and order operations",
+      "Reports and normal exports",
+      "WhatsApp health checks",
+    ],
+    blockedHighlights: [
+      "Tenant deletion",
+      "Billing plan changes",
+      "Raw tokens",
+    ],
+  },
+  {
+    role: "counter_staff",
+    label: "Counter staff",
+    scope:
+      "Fast counter workflow: lookup, order creation, receipts, normal payment.",
+    permissions: getRolePermissions("counter_staff"),
+    allowedHighlights: [
+      "Family/customer lookup",
+      "Order creation",
+      "Receipt link issue",
+    ],
+    blockedHighlights: ["Payment correction", "Customer export", "Settings"],
+  },
+  {
+    role: "measurement_taker",
+    label: "Measurement taker",
+    scope: "Customer fit data with historical version discipline.",
+    permissions: getRolePermissions("measurement_taker"),
+    allowedHighlights: [
+      "Measurement create/update",
+      "Customer identity read",
+      "Order context read",
+    ],
+    blockedHighlights: ["Money reports", "Exports", "WhatsApp settings"],
+  },
+  {
+    role: "tailor",
+    label: "Tailor",
+    scope: "Assigned work, measurement snapshot, production notes.",
+    permissions: getRolePermissions("tailor"),
+    allowedHighlights: [
+      "Assigned task list",
+      "Measurement snapshot",
+      "Production status update",
+    ],
+    blockedHighlights: ["Reports", "Payments", "Customer export"],
+  },
+  {
+    role: "cutter",
+    label: "Cutter",
+    scope: "Cutting board and measurement context for assigned items.",
+    permissions: getRolePermissions("cutter"),
+    allowedHighlights: [
+      "Assigned item status",
+      "Garment measurement read",
+      "Production exception note",
+    ],
+    blockedHighlights: ["Receipts", "Payment correction", "Settings"],
+  },
+  {
+    role: "cashier",
+    label: "Cashier",
+    scope:
+      "Collection, receipt, and balance workflow without measurement deletion.",
+    permissions: getRolePermissions("cashier"),
+    allowedHighlights: [
+      "Payment collection",
+      "Receipt links",
+      "Balance report",
+    ],
+    blockedHighlights: [
+      "Measurement deletion",
+      "Exports",
+      "Production settings",
+    ],
+  },
+  {
+    role: "viewer",
+    label: "Viewer",
+    scope: "Read-only dashboard and lookup for low-risk staff.",
+    permissions: getRolePermissions("viewer"),
+    allowedHighlights: ["Dashboard", "Customer lookup", "Order lookup"],
+    blockedHighlights: ["Writes", "Reports", "Receipts and exports"],
+  },
+  {
+    role: "platform_support",
+    label: "Platform support",
+    scope: "Reasoned, time-limited tenant support access with audit evidence.",
+    permissions: getRolePermissions("platform_support"),
+    allowedHighlights: [
+      "Scoped tenant support",
+      "Credential health state",
+      "Audit review",
+    ],
+    blockedHighlights: ["Raw tokens", "Unscoped browsing", "Tenant deletion"],
+  },
+] as const satisfies readonly SecurityRoleRow[];
+
+export const tenantIsolationChecks = [
+  {
+    id: "iso_session",
+    layer: "Session/auth",
+    title: "Authenticate before tenant dispatch",
+    state: "warn",
+    evidence:
+      "Current Workers expose health/demo routes. Production login/session provider still needs to become the front door before real tenant data.",
+  },
+  {
+    id: "iso_membership",
+    layer: "Membership",
+    title: "Tenant ID must come from resolved membership",
+    state: "pass",
+    evidence:
+      "Core authorization rejects mismatched tenant membership even when the role itself has the permission.",
+  },
+  {
+    id: "iso_role",
+    layer: "Role permissions",
+    title: "Action-level RBAC matrix is code-owned",
+    state: "pass",
+    evidence:
+      "Owner, manager, counter, measurement, tailor, cutter, cashier, viewer, and support roles map to explicit permissions.",
+  },
+  {
+    id: "iso_binding",
+    layer: "Tenant DB binding",
+    title: "Dispatch only active tenants with healthy worker mapping",
+    state: "pass",
+    evidence:
+      "API gateway resolves slug through control DB and blocks suspended tenants before invoking the tenant API.",
+  },
+  {
+    id: "iso_audit",
+    layer: "Audit trail",
+    title: "Sensitive actions require audit rows",
+    state: "warn",
+    evidence:
+      "Core action list is implemented; production D1 audit writes must be connected to auth/session once login lands.",
+  },
+] as const satisfies readonly TenantIsolationCheck[];
+
+export const credentialVaultRecords = [
+  {
+    id: "cred_mdu",
+    channelLabel: "Madurai main counter",
+    healthSummary: "Valid token; rotation window opens in 15 days.",
+    ...createCredentialPublicView({
+      businessId: "102938475610293",
+      phoneNumberId: "123456789012345",
+      tokenLastRotatedAt: "2026-06-22T10:00:00+05:30",
+      tokenRotationDueAt: "2026-07-21T10:00:00+05:30",
+      tokenStatus: "valid",
+    }),
+  },
+  {
+    id: "cred_cbe",
+    channelLabel: "Coimbatore school batch",
+    healthSummary: "Permission warning after template sync lag.",
+    ...createCredentialPublicView({
+      businessId: "203948576120394",
+      phoneNumberId: "223456789012345",
+      tokenLastRotatedAt: "2026-05-25T10:00:00+05:30",
+      tokenRotationDueAt: "2026-07-10T10:00:00+05:30",
+      tokenStatus: "permission_issue",
+    }),
+  },
+  {
+    id: "cred_tnj",
+    channelLabel: "Thanjavur pilot shop",
+    healthSummary: "Expired rotation; sends remain blocked.",
+    ...createCredentialPublicView({
+      businessId: "304958671230495",
+      phoneNumberId: "323456789012345",
+      tokenLastRotatedAt: "2026-04-01T10:00:00+05:30",
+      tokenRotationDueAt: "2026-07-06T10:00:00+05:30",
+      tokenStatus: "expired",
+    }),
+  },
+] as const satisfies readonly CredentialVaultRecord[];
+
+export const receiptAccessCases = [
+  {
+    id: "r2_measurement_photo",
+    asset: "Measurement/reference photos",
+    storage: "R2 media bucket",
+    retention:
+      "Retain while customer/order active; owner export/delete workflow required.",
+    decision: evaluateSignedAccess({
+      confirmationRequired: false,
+      expiresAt: "2026-07-06T10:15:00.000Z",
+      now: phase08Now,
+      signatureValid: true,
+    }),
+  },
+  {
+    id: "r2_receipt_snapshot",
+    asset: "Receipt snapshot link",
+    storage: "R2 + D1 metadata",
+    retention: "Retain per accounting policy; signed public link expires.",
+    decision: evaluateSignedAccess({
+      confirmationRequired: true,
+      confirmationSatisfied: true,
+      expiresAt: "2026-07-06T10:05:00.000Z",
+      now: phase08Now,
+      signatureValid: true,
+    }),
+  },
+  {
+    id: "r2_expired_receipt",
+    asset: "Expired receipt share",
+    storage: "R2 signed token",
+    retention: "Regenerate only after authorized staff opens order context.",
+    decision: evaluateSignedAccess({
+      expiresAt: "2026-07-06T09:55:00.000Z",
+      now: phase08Now,
+      signatureValid: true,
+    }),
+  },
+  {
+    id: "r2_export_download",
+    asset: "Tenant export download",
+    storage: "R2 export bucket",
+    retention: "Expire quickly; owner/platform-admin only.",
+    decision: evaluateSignedAccess({
+      confirmationRequired: true,
+      confirmationSatisfied: false,
+      expiresAt: "2026-07-06T10:30:00.000Z",
+      now: phase08Now,
+      signatureValid: true,
+    }),
+  },
+] as const satisfies readonly ReceiptAccessCase[];
+
+export const publicEndpointControls = [
+  {
+    id: "endpoint_signup",
+    endpoint: "Signup",
+    state: "warn",
+    protection:
+      "Turnstile server validation, IP/email/mobile rate limit, idempotent slug reservation.",
+    failureMode:
+      "Bot registrations or duplicate tenant slugs before provisioning.",
+  },
+  {
+    id: "endpoint_login",
+    endpoint: "Login",
+    state: "warn",
+    protection: "Rate limit by IP and account, secure cookie, failed audit.",
+    failureMode: "Credential stuffing against staff accounts.",
+  },
+  {
+    id: "endpoint_search",
+    endpoint: "Search API",
+    state: "pass",
+    protection:
+      "Authenticated-only contract, min query length, user/tenant limits.",
+    failureMode: "Wildcard dump of customer/order records.",
+  },
+  {
+    id: "endpoint_receipts",
+    endpoint: "Receipt links",
+    state: "pass",
+    protection:
+      "Signed token, expiry, optional mobile-last-4 or order-code confirmation.",
+    failureMode: "Guessable public receipts or stale links.",
+  },
+  {
+    id: "endpoint_webhook",
+    endpoint: "WhatsApp webhook",
+    state: "pass",
+    protection:
+      "Verify challenge, signature validation, dedupe, quick response, queue processing.",
+    failureMode: "Forged provider events or duplicate sends.",
+  },
+  {
+    id: "endpoint_exports",
+    endpoint: "Exports",
+    state: "warn",
+    protection: "Owner-only request, async generation, expiring signed link.",
+    failureMode: "Bulk customer export by staff role.",
+  },
+] as const satisfies readonly PublicEndpointControl[];
+
+export const supportAccessCases = [
+  {
+    id: "support_active",
+    actor: "Platform support · Anika",
+    tenantCode: "TEN-MDU",
+    reason: "Debug failed receipt link",
+    expiresAt: "2026-07-06T10:30:00.000Z",
+    decision: authorizeTenantPermission({
+      membershipTenantId: "ten_mdu",
+      now: phase08Now,
+      permission: "customers.read",
+      role: "platform_support",
+      supportGrant: {
+        expiresAt: "2026-07-06T10:30:00.000Z",
+        reason: "Debug failed receipt link",
+        status: "active",
+        tenantId: "ten_mdu",
+      },
+      tenantId: "ten_mdu",
+      tenantStatus: "active",
+    }),
+  },
+  {
+    id: "support_expired",
+    actor: "Platform support · Bala",
+    tenantCode: "TEN-CBE",
+    reason: "Template audit",
+    expiresAt: "2026-07-06T09:50:00.000Z",
+    decision: authorizeTenantPermission({
+      membershipTenantId: "ten_cbe",
+      now: phase08Now,
+      permission: "reports.read",
+      role: "platform_support",
+      supportGrant: {
+        expiresAt: "2026-07-06T09:50:00.000Z",
+        reason: "Template audit",
+        status: "active",
+        tenantId: "ten_cbe",
+      },
+      tenantId: "ten_cbe",
+      tenantStatus: "active",
+    }),
+  },
+  {
+    id: "support_no_scope",
+    actor: "Platform support · Unscoped",
+    tenantCode: "All tenants",
+    reason: "Browse",
+    expiresAt: "Not issued",
+    decision: authorizeTenantPermission({
+      membershipTenantId: "ten_mdu",
+      now: phase08Now,
+      permission: "support.unscoped_access",
+      role: "platform_support",
+      supportGrant: null,
+      tenantId: "ten_mdu",
+      tenantStatus: "active",
+    }),
+  },
+] as const satisfies readonly SupportAccessCase[];
+
+export const auditCoverageRows = [
+  {
+    id: "audit_measurement",
+    action: "measurement.edit",
+    actor: "Measurement taker",
+    record: "CUS-MDU-000231 · Blouse v4",
+    state: requiresSecurityAudit("measurement.edit") ? "pass" : "block",
+    evidence: "Before/after field summary and reason are required.",
+  },
+  {
+    id: "audit_payment",
+    action: "payment.correct",
+    actor: "Owner",
+    record: "PAY-MDU-000188",
+    state: requiresSecurityAudit("payment.correct") ? "pass" : "block",
+    evidence: "Correction reason is required before ledger mutation.",
+  },
+  {
+    id: "audit_export",
+    action: "export.create",
+    actor: "Owner",
+    record: "TEN-MDU customer export",
+    state: requiresSecurityAudit("export.create") ? "pass" : "block",
+    evidence: "Export runs async and returns an expiring signed R2 link.",
+  },
+  {
+    id: "audit_credential",
+    action: "credential.rotate",
+    actor: "Platform support",
+    record: "wa_channel_tnj",
+    state: requiresSecurityAudit("credential.rotate") ? "pass" : "block",
+    evidence:
+      "Credential values stay hidden; only rotation metadata is logged.",
+  },
+  {
+    id: "audit_support",
+    action: "support.access.start",
+    actor: "Platform support",
+    record: "TEN-CBE support session",
+    state: requiresSecurityAudit("support.access.start") ? "pass" : "block",
+    evidence: "Reason, tenant, actor, expiry, and request id are captured.",
+  },
+  {
+    id: "audit_delete",
+    action: "privacy.delete",
+    actor: "Owner",
+    record: "FAM-CBE-00044 privacy request",
+    state: "warn",
+    evidence:
+      "Policy is modeled; production anonymization/delete workflow still needs a runbook-backed implementation.",
+  },
+] as const satisfies readonly AuditCoverageRow[];
 
 export function formatPaise(amountPaise: number): string {
   return new Intl.NumberFormat("en-IN", {
@@ -1006,6 +1912,41 @@ export function formatPaise(amountPaise: number): string {
     maximumFractionDigits: 0,
     style: "currency",
   }).format(amountPaise / 100);
+}
+
+export function getPhase08SecuritySignals() {
+  const blockedCriticalEdges = securityRoleRows.reduce(
+    (total, row) =>
+      total +
+      getDeniedPermissionsForRole(row.role, criticalSecurityPermissions).length,
+    0,
+  );
+  const rawCredentialExposureCount = credentialVaultRecords.filter((record) =>
+    [record.businessId, record.phoneNumberId].some(
+      (value) => !value.includes("*"),
+    ),
+  ).length;
+
+  return {
+    auditCoveredActions: auditCoverageRows.filter((row) => row.state === "pass")
+      .length,
+    blockedCriticalEdges,
+    credentialRecords: credentialVaultRecords.length,
+    publicEndpointGaps: publicEndpointControls.filter(
+      (control) => control.state !== "pass",
+    ).length,
+    rawCredentialExposureCount,
+    receiptAccessBlocks: receiptAccessCases.filter(
+      (item) => !item.decision.allowed,
+    ).length,
+    roles: securityRoleRows.length,
+    supportAccessAlerts: supportAccessCases.filter(
+      (item) => !item.decision.allowed,
+    ).length,
+    tenantControlsPassing: tenantIsolationChecks.filter(
+      (check) => check.state === "pass",
+    ).length,
+  };
 }
 
 export function calculateOrderFinancials(order: ShopOrder) {
@@ -1034,11 +1975,17 @@ export function getPartialDeliveryOrders() {
 }
 
 export function isWhatsAppFailureRetryable(failure: WhatsAppFailure) {
-  return failure.retryable && failure.status !== "blocked" && failure.status !== "opted_out";
+  return (
+    failure.retryable &&
+    failure.status !== "blocked" &&
+    failure.status !== "opted_out"
+  );
 }
 
 export function getDashboardSignals() {
-  const dueToday = shopOrders.filter((order) => order.promisedDate <= "2026-07-06");
+  const dueToday = shopOrders.filter(
+    (order) => order.promisedDate <= "2026-07-06",
+  );
   const readyItems = shopOrders.flatMap((order) =>
     order.items
       .filter((item) => isItemReady(item.status))
@@ -1138,12 +2085,15 @@ export function getWhatsAppConnectorSignals() {
   const templateReadiness = getWhatsAppTemplateReadiness();
 
   return {
-    activeChannels: whatsAppChannels.filter((channel) => channel.status === "active")
-      .length,
+    activeChannels: whatsAppChannels.filter(
+      (channel) => channel.status === "active",
+    ).length,
     blockedRequests: whatsAppMessageRequests.filter(
       (request) => request.status === "blocked",
     ).length,
-    consentCoveragePct: Math.round(totalConsentCoverage / whatsAppChannels.length),
+    consentCoveragePct: Math.round(
+      totalConsentCoverage / whatsAppChannels.length,
+    ),
     degradedChannels: whatsAppChannels.filter(
       (channel) => channel.status !== "active",
     ).length,
@@ -1179,14 +2129,45 @@ export function getWhatsAppConnectorSignals() {
 }
 
 export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
-  const normalizedText = normalizeSearchText(rawQuery);
-  if (normalizedText.length < 2) {
+  const parsed = parseTenantSearchQuery(rawQuery, {
+    todayIsoDate: pilotTodayIsoDate,
+  });
+  const normalizedText = parsed.normalizedText;
+  if (!parsed.minLengthSatisfied) {
     return [];
   }
 
-  const mobile = tryNormalizeMobile(rawQuery);
+  const allowFtsMatches = parsed.strategy === "fts_prefix";
+  const mobilePrefix = parsed.mobileE164Prefix;
   const uppercase = rawQuery.trim().toUpperCase().replace(/\s+/g, "");
-  const results: CommandSearchResult[] = [];
+  const results: DraftCommandSearchResult[] = [];
+
+  if (parsed.shortcut) {
+    for (const order of shopOrders) {
+      const isDueToday =
+        parsed.shortcut.name === "today_delivery" &&
+        order.promisedDate === parsed.shortcut.deliveryDate &&
+        !["delivered", "closed", "cancelled"].includes(order.status);
+      const isOverdue =
+        parsed.shortcut.name === "overdue_delivery" &&
+        order.promisedDate < parsed.shortcut.beforeDate &&
+        !["delivered", "closed", "cancelled"].includes(order.status);
+
+      if (isDueToday || isOverdue) {
+        results.push({
+          entityType: "order",
+          id: order.id,
+          title: `${order.orderCode} - ${order.customerName}`,
+          eyebrow: isDueToday ? "Due today" : "Overdue delivery",
+          description: `${order.items.length} item(s), promised ${formatShortDate(order.promisedDate)}`,
+          href: "/shop/orders",
+          priority: 0,
+          hitType: "shortcut",
+          matchedOn: "status + promised delivery date index",
+        });
+      }
+    }
+  }
 
   for (const family of familyAccounts) {
     const familyText = normalizeSearchText(
@@ -1198,9 +2179,14 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         family.address,
       ].join(" "),
     );
-    const mobileMatches = mobile !== null && family.primaryMobileE164 === mobile;
+    const mobileMatches =
+      mobilePrefix !== null &&
+      family.primaryMobileE164.startsWith(mobilePrefix);
 
-    if (mobileMatches || familyText.includes(normalizedText)) {
+    if (
+      mobileMatches ||
+      (allowFtsMatches && familyText.includes(normalizedText))
+    ) {
       results.push({
         entityType: "family",
         id: family.id,
@@ -1209,6 +2195,15 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         description: `${family.profiles.length} profiles in ${family.city}`,
         href: "/shop/customers",
         priority: mobileMatches ? 1 : 5,
+        hitType:
+          mobileMatches && family.primaryMobileE164 === parsed.mobileE164
+            ? "exact"
+            : mobileMatches
+              ? "prefix"
+              : "fts",
+        matchedOn: mobileMatches
+          ? "normalized mobile index"
+          : "family projection text",
       });
     }
 
@@ -1224,7 +2219,11 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
       );
       const exactCode = profile.customerCode === uppercase;
 
-      if (exactCode || mobileMatches || profileText.includes(normalizedText)) {
+      if (
+        exactCode ||
+        mobileMatches ||
+        (allowFtsMatches && profileText.includes(normalizedText))
+      ) {
         results.push({
           entityType: "customer",
           id: profile.id,
@@ -1233,6 +2232,18 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
           description: `${profile.relationLabel} - ${profile.lastMeasurement}`,
           href: "/shop/customers",
           priority: exactCode ? 0 : mobileMatches ? 2 : 6,
+          hitType: exactCode
+            ? "exact"
+            : mobileMatches
+              ? family.primaryMobileE164 === parsed.mobileE164
+                ? "exact"
+                : "prefix"
+              : "fts",
+          matchedOn: exactCode
+            ? "customer_code unique index"
+            : mobileMatches
+              ? "profile mobile projection"
+              : "profile FTS text",
         });
       }
     }
@@ -1253,9 +2264,14 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
     );
     const exactOrder = order.orderCode === uppercase;
     const exactReceipt = order.receiptCode === uppercase;
-    const mobileMatches = mobile !== null && order.mobileE164 === mobile;
+    const mobileMatches =
+      mobilePrefix !== null && order.mobileE164.startsWith(mobilePrefix);
 
-    if (exactOrder || mobileMatches || orderText.includes(normalizedText)) {
+    if (
+      exactOrder ||
+      mobileMatches ||
+      (allowFtsMatches && orderText.includes(normalizedText))
+    ) {
       results.push({
         entityType: "order",
         id: order.id,
@@ -1264,10 +2280,25 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         description: `${order.items.length} item(s), balance ${formatPaise(financials.balanceDuePaise)}`,
         href: "/shop/orders",
         priority: exactOrder ? 0 : mobileMatches ? 3 : 7,
+        hitType: exactOrder
+          ? "exact"
+          : mobileMatches
+            ? order.mobileE164 === parsed.mobileE164
+              ? "exact"
+              : "prefix"
+            : "fts",
+        matchedOn: exactOrder
+          ? "order_code unique index"
+          : mobileMatches
+            ? "order mobile projection"
+            : "order FTS text",
       });
     }
 
-    if (exactReceipt || orderText.includes(normalizedText)) {
+    if (
+      exactReceipt ||
+      (allowFtsMatches && orderText.includes(normalizedText))
+    ) {
       results.push({
         entityType: "receipt",
         id: `${order.id}-receipt`,
@@ -1276,8 +2307,18 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         description: `${formatPaise(financials.netPaidPaise)} paid, ${formatPaise(financials.balanceDuePaise)} due`,
         href: "/shop/payments",
         priority: exactReceipt ? 0 : 8,
+        hitType: exactReceipt ? "exact" : "fts",
+        matchedOn: exactReceipt
+          ? "receipt_code unique index"
+          : "receipt projection text",
       });
     }
+  }
+
+  if (!allowFtsMatches) {
+    return dedupeResults(results.map(completeSearchResult))
+      .sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title))
+      .slice(0, 10);
   }
 
   for (const failure of whatsAppFailures) {
@@ -1300,6 +2341,8 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         description: failure.reason,
         href: "/shop/whatsapp",
         priority: failure.retryable ? 4 : 9,
+        hitType: "fts",
+        matchedOn: "WhatsApp failure FTS text",
       });
     }
   }
@@ -1322,10 +2365,15 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         entityType: "message",
         id: channel.id,
         title: `${channel.branchLabel} - ${channel.displayPhone}`,
-        eyebrow: channel.status === "active" ? "Active channel" : "Channel action",
-        description: channel.risk ?? `${channel.messagingLimitTier}, ${channel.qualityRating} quality`,
+        eyebrow:
+          channel.status === "active" ? "Active channel" : "Channel action",
+        description:
+          channel.risk ??
+          `${channel.messagingLimitTier}, ${channel.qualityRating} quality`,
         href: "/shop/whatsapp",
         priority: channel.status === "active" ? 6 : 3,
+        hitType: "fts",
+        matchedOn: "channel projection text",
       });
     }
   }
@@ -1346,10 +2394,15 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
         entityType: "message",
         id: template.id,
         title: `${template.providerTemplateName} (${template.language})`,
-        eyebrow: template.status === "approved" ? "Approved template" : "Template review",
+        eyebrow:
+          template.status === "approved"
+            ? "Approved template"
+            : "Template review",
         description: template.ownerAction,
         href: "/shop/whatsapp",
         priority: template.status === "approved" ? 8 : 2,
+        hitType: "fts",
+        matchedOn: "template projection text",
       });
     }
   }
@@ -1381,22 +2434,155 @@ export function searchPilotRecords(rawQuery: string): CommandSearchResult[] {
               : "Message request",
         description: request.reason,
         href: "/shop/whatsapp",
-        priority: request.status === "failed" || request.status === "blocked" ? 2 : 7,
+        priority:
+          request.status === "failed" || request.status === "blocked" ? 2 : 7,
+        hitType: "fts",
+        matchedOn: "message request FTS text",
       });
     }
   }
 
-  return dedupeResults(results)
+  return dedupeResults(results.map(completeSearchResult))
     .sort((a, b) => a.priority - b.priority || a.title.localeCompare(b.title))
     .slice(0, 10);
 }
 
-function tryNormalizeMobile(input: string): string | null {
-  try {
-    return normalizeIndianMobile(input).e164;
-  } catch {
-    return null;
-  }
+export async function searchPilotRecordsAsync(
+  rawQuery: string,
+  options: { signal?: AbortSignal; delayMs?: number } = {},
+): Promise<CommandSearchResponse> {
+  const startedAt = nowMs();
+
+  await waitForPilotSearch(options.delayMs ?? 96, options.signal);
+
+  const results = searchPilotRecords(rawQuery);
+  const elapsedMs = Math.round(nowMs() - startedAt);
+
+  return {
+    results,
+    meta: createCommandSearchMeta({
+      rawQuery,
+      resultCount: results.length,
+      elapsedMs,
+    }),
+  };
+}
+
+export function createCommandSearchMeta(input: {
+  rawQuery: string;
+  resultCount: number;
+  elapsedMs?: number;
+}): CommandSearchMeta {
+  const parsed = parseTenantSearchQuery(input.rawQuery, {
+    todayIsoDate: pilotTodayIsoDate,
+  });
+
+  return {
+    rawQuery: input.rawQuery,
+    normalizedQuery: parsed.normalizedText,
+    queryKind: parsed.kind,
+    strategy: parsed.strategy,
+    minLengthSatisfied: parsed.minLengthSatisfied,
+    resultCount: input.resultCount,
+    latencyBudgetMs: parsed.latencyBudgetMs,
+    elapsedMs: input.elapsedMs ?? 0,
+    source: "pilot-fixture",
+  };
+}
+
+export function shouldApplyCommandSearchResponse(input: {
+  requestId: number;
+  latestRequestId: number;
+  aborted: boolean;
+}) {
+  return !input.aborted && input.requestId === input.latestRequestId;
+}
+
+export function getSearchPerformanceSignals() {
+  const sharedMobileResults = searchPilotRecords("98765");
+  const exactOrderResults = searchPilotRecords("ORD-MDU-000421");
+  const todayResults = searchPilotRecords("today delivery");
+  const ftsResults = searchPilotRecords("Meena blouse");
+
+  return {
+    sharedMobileResults: sharedMobileResults.length,
+    exactOrderResults: exactOrderResults.length,
+    todayShortcutResults: todayResults.length,
+    ftsResults: ftsResults.length,
+    exactOrderBudgetMs:
+      createCommandSearchMeta({
+        rawQuery: "ORD-MDU-000421",
+        resultCount: exactOrderResults.length,
+      }).latencyBudgetMs ?? 0,
+    mobileBudgetMs:
+      createCommandSearchMeta({
+        rawQuery: "98765",
+        resultCount: sharedMobileResults.length,
+      }).latencyBudgetMs ?? 0,
+    ftsBudgetMs:
+      createCommandSearchMeta({
+        rawQuery: "Meena blouse",
+        resultCount: ftsResults.length,
+      }).latencyBudgetMs ?? 0,
+  };
+}
+
+export function getPhase09ReleaseSignals(): Phase09ReleaseSignals {
+  const warningReleaseGates = phase09ReleaseGates.filter(
+    (gate) => gate.state === "warn",
+  ).length;
+  const blockedReleaseGates = phase09ReleaseGates.filter(
+    (gate) => gate.state === "block",
+  ).length;
+
+  return {
+    blockedReleaseGates,
+    criticalAlerts: phase09ObservabilityMetrics.filter(
+      (metric) => metric.state === "block",
+    ).length,
+    fixtureRecords: phase09FixtureRecords.length,
+    passingReleaseGates: phase09ReleaseGates.filter(
+      (gate) => gate.state === "pass",
+    ).length,
+    pilotChecksReady: phase09PilotGoLiveChecks.filter(
+      (check) => check.state === "pass",
+    ).length,
+    releaseGates: phase09ReleaseGates.length,
+    runbooks: phase09Runbooks.length,
+    structuredLogFields: phase09StructuredLogFields.length,
+    testingLayers: phase09TestingLayers.length,
+    warningReleaseGates,
+  };
+}
+
+export function getPhase09BlockingReleaseGates() {
+  return phase09ReleaseGates.filter((gate) => gate.state === "block");
+}
+
+export function getPhase09RunbookCoverage() {
+  return {
+    d1Storage: phase09Runbooks.some((runbook) => runbook.id === "d1-size-limit"),
+    emergencyWhatsAppDisable: phase09Runbooks.some(
+      (runbook) => runbook.id === "disable-whatsapp-tenant",
+    ),
+    rollback: phase09Runbooks.some(
+      (runbook) => runbook.id === "frontend-rollback",
+    ),
+    tenantMigration: phase09Runbooks.some(
+      (runbook) => runbook.id === "tenant-migration-partial",
+    ),
+    whatsappDlq: phase09Runbooks.some((runbook) => runbook.id === "whatsapp-dlq"),
+  };
+}
+
+function completeSearchResult(
+  result: DraftCommandSearchResult,
+): CommandSearchResult {
+  return {
+    ...result,
+    hitType: result.hitType ?? "fts",
+    matchedOn: result.matchedOn ?? "tenant FTS projection",
+  };
 }
 
 function dedupeResults(results: CommandSearchResult[]): CommandSearchResult[] {
@@ -1410,4 +2596,27 @@ function dedupeResults(results: CommandSearchResult[]): CommandSearchResult[] {
     seen.add(key);
     return true;
   });
+}
+
+function waitForPilotSearch(delayMs: number, signal?: AbortSignal) {
+  if (signal?.aborted) {
+    return Promise.reject(new Error("Search request aborted."));
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    const timeout = globalThis.setTimeout(resolve, delayMs);
+
+    signal?.addEventListener(
+      "abort",
+      () => {
+        globalThis.clearTimeout(timeout);
+        reject(new Error("Search request aborted."));
+      },
+      { once: true },
+    );
+  });
+}
+
+function nowMs() {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
 }

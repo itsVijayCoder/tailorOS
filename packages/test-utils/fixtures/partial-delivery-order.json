@@ -1,0 +1,8 @@
+{
+  "orderCode": "ORD-MDU-P090012",
+  "customerCode": "CUS-P090006",
+  "items": [
+    { "itemCode": "ORD-MDU-P090012-1", "garmentType": "Blouse", "status": "ready_for_pickup" },
+    { "itemCode": "ORD-MDU-P090012-2", "garmentType": "Salwar", "status": "stitching" }
+  ]
+}

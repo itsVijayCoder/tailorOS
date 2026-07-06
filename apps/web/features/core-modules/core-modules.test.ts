@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   calculateOrderFinancials,
+  credentialVaultRecords,
   getDashboardSignals,
+  getPhase09BlockingReleaseGates,
+  getPhase09ReleaseSignals,
+  getPhase09RunbookCoverage,
+  getPhase08SecuritySignals,
   getPartialDeliveryOrders,
   getWhatsAppConnectorSignals,
   getWhatsAppTemplateReadiness,
@@ -10,8 +15,19 @@ import {
   isWhatsAppFailureRetryable,
   isWhatsAppRequestDeadLettered,
   isWhatsAppRequestRetryable,
+  phase09FixtureRecords,
+  phase09ObservabilityMetrics,
+  phase09PilotGoLiveChecks,
+  phase09ReleaseGates,
+  phase09StructuredLogFields,
+  receiptAccessCases,
+  searchPilotRecordsAsync,
   searchPilotRecords,
+  securityRoleRows,
+  shouldApplyCommandSearchResponse,
   shopOrders,
+  supportAccessCases,
+  tenantIsolationChecks,
   whatsAppFailures,
   whatsAppMessageRequests,
 } from "./data";
@@ -20,14 +36,30 @@ describe("Phase 05 core modules", () => {
   it("normalizes shared mobile searches and returns the family before profiles", () => {
     const nationalResults = searchPilotRecords("09876543210");
     const formattedResults = searchPilotRecords("+91 98765 43210");
+    const prefixResults = searchPilotRecords("98765");
 
     expect(nationalResults[0]?.entityType).toBe("family");
     expect(nationalResults[0]?.title).toContain("FAM-MDU-00018");
-    expect(nationalResults.some((result) => result.title.includes("CUS-MDU-000231"))).toBe(
-      true,
-    );
+    expect(prefixResults[0]).toMatchObject({
+      entityType: "family",
+      hitType: "prefix",
+      matchedOn: "normalized mobile index",
+    });
+    expect(
+      nationalResults.some((result) => result.title.includes("CUS-MDU-000231")),
+    ).toBe(true);
     expect(formattedResults.map((result) => result.id)).toEqual(
       nationalResults.map((result) => result.id),
+    );
+  });
+
+  it("routes delivery shortcuts through the status/date strategy", () => {
+    const results = searchPilotRecords("today delivery");
+
+    expect(results).toHaveLength(2);
+    expect(results.every((result) => result.hitType === "shortcut")).toBe(true);
+    expect(results.map((result) => result.title)).toEqual(
+      expect.arrayContaining(["ORD-MDU-000422 - Ravi Kumar"]),
     );
   });
 
@@ -165,5 +197,151 @@ describe("Phase 05 core modules", () => {
       href: "/shop/whatsapp",
       id: "tpl_alteration_ta",
     });
+  });
+
+  it("cancels stale async command searches before applying results", async () => {
+    const controller = new AbortController();
+    const search = searchPilotRecordsAsync("Meena", {
+      signal: controller.signal,
+      delayMs: 20,
+    });
+
+    controller.abort();
+
+    await expect(search).rejects.toThrow("Search request aborted.");
+    expect(
+      shouldApplyCommandSearchResponse({
+        requestId: 1,
+        latestRequestId: 2,
+        aborted: false,
+      }),
+    ).toBe(false);
+    expect(
+      shouldApplyCommandSearchResponse({
+        requestId: 2,
+        latestRequestId: 2,
+        aborted: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("summarizes Phase 08 security posture from RBAC, support, receipt, and endpoint controls", () => {
+    expect(getPhase08SecuritySignals()).toMatchObject({
+      auditCoveredActions: 5,
+      credentialRecords: 3,
+      publicEndpointGaps: 3,
+      rawCredentialExposureCount: 0,
+      receiptAccessBlocks: 2,
+      roles: 9,
+      supportAccessAlerts: 2,
+      tenantControlsPassing: 3,
+    });
+  });
+
+  it("keeps tailor access scoped away from money reports and exports", () => {
+    const tailor = securityRoleRows.find((row) => row.role === "tailor");
+
+    expect(tailor).toBeDefined();
+    expect(tailor?.permissions).toContain("production.update");
+    expect(tailor?.permissions).not.toContain("reports.read");
+    expect(tailor?.permissions).not.toContain("exports.create");
+  });
+
+  it("renders only masked WhatsApp credential identifiers in Phase 08 data", () => {
+    expect(
+      credentialVaultRecords.every(
+        (record) =>
+          record.businessId.includes("*") && record.phoneNumberId.includes("*"),
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps support and receipt access decisions visible for edge cases", () => {
+    expect(supportAccessCases.map((item) => item.decision.reason)).toEqual([
+      "ALLOWED",
+      "SUPPORT_SCOPE_EXPIRED",
+      "SUPPORT_SCOPE_REQUIRED",
+    ]);
+    expect(receiptAccessCases.map((item) => item.decision.reason)).toEqual([
+      "ALLOWED",
+      "ALLOWED",
+      "EXPIRED",
+      "CONFIRMATION_REQUIRED",
+    ]);
+    expect(tenantIsolationChecks.map((check) => check.state)).toEqual([
+      "warn",
+      "pass",
+      "pass",
+      "pass",
+      "warn",
+    ]);
+  });
+
+  it("summarizes Phase 09 release posture from gates, logs, fixtures, and runbooks", () => {
+    expect(getPhase09ReleaseSignals()).toMatchObject({
+      blockedReleaseGates: 4,
+      criticalAlerts: 1,
+      fixtureRecords: 6,
+      passingReleaseGates: 4,
+      pilotChecksReady: 1,
+      releaseGates: 12,
+      runbooks: 10,
+      structuredLogFields: 14,
+      testingLayers: 6,
+      warningReleaseGates: 4,
+    });
+  });
+
+  it("keeps Phase 09 production approval blocked until smoke and deploy gates are green", () => {
+    expect(getPhase09BlockingReleaseGates().map((gate) => gate.id)).toEqual([
+      "playwright-smoke",
+      "manual-approval",
+      "production-deploy",
+      "post-deploy-smoke",
+    ]);
+    expect(
+      phase09ReleaseGates.find((gate) => gate.id === "production-deploy"),
+    ).toMatchObject({
+      owner: "production",
+      state: "block",
+    });
+  });
+
+  it("documents the Phase 09 fixture and log-field edge cases", () => {
+    expect(phase09FixtureRecords.map((fixture) => fixture.id)).toEqual([
+      "family-one-mobile-four-profiles",
+      "duplicate-mobile-variants",
+      "partial-delivery-order",
+      "payment-correction-case",
+      "whatsapp-duplicate-webhook",
+      "whatsapp-out-of-order-status",
+    ]);
+    expect(phase09StructuredLogFields).toEqual(
+      expect.arrayContaining([
+        "requestId",
+        "tenantId",
+        "userId",
+        "entityId",
+        "d1RowsRead",
+        "d1RowsWritten",
+        "version",
+      ]),
+    );
+  });
+
+  it("keeps Phase 09 runbooks mapped to launch-critical incident families", () => {
+    expect(getPhase09RunbookCoverage()).toEqual({
+      d1Storage: true,
+      emergencyWhatsAppDisable: true,
+      rollback: true,
+      tenantMigration: true,
+      whatsappDlq: true,
+    });
+    expect(phase09ObservabilityMetrics.map((metric) => metric.id)).toContain(
+      "queue-dlq",
+    );
+    expect(phase09PilotGoLiveChecks.map((check) => check.id)).toContain(
+      "parallel-notebook",
+    );
   });
 });

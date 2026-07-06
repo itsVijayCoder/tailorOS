@@ -1,7 +1,12 @@
-import type { OrderStatus } from "@tailoros/core";
+import type {
+  OrderStatus,
+  SecurityPermission,
+  TailorOsRole,
+} from "@tailoros/core";
 
 export type ModuleKey =
   | "dashboard"
+  | "search"
   | "customers"
   | "measurements"
   | "orders"
@@ -9,6 +14,8 @@ export type ModuleKey =
   | "whatsapp"
   | "payments"
   | "reports"
+  | "security"
+  | "release"
   | "settings";
 
 export type CoreNavItem = Readonly<{
@@ -214,7 +221,8 @@ export type WhatsAppWebhookEvent = Readonly<{
     | "failed"
     | "inbound"
     | "template_paused";
-  handling: "applied" | "duplicate_ignored" | "stale_ignored" | "profile_selection";
+  handling:
+    "applied" | "duplicate_ignored" | "stale_ignored" | "profile_selection";
   detail: string;
 }>;
 
@@ -252,6 +260,79 @@ export type ReportMetric = Readonly<{
   trend: "up" | "down" | "flat";
 }>;
 
+export type Phase09GateState = "pass" | "warn" | "block";
+
+export type TestingPyramidLayer = Readonly<{
+  layer: string;
+  tool: string;
+  coverage: string;
+  example: string;
+  state: Phase09GateState;
+}>;
+
+export type Phase09FixtureRecord = Readonly<{
+  id: string;
+  path: string;
+  edgeCase: string;
+  assertion: string;
+  owner: "domain" | "connector" | "release";
+}>;
+
+export type ObservabilityMetric = Readonly<{
+  id: string;
+  label: string;
+  value: string;
+  threshold: string;
+  action: string;
+  state: Phase09GateState;
+}>;
+
+export type ReleaseGate = Readonly<{
+  id: string;
+  order: number;
+  label: string;
+  owner: "ci" | "staging" | "release" | "production";
+  evidence: string;
+  state: Phase09GateState;
+}>;
+
+export type ReleaseRunbook = Readonly<{
+  id: string;
+  title: string;
+  trigger: string;
+  firstAction: string;
+  owner: "platform" | "support" | "shop-owner";
+  state: Phase09GateState;
+}>;
+
+export type PilotGoLiveCheck = Readonly<{
+  id: string;
+  label: string;
+  evidence: string;
+  state: Phase09GateState;
+}>;
+
+export type WorkerRuntimeCheck = Readonly<{
+  id: string;
+  worker: string;
+  check: string;
+  evidence: string;
+  state: Phase09GateState;
+}>;
+
+export type Phase09ReleaseSignals = Readonly<{
+  testingLayers: number;
+  fixtureRecords: number;
+  structuredLogFields: number;
+  releaseGates: number;
+  passingReleaseGates: number;
+  warningReleaseGates: number;
+  blockedReleaseGates: number;
+  criticalAlerts: number;
+  runbooks: number;
+  pilotChecksReady: number;
+}>;
+
 export type SettingsItem = Readonly<{
   id: string;
   title: string;
@@ -260,12 +341,76 @@ export type SettingsItem = Readonly<{
   detail: string;
 }>;
 
+export type SecurityRoleRow = Readonly<{
+  role: TailorOsRole;
+  label: string;
+  scope: string;
+  permissions: readonly SecurityPermission[];
+  allowedHighlights: readonly string[];
+  blockedHighlights: readonly string[];
+}>;
+
+export type TenantIsolationCheck = Readonly<{
+  id: string;
+  layer: string;
+  title: string;
+  state: "pass" | "warn" | "block";
+  evidence: string;
+}>;
+
+export type CredentialVaultRecord = Readonly<{
+  id: string;
+  channelLabel: string;
+  businessId: string;
+  phoneNumberId: string;
+  tokenStatus: "valid" | "invalid" | "expired" | "permission_issue";
+  tokenLastRotatedAt: string;
+  tokenRotationDueAt: string;
+  healthSummary: string;
+}>;
+
+export type ReceiptAccessCase = Readonly<{
+  id: string;
+  asset: string;
+  storage: string;
+  retention: string;
+  decision: {
+    allowed: boolean;
+    reason: string;
+  };
+}>;
+
+export type PublicEndpointControl = Readonly<{
+  id: string;
+  endpoint: string;
+  state: "pass" | "warn" | "block";
+  protection: string;
+  failureMode: string;
+}>;
+
+export type SupportAccessCase = Readonly<{
+  id: string;
+  actor: string;
+  tenantCode: string;
+  reason: string;
+  expiresAt: string;
+  decision: {
+    allowed: boolean;
+    reason: string;
+  };
+}>;
+
+export type AuditCoverageRow = Readonly<{
+  id: string;
+  action: string;
+  actor: string;
+  record: string;
+  state: "pass" | "warn" | "block";
+  evidence: string;
+}>;
+
 export type SearchEntityType =
-  | "family"
-  | "customer"
-  | "order"
-  | "receipt"
-  | "message";
+  "family" | "customer" | "order" | "receipt" | "message";
 
 export type CommandSearchResult = Readonly<{
   entityType: SearchEntityType;
@@ -275,4 +420,35 @@ export type CommandSearchResult = Readonly<{
   description: string;
   href: string;
   priority: number;
+  hitType: "exact" | "prefix" | "shortcut" | "fts";
+  matchedOn: string;
+}>;
+
+export type CommandSearchMeta = Readonly<{
+  rawQuery: string;
+  normalizedQuery: string;
+  queryKind:
+    | "empty"
+    | "mobile"
+    | "customer_code"
+    | "order_code"
+    | "receipt_code"
+    | "shortcut"
+    | "text";
+  strategy:
+    | "none"
+    | "indexed_mobile_prefix"
+    | "indexed_code_exact"
+    | "indexed_status_date"
+    | "fts_prefix";
+  minLengthSatisfied: boolean;
+  resultCount: number;
+  latencyBudgetMs: number | null;
+  elapsedMs: number;
+  source: "pilot-fixture";
+}>;
+
+export type CommandSearchResponse = Readonly<{
+  results: readonly CommandSearchResult[];
+  meta: CommandSearchMeta;
 }>;

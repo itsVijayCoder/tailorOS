@@ -26,6 +26,7 @@ import {
   type OrderCreateRecord,
   type OrderPaymentState,
   type PaymentRecordBundle,
+  type SearchResponseRecord,
   type SearchResultRecord,
   type TenantDomainRepository,
 } from "./domain-service";
@@ -230,6 +231,48 @@ describe("tenant domain services", () => {
       "RECEIPT_GENERATED",
     ]);
   });
+
+  it("projects contacts, orders, and receipts into tenant-local search rows", async () => {
+    const repository = new InMemoryTenantDomainRepository();
+    const contact = await seedFamily(repository);
+    const customerProfileId = contact.profiles[0]?.id;
+    expect(customerProfileId).toBeDefined();
+
+    const order = await createOrderService({
+      repository,
+      runtime,
+      data: {
+        contactId: contact.contactId,
+        customerProfileId: customerProfileId!,
+        currentStatus: "booked",
+        discountPaise: 0,
+        promisedDeliveryDate: "2026-07-06",
+        createdByUserId: "usr_counter_01",
+        items: [
+          {
+            garmentTypeCode: "alteration",
+            quantity: 1,
+            pricePaise: 50000,
+            allowWithoutMeasurementReason: "Simple hem alteration",
+          },
+        ],
+      },
+    });
+    const search = await repository.search({ query: "meena", limit: 10 });
+
+    expect(
+      search.results.map((result) => [result.entityType, result.title]),
+    ).toEqual(
+      expect.arrayContaining([
+        ["contact", "+919876543210"],
+        ["customer_profile", "Meena Ravi"],
+        ["order", order.orderCode],
+      ]),
+    );
+    expect(
+      search.results.some((result) => result.entityType === "receipt"),
+    ).toBe(true);
+  });
 });
 
 describe("tenant D1 migration", () => {
@@ -266,6 +309,20 @@ describe("tenant D1 migration", () => {
         )
         .get("search_docs_fts"),
     ).toEqual({ name: "search_docs_fts" });
+    expect(
+      db
+        .prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        )
+        .get("search_projection"),
+    ).toEqual({ name: "search_projection" });
+    expect(
+      db
+        .prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'index' AND name = ?",
+        )
+        .get("idx_search_projection_mobile"),
+    ).toEqual({ name: "idx_search_projection_mobile" });
 
     db.close();
   });
@@ -341,6 +398,7 @@ class InMemoryTenantDomainRepository implements TenantDomainRepository {
       this.profiles.set(profile.id, profile);
     }
     this.audits.push(record.audit);
+    this.upsertSearch(record.search);
     return summary;
   }
 
@@ -379,6 +437,7 @@ class InMemoryTenantDomainRepository implements TenantDomainRepository {
     this.measurementProfiles.set(profile.id, profile);
     this.measurementVersions.set(record.version.id, record.version);
     this.audits.push(record.audit);
+    this.upsertSearch([record.search]);
 
     return {
       measurementProfileId: profile.id,
@@ -414,6 +473,12 @@ class InMemoryTenantDomainRepository implements TenantDomainRepository {
       orderCode: record.order.orderCode,
       contactId: record.order.contactId,
       customerProfileId: record.order.customerProfileId,
+      primaryMobileE164:
+        this.contacts.get(record.order.contactId)?.primaryMobileE164 ?? "",
+      customerCode:
+        this.profiles.get(record.order.customerProfileId)?.customerCode ?? "",
+      currentStatus: record.order.currentStatus,
+      promisedDeliveryDate: record.order.promisedDeliveryDate,
       finalTotalPaise: record.order.finalTotalPaise,
       balanceDuePaise: record.order.balanceDuePaise,
       receiptId: record.receipt.id,
@@ -429,6 +494,7 @@ class InMemoryTenantDomainRepository implements TenantDomainRepository {
     );
     this.audits.push(record.audit);
     this.outbox.push(...record.outbox);
+    this.upsertSearch(record.search);
 
     return {
       orderId: record.order.id,
@@ -467,6 +533,7 @@ class InMemoryTenantDomainRepository implements TenantDomainRepository {
     order.balanceDuePaise = record.balanceDuePaise;
     this.audits.push(record.audit);
     this.outbox.push(...record.outbox);
+    this.upsertSearch(record.search);
 
     return {
       paymentId: record.payment.id,
@@ -481,7 +548,50 @@ class InMemoryTenantDomainRepository implements TenantDomainRepository {
     } satisfies PaymentSummary;
   }
 
-  async search() {
-    return this.searchDocs;
+  async search(_input?: {
+    query: string;
+    limit: number;
+  }): Promise<SearchResponseRecord> {
+    return {
+      results: this.searchDocs,
+      meta: {
+        rawQuery: "",
+        normalizedQuery: "",
+        queryKind: "text",
+        strategy: "fts_prefix",
+        minLengthSatisfied: true,
+        resultCount: this.searchDocs.length,
+        latencyBudgetMs: 150,
+        elapsedMs: 0,
+      },
+    };
+  }
+
+  private upsertSearch(
+    records: readonly ContactProfileCreateRecord["search"][number][],
+  ) {
+    for (const record of records) {
+      const result: SearchResultRecord = {
+        entityType: record.entityType,
+        entityId: record.entityId,
+        title: record.title,
+        subtitle: record.subtitle,
+        hitType: "fts",
+        score: 0,
+        updatedAt: record.updatedAt,
+        payload: record.payload,
+      };
+      const existingIndex = this.searchDocs.findIndex(
+        (item) =>
+          item.entityType === result.entityType &&
+          item.entityId === result.entityId,
+      );
+
+      if (existingIndex >= 0) {
+        this.searchDocs[existingIndex] = result;
+      } else {
+        this.searchDocs.push(result);
+      }
+    }
   }
 }

@@ -9,6 +9,7 @@ import { createStableId } from "./ids";
 import { addMoney, moneyFromRupees, subtractMoney } from "./money";
 import { canTransitionOrder, transitionOrder } from "./order-state";
 import { normalizeIndianMobile } from "./phone";
+import { parseTenantSearchQuery } from "./search";
 
 describe("TailorOS core domain utilities", () => {
   it("normalizes Indian mobile input without treating mobile as identity", () => {
@@ -78,5 +79,41 @@ describe("TailorOS core domain utilities", () => {
     );
     expect(nextVersionNumber(null)).toBe(1);
     expect(nextVersionNumber(3)).toBe(4);
+  });
+
+  it("classifies tenant search queries for exact indexes before FTS", () => {
+    expect(parseTenantSearchQuery("98765")).toMatchObject({
+      kind: "mobile",
+      strategy: "indexed_mobile_prefix",
+      mobileE164Prefix: "+9198765",
+      latencyBudgetMs: 80,
+    });
+    expect(parseTenantSearchQuery(" ord-mdu-000421 ")).toMatchObject({
+      kind: "order_code",
+      strategy: "indexed_code_exact",
+      code: "ORD-MDU-000421",
+      latencyBudgetMs: 50,
+    });
+    expect(
+      parseTenantSearchQuery("today delivery", {
+        todayIsoDate: "2026-07-06",
+      }),
+    ).toMatchObject({
+      kind: "shortcut",
+      strategy: "indexed_status_date",
+      shortcut: { name: "today_delivery", deliveryDate: "2026-07-06" },
+      latencyBudgetMs: 120,
+    });
+    expect(parseTenantSearchQuery("m")).toMatchObject({
+      kind: "empty",
+      strategy: "none",
+      minLengthSatisfied: false,
+    });
+    expect(parseTenantSearchQuery("Meena blouse")).toMatchObject({
+      kind: "text",
+      strategy: "fts_prefix",
+      ftsQuery: "meena* blouse*",
+      latencyBudgetMs: 150,
+    });
   });
 });

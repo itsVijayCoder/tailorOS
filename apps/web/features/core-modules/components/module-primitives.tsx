@@ -88,7 +88,7 @@ export function MetricCard({
   value: string;
 }) {
   return (
-    <Card className="group overflow-hidden rounded-lg bg-surface-strong transition duration-200 ease-premium hover:-translate-y-0.5 hover:border-border-accent hover:shadow-lift motion-reduce:transition-none">
+    <Card className="group min-w-0 overflow-hidden rounded-lg bg-surface-strong transition duration-200 ease-premium hover:-translate-y-0.5 hover:border-border-accent hover:shadow-lift motion-reduce:transition-none">
       <CardContent className="grid gap-4 p-4">
         <div className="flex items-start justify-between gap-3">
           <span
@@ -132,7 +132,7 @@ export function DataPanel({
   title: string;
 }) {
   return (
-    <Card className={cn("rounded-lg bg-surface-strong", className)}>
+    <Card className={cn("min-w-0 rounded-lg bg-surface-strong", className)}>
       <CardHeader className="p-4">
         <CardTitle className="text-xl">{title}</CardTitle>
         {description ? (

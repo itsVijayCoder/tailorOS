@@ -1,0 +1,7 @@
+{
+  "orderCode": "ORD-MDU-P090012",
+  "payments": [
+    { "kind": "advance", "mode": "upi", "amountPaise": 250000, "reason": null },
+    { "kind": "correction", "mode": "adjustment", "amountPaise": -50000, "reason": "UPI amount entered twice during rush hour." }
+  ]
+}

@@ -8,6 +8,7 @@ import {
   createApiSuccess,
   zodIssuesToFieldErrors,
 } from "./api";
+import { searchTenantDomainResponseSchema } from "./domain";
 import { createQueueEnvelope, queueEnvelopeSchema } from "./queue";
 
 describe("API response contracts", () => {
@@ -59,5 +60,34 @@ describe("API response contracts", () => {
     });
 
     expect(queueEnvelopeSchema.safeParse(envelope).success).toBe(true);
+  });
+
+  it("validates tenant search results with performance metadata", () => {
+    const parsed = searchTenantDomainResponseSchema.safeParse({
+      results: [
+        {
+          entityType: "order",
+          entityId: "ORD-MDU-000421",
+          title: "ORD-MDU-000421",
+          subtitle: "Meena Ravi",
+          hitType: "exact",
+          score: 0,
+          updatedAt: "2026-07-05T10:00:00.000Z",
+          payload: { orderId: "ORD-MDU-000421" },
+        },
+      ],
+      meta: {
+        rawQuery: "ORD-MDU-000421",
+        normalizedQuery: "ord mdu 000421",
+        queryKind: "order_code",
+        strategy: "indexed_code_exact",
+        minLengthSatisfied: true,
+        resultCount: 1,
+        latencyBudgetMs: 50,
+        elapsedMs: 4,
+      },
+    });
+
+    expect(parsed.success).toBe(true);
   });
 });

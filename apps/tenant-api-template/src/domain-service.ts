@@ -5,6 +5,8 @@ import {
   nextVersionNumber,
   normalizeIndianMobile,
   normalizeSearchText,
+  type TenantSearchQueryKind,
+  type TenantSearchStrategy,
   type PaymentLedgerEntry,
 } from "@tailoros/core";
 import type {
@@ -20,6 +22,7 @@ import type {
   PaymentMode,
   PaymentSummary,
   RecordPayment,
+  SearchResultHitType,
 } from "@tailoros/schemas";
 
 type DomainErrorCode = "VALIDATION_ERROR" | "NOT_FOUND" | "CONFLICT";
@@ -59,6 +62,8 @@ export type CustomerProfileRecord = {
   fullName: string;
   relationLabel: string | null;
   genderContext: string | null;
+  primaryMobileE164: string;
+  primaryMobileNational: string;
 };
 
 export type MeasurementProfileRecord = {
@@ -92,6 +97,10 @@ export type OrderPaymentState = {
   orderCode: string;
   contactId: string;
   customerProfileId: string;
+  primaryMobileE164: string;
+  customerCode: string;
+  currentStatus: string;
+  promisedDeliveryDate: string | null;
   finalTotalPaise: number;
   balanceDuePaise: number;
   receiptId: string | null;
@@ -104,7 +113,24 @@ export type SearchResultRecord = {
   entityId: string;
   title: string;
   subtitle: string | null;
+  hitType: SearchResultHitType;
+  score: number;
+  updatedAt: string;
   payload: Record<string, unknown>;
+};
+
+export type SearchResponseRecord = {
+  results: SearchResultRecord[];
+  meta: {
+    rawQuery: string;
+    normalizedQuery: string;
+    queryKind: TenantSearchQueryKind;
+    strategy: TenantSearchStrategy;
+    minLengthSatisfied: boolean;
+    resultCount: number;
+    latencyBudgetMs: number | null;
+    elapsedMs: number;
+  };
 };
 
 export type DomainAuditRecord = {
@@ -137,6 +163,12 @@ export type SearchProjectionRecord = {
   entityId: string;
   title: string;
   subtitle: string | null;
+  mobileE164: string | null;
+  customerCode: string | null;
+  orderCode: string | null;
+  receiptCode: string | null;
+  status: string | null;
+  deliveryDate: string | null;
   searchText: string;
   payload: Record<string, unknown>;
   updatedAt: string;
@@ -257,7 +289,7 @@ export type PaymentRecordBundle = {
   balanceDuePaise: number;
   audit: DomainAuditRecord;
   outbox: DomainOutboxRecord[];
-  search: SearchProjectionRecord;
+  search: SearchProjectionRecord[];
 };
 
 export type TenantDomainRepository = {
@@ -290,7 +322,7 @@ export type TenantDomainRepository = {
   search(input: {
     query: string;
     limit: number;
-  }): Promise<SearchResultRecord[]>;
+  }): Promise<SearchResponseRecord>;
 };
 
 const simpleServiceGarments = new Set(["alteration", "sari_fall"]);
@@ -332,6 +364,8 @@ export async function createContactWithProfilesService(input: {
       fullName: profile.fullName,
       relationLabel: profile.relationLabel ?? null,
       genderContext: profile.genderContext ?? null,
+      primaryMobileE164: primaryMobile.e164,
+      primaryMobileNational: primaryMobile.nationalNumber,
     };
   });
 
@@ -384,6 +418,7 @@ export async function createContactWithProfilesService(input: {
         entityId: contactId,
         title: primaryMobile.e164,
         subtitle: profiles.map((profile) => profile.fullName).join(", "),
+        mobileE164: primaryMobile.e164,
         fields: [
           primaryMobile.e164,
           primaryMobile.nationalNumber,
@@ -403,6 +438,8 @@ export async function createContactWithProfilesService(input: {
           entityId: profile.id,
           title: profile.fullName,
           subtitle: primaryMobile.e164,
+          mobileE164: primaryMobile.e164,
+          customerCode: profile.customerCode,
           fields: [
             profile.fullName,
             profile.customerCode,
@@ -485,6 +522,7 @@ export async function createMeasurementVersionService(input: {
       entityId: measurementProfile.id,
       title: `${profile.fullName} - ${displayName}`,
       subtitle: `v${versionNo} ${input.data.unit}`,
+      customerCode: profile.customerCode,
       fields: [
         profile.fullName,
         profile.customerCode,
@@ -673,8 +711,17 @@ export async function createOrderService(input: {
         entityId: orderId,
         title: orderId,
         subtitle: profile.fullName,
+        mobileE164: profile.primaryMobileE164,
+        customerCode: profile.customerCode,
+        orderCode: orderId,
+        receiptCode: receipt.receiptCode,
+        status: input.data.currentStatus,
+        deliveryDate: input.data.promisedDeliveryDate ?? null,
         fields: [
           orderId,
+          receipt.receiptCode,
+          profile.primaryMobileE164,
+          profile.primaryMobileNational,
           profile.fullName,
           profile.customerCode,
           input.data.currentStatus,
@@ -685,6 +732,35 @@ export async function createOrderService(input: {
           customerProfileId: profile.id,
           contactId: profile.contactId,
           balanceDuePaise: ledger.balanceDuePaise,
+        },
+        updatedAt: now,
+      }),
+      createSearchProjection({
+        id: createDomainId("SCH", input.runtime),
+        entityType: "receipt",
+        entityId: receipt.id,
+        title: receipt.receiptCode,
+        subtitle: `${profile.fullName} - ${orderId}`,
+        mobileE164: profile.primaryMobileE164,
+        customerCode: profile.customerCode,
+        orderCode: orderId,
+        receiptCode: receipt.receiptCode,
+        status: receipt.status,
+        deliveryDate: input.data.promisedDeliveryDate ?? null,
+        fields: [
+          receipt.receiptCode,
+          orderId,
+          profile.fullName,
+          profile.customerCode,
+          profile.primaryMobileE164,
+          String(receipt.balanceDuePaise),
+        ],
+        payload: {
+          receiptId: receipt.id,
+          orderId,
+          customerProfileId: profile.id,
+          contactId: profile.contactId,
+          balanceDuePaise: receipt.balanceDuePaise,
         },
         updatedAt: now,
       }),
@@ -806,21 +882,65 @@ export async function recordPaymentService(input: {
       now,
     }),
     outbox,
-    search: createSearchProjection({
-      id: createDomainId("SCH", input.runtime),
-      entityType: "order",
-      entityId: order.orderId,
-      title: order.orderCode,
-      subtitle: `Balance ${ledger.balanceDuePaise}`,
-      fields: [order.orderCode, String(ledger.balanceDuePaise), payment.kind],
-      payload: {
-        orderId: order.orderId,
-        contactId: order.contactId,
-        customerProfileId: order.customerProfileId,
-        balanceDuePaise: ledger.balanceDuePaise,
-      },
-      updatedAt: now,
-    }),
+    search: [
+      createSearchProjection({
+        id: createDomainId("SCH", input.runtime),
+        entityType: "order",
+        entityId: order.orderId,
+        title: order.orderCode,
+        subtitle: `Balance ${ledger.balanceDuePaise}`,
+        mobileE164: order.primaryMobileE164,
+        customerCode: order.customerCode,
+        orderCode: order.orderCode,
+        receiptCode: receipt.receiptCode,
+        status: order.currentStatus,
+        deliveryDate: order.promisedDeliveryDate,
+        fields: [
+          order.orderCode,
+          receipt.receiptCode,
+          order.primaryMobileE164,
+          order.customerCode,
+          String(ledger.balanceDuePaise),
+          payment.kind,
+        ],
+        payload: {
+          orderId: order.orderId,
+          contactId: order.contactId,
+          customerProfileId: order.customerProfileId,
+          balanceDuePaise: ledger.balanceDuePaise,
+        },
+        updatedAt: now,
+      }),
+      createSearchProjection({
+        id: createDomainId("SCH", input.runtime),
+        entityType: "receipt",
+        entityId: receipt.id,
+        title: receipt.receiptCode,
+        subtitle: `Balance ${ledger.balanceDuePaise}`,
+        mobileE164: order.primaryMobileE164,
+        customerCode: order.customerCode,
+        orderCode: order.orderCode,
+        receiptCode: receipt.receiptCode,
+        status: receipt.status,
+        deliveryDate: order.promisedDeliveryDate,
+        fields: [
+          receipt.receiptCode,
+          order.orderCode,
+          order.primaryMobileE164,
+          order.customerCode,
+          String(ledger.balanceDuePaise),
+          payment.kind,
+        ],
+        payload: {
+          receiptId: receipt.id,
+          orderId: order.orderId,
+          contactId: order.contactId,
+          customerProfileId: order.customerProfileId,
+          balanceDuePaise: ledger.balanceDuePaise,
+        },
+        updatedAt: now,
+      }),
+    ],
   });
 }
 
@@ -1050,6 +1170,12 @@ function createSearchProjection(input: {
   entityId: string;
   title: string;
   subtitle: string | null;
+  mobileE164?: string | null;
+  customerCode?: string | null;
+  orderCode?: string | null;
+  receiptCode?: string | null;
+  status?: string | null;
+  deliveryDate?: string | null;
   fields: string[];
   payload: Record<string, unknown>;
   updatedAt: string;
@@ -1060,6 +1186,12 @@ function createSearchProjection(input: {
     entityId: input.entityId,
     title: input.title,
     subtitle: input.subtitle,
+    mobileE164: input.mobileE164 ?? null,
+    customerCode: input.customerCode ?? null,
+    orderCode: input.orderCode ?? null,
+    receiptCode: input.receiptCode ?? null,
+    status: input.status ?? null,
+    deliveryDate: input.deliveryDate ?? null,
     searchText: normalizeSearchText(
       [input.title, input.subtitle, ...input.fields].filter(Boolean).join(" "),
     ),

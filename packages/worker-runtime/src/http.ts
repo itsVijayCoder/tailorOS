@@ -8,6 +8,12 @@ import {
   type ApiErrorCode,
 } from "@tailoros/schemas";
 
+import {
+  createLogEntry,
+  logWorkerEvent,
+  readRuntimeMetadata,
+} from "./observability";
+
 export type RequestVariables = {
   requestId: string;
 };
@@ -80,11 +86,23 @@ export function createNotFoundHandler<Env extends EnvWithRequestVariables>() {
 
 export function createErrorHandler<Env extends EnvWithRequestVariables>() {
   return ((error, c) => {
-    console.error(
-      JSON.stringify({
+    logWorkerEvent(
+      createLogEntry({
+        context: {
+          requestId: getRequestId(c),
+          route: `${c.req.method} ${new URL(c.req.url).pathname}`,
+        },
+        error,
+        event: "worker.request.error",
         level: "error",
-        request_id: getRequestId(c),
-        message: error.message,
+        message: "Unhandled worker request error.",
+        metadata: readRuntimeMetadata(
+          c.env as Partial<
+            Record<"ENVIRONMENT" | "RELEASE_VERSION" | "SERVICE_NAME", string>
+          >,
+          { worker: "worker-runtime" },
+        ),
+        statusCode: 500,
       }),
     );
 

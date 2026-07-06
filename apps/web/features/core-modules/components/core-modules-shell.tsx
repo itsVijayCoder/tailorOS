@@ -4,6 +4,9 @@ import {
   CreditCard,
   Gauge,
   MessageCircle,
+  Rocket,
+  Search,
+  ShieldCheck,
   Ruler,
   Settings2,
   Shirt,
@@ -23,18 +26,21 @@ import { CoreCommandMenu } from "./core-command-menu";
 const iconByKey: Record<ModuleKey, typeof Gauge> = {
   customers: UsersRound,
   dashboard: Gauge,
+  search: Search,
   measurements: Ruler,
   orders: ClipboardList,
   payments: CreditCard,
   production: Shirt,
   reports: WalletCards,
+  release: Rocket,
+  security: ShieldCheck,
   settings: Settings2,
   whatsapp: MessageCircle,
 };
 
 export function CoreModulesShell({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-screen bg-page text-ink-body">
+    <main className="min-h-screen overflow-x-hidden bg-page text-ink-body">
       <header className="sticky top-0 z-40 border-b border-hairline bg-page/90 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-[96rem] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
           <Link className="group flex items-center gap-3" href="/shop">
@@ -72,9 +78,9 @@ export function CoreModulesShell({ children }: { children: ReactNode }) {
       </header>
       <nav
         aria-label="Mobile shop modules"
-        className="sticky top-16 z-30 border-b border-hairline bg-page/92 px-3 py-2 backdrop-blur-xl lg:hidden"
+        className="sticky top-16 z-30 overflow-hidden border-b border-hairline bg-page/92 px-3 py-2 backdrop-blur-xl lg:hidden"
       >
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1">
           {coreNavItems.map((item) => {
             const Icon = iconByKey[item.key];
             return (
