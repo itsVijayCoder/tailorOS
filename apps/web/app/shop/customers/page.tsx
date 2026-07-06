@@ -10,12 +10,17 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { SearchField } from "@/components/ui/search-field";
+import { Textarea } from "@/components/ui/textarea";
+import { createCustomerAction } from "@/features/core-modules/actions";
 import {
-  familyAccounts,
-  shopOrders,
-  whatsAppFailures,
-} from "@/features/core-modules/data";
+  getRealDashboardData,
+  getRealFamilyAccounts,
+  getRealOrders,
+} from "@/features/core-modules/real-data";
 import {
   DataPanel,
   EmptyState,
@@ -23,13 +28,27 @@ import {
   SectionHeader,
   StatusBadge,
 } from "@/features/core-modules/components/module-primitives";
-import { formatShortDate, statusTone } from "@/features/core-modules/presenters";
+import {
+  formatShortDate,
+  statusTone,
+} from "@/features/core-modules/presenters";
 
 export const metadata: Metadata = {
   title: "Customers and Family",
 };
 
-export default function CustomersPage() {
+export default async function CustomersPage() {
+  const [customers, orders, dashboard] = await Promise.all([
+    getRealFamilyAccounts(),
+    getRealOrders(),
+    getRealDashboardData(),
+  ]);
+  const familyAccounts = customers.familyAccounts;
+  const shopOrders = orders.shopOrders;
+  const whatsAppFailures = dashboard.whatsAppFailures;
+  const selectedCustomerCode =
+    familyAccounts[0]?.profiles[0]?.customerCode ?? "";
+
   return (
     <>
       <PageHeader
@@ -58,10 +77,18 @@ export default function CustomersPage() {
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant={family.whatsappOptIn ? "whatsapp" : "warning"}>
-                            {family.whatsappOptIn ? "WhatsApp opt-in" : "Call fallback"}
+                          <Badge
+                            variant={
+                              family.whatsappOptIn ? "whatsapp" : "warning"
+                            }
+                          >
+                            {family.whatsappOptIn
+                              ? "WhatsApp opt-in"
+                              : "Call fallback"}
                           </Badge>
-                          <StatusBadge tone="neutral">{family.familyCode}</StatusBadge>
+                          <StatusBadge tone="neutral">
+                            {family.familyCode}
+                          </StatusBadge>
                         </div>
                         <h2 className="mt-3 font-display text-2xl font-medium text-ink-display">
                           {family.primaryMobileDisplay}
@@ -174,6 +201,50 @@ export default function CustomersPage() {
               })}
             </div>
           </DataPanel>
+
+          <DataPanel title="Create family contact">
+            <form action={createCustomerAction} className="grid gap-3">
+              <div className="grid gap-2">
+                <Label htmlFor="primaryMobile">Mobile</Label>
+                <Input
+                  id="primaryMobile"
+                  name="primaryMobile"
+                  placeholder="+91 98765 43210"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="profileName">Primary profile</Label>
+                <Input
+                  id="profileName"
+                  name="profileName"
+                  placeholder="Customer full name"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="profileName2">Family profile</Label>
+                <Input
+                  id="profileName2"
+                  name="profileName"
+                  placeholder="Optional family member"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  name="notes"
+                  placeholder="Notebook import, address hint, or staff note"
+                />
+              </div>
+              <label className="flex items-center gap-2 text-sm text-ink-body">
+                <input name="whatsappOptIn" type="checkbox" />
+                WhatsApp opt-in
+              </label>
+              <Button type="submit">Create customer</Button>
+            </form>
+          </DataPanel>
         </section>
 
         <section>
@@ -186,7 +257,9 @@ export default function CustomersPage() {
             <DataPanel title="Orders">
               <div className="grid gap-3">
                 {shopOrders
-                  .filter((order) => order.customerCode === "CUS-MDU-000231")
+                  .filter(
+                    (order) => order.customerCode === selectedCustomerCode,
+                  )
                   .map((order) => (
                     <div
                       className="rounded-lg border border-hairline bg-surface p-3"

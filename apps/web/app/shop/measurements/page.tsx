@@ -9,14 +9,13 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  measurementTemplates,
-  measurementVersions,
-} from "@/features/core-modules/data";
+import { createMeasurementAction } from "@/features/core-modules/actions";
+import { getRealMeasurementsData } from "@/features/core-modules/real-data";
 import {
   DataPanel,
   MetricCard,
@@ -29,7 +28,11 @@ export const metadata: Metadata = {
   title: "Measurement Center",
 };
 
-export default function MeasurementsPage() {
+export default async function MeasurementsPage() {
+  const { measurementTemplates, measurementVersions } =
+    await getRealMeasurementsData();
+  const defaultProfileId = measurementVersions[0]?.id ? "" : "";
+
   return (
     <>
       <PageHeader
@@ -89,7 +92,9 @@ export default function MeasurementsPage() {
                         {template.version} · {template.defaultDays} day default
                       </p>
                     </div>
-                    <Badge variant="signal">{template.requiredFields.length} req</Badge>
+                    <Badge variant="signal">
+                      {template.requiredFields.length} req
+                    </Badge>
                   </div>
                   <div className="mt-4 grid gap-3">
                     <div>
@@ -125,53 +130,71 @@ export default function MeasurementsPage() {
             description="This fixture shows the fields the live form must keep visible at counter speed."
             title="Capture form skeleton"
           >
-            <div className="grid gap-4">
+            <form action={createMeasurementAction} className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="profile">Customer profile</Label>
+                <Label htmlFor="customerProfileId">Customer profile ID</Label>
                 <Input
-                  id="profile"
-                  readOnly
-                  value="CUS-MDU-000231 · Meena Ravi"
+                  id="customerProfileId"
+                  name="customerProfileId"
+                  placeholder="CUS-..."
+                  defaultValue={defaultProfileId}
+                  required
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="garment">Template</Label>
-                <Select defaultValue="blouse" id="garment">
-                  <option value="blouse">Blouse · v3 active</option>
-                  <option value="shirt">Shirt · v2 active</option>
-                  <option value="kidswear">Kidswear · v2 active</option>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  ["Bust", "36"],
-                  ["Waist", "31"],
-                  ["Shoulder", "14.5"],
-                  ["Sleeve", "11"],
-                ].map(([label, value]) => (
-                  <div className="grid gap-2" key={label}>
-                    <Label htmlFor={`field-${label}`}>{label}</Label>
-                    <Input id={`field-${label}`} readOnly value={value} />
-                  </div>
-                ))}
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="fit">Fit preference</Label>
-                <Select defaultValue="regular" id="fit">
-                  <option value="tight">Tight</option>
-                  <option value="regular">Regular</option>
-                  <option value="loose">Loose</option>
+                <Label htmlFor="garmentTypeCode">Template</Label>
+                <Select
+                  defaultValue={measurementTemplates[0]?.code ?? "blouse"}
+                  id="garmentTypeCode"
+                  name="garmentTypeCode"
+                >
+                  {measurementTemplates.map((template) => (
+                    <option key={template.code} value={template.code}>
+                      {template.label}
+                    </option>
+                  ))}
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="reason">Change reason</Label>
+                <Label htmlFor="displayName">Display name</Label>
+                <Input
+                  defaultValue={measurementTemplates[0]?.label ?? "Blouse"}
+                  id="displayName"
+                  name="displayName"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="values">Measurements</Label>
+                <Input
+                  id="values"
+                  name="values"
+                  placeholder="chest=36,waist=31,shoulder=14.5"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="unit">Unit</Label>
+                <Select defaultValue="inch" id="unit" name="unit">
+                  <option value="inch">Inch</option>
+                  <option value="cm">Centimeter</option>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="fitNotes">Fit preference</Label>
+                <Textarea id="fitNotes" name="fitNotes" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="reason">Reason</Label>
                 <Textarea
                   id="reason"
-                  readOnly
-                  value="Customer requested regular fit after tight sleeve trial."
+                  name="reason"
+                  placeholder="Initial capture or changed fit"
+                  required
                 />
               </div>
-            </div>
+              <Button type="submit">Capture measurement</Button>
+            </form>
           </DataPanel>
         </section>
 
@@ -194,7 +217,8 @@ export default function MeasurementsPage() {
                       {version.reason}
                     </p>
                     <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                      {version.changedBy} · {new Date(version.changedAt).toLocaleString("en-IN")}
+                      {version.changedBy} ·{" "}
+                      {new Date(version.changedAt).toLocaleString("en-IN")}
                     </p>
                   </div>
                   <div className="grid gap-2">
@@ -214,7 +238,9 @@ export default function MeasurementsPage() {
                           className="size-4 text-accent"
                         />
                         <span className="text-right">
-                          <strong className="block text-ink-display">New</strong>
+                          <strong className="block text-ink-display">
+                            New
+                          </strong>
                           <span className="text-ink-muted">{field.to}</span>
                         </span>
                       </div>
@@ -258,8 +284,8 @@ export default function MeasurementsPage() {
               </h3>
               <p className="mt-2 text-sm leading-6 text-ink-muted">
                 The browser requests a short-lived upload URL from the tenant
-                API. File size, MIME type, and object key namespace are validated
-                before writing to R2.
+                API. File size, MIME type, and object key namespace are
+                validated before writing to R2.
               </p>
             </div>
           </DataPanel>

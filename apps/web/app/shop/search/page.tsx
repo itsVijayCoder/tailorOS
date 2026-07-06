@@ -23,10 +23,7 @@ import {
   SectionHeader,
   StatusBadge,
 } from "@/features/core-modules/components/module-primitives";
-import {
-  getSearchPerformanceSignals,
-  searchPilotRecords,
-} from "@/features/core-modules/data";
+import { searchRealRecords } from "@/features/core-modules/real-data";
 
 export const metadata: Metadata = {
   title: "Global Search and Performance",
@@ -77,8 +74,16 @@ const sampleQueries = [
   "today delivery",
 ];
 
-export default function SearchPerformancePage() {
-  const signals = getSearchPerformanceSignals();
+export default async function SearchPerformancePage() {
+  const sampleResults = await Promise.all(
+    sampleQueries.map((query) => searchRealRecords(query)),
+  );
+  const signals = {
+    exactOrderBudgetMs: 50,
+    ftsBudgetMs: 150,
+    mobileBudgetMs: 80,
+    sharedMobileResults: sampleResults[0]?.results.length ?? 0,
+  };
 
   return (
     <>
@@ -123,9 +128,9 @@ export default function SearchPerformancePage() {
             value={`${signals.ftsBudgetMs}ms`}
           />
           <MetricCard
-            detail="Shared mobile prefix pilot result count"
+            detail="Shared mobile prefix tenant result count"
             icon={Gauge}
-            label="Pilot hits"
+            label="Tenant hits"
             tone="neutral"
             value={`${signals.sharedMobileResults}`}
           />
@@ -203,13 +208,13 @@ export default function SearchPerformancePage() {
 
         <section>
           <SectionHeader
-            body="These samples use the same pilot fixture behind the command palette. Exact matches stay above text matches so staff can move quickly during counter work."
-            eyebrow="Pilot projection"
+            body="These samples use the same tenant search endpoint behind the command palette. Exact matches stay above text matches so staff can move quickly during counter work."
+            eyebrow="Tenant projection"
             title="Sample search outcomes"
           />
           <div className="mt-5 grid gap-4 lg:grid-cols-4">
-            {sampleQueries.map((query) => {
-              const results = searchPilotRecords(query);
+            {sampleQueries.map((query, index) => {
+              const results = sampleResults[index]?.results ?? [];
               const first = results[0];
 
               return (
@@ -233,7 +238,7 @@ export default function SearchPerformancePage() {
                   <p className="mt-2 text-sm leading-6 text-ink-muted">
                     {first
                       ? `${first.title} via ${first.matchedOn}`
-                      : "No result in pilot projection."}
+                      : "No result in tenant projection."}
                   </p>
                   <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                     {results.length} result{results.length === 1 ? "" : "s"}

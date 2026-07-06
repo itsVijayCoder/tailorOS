@@ -10,10 +10,7 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import {
-  measurementTemplates,
-  settingsItems,
-} from "@/features/core-modules/data";
+import { getRealSettingsData } from "@/features/core-modules/real-data";
 import {
   DataPanel,
   MetricCard,
@@ -21,14 +18,21 @@ import {
   SectionHeader,
   StatusBadge,
 } from "@/features/core-modules/components/module-primitives";
-import { humanizeStatus, settingTone } from "@/features/core-modules/presenters";
+import {
+  humanizeStatus,
+  settingTone,
+} from "@/features/core-modules/presenters";
 
 export const metadata: Metadata = {
   title: "Settings",
 };
 
-export default function SettingsPage() {
-  const readyCount = settingsItems.filter((item) => item.state === "ready").length;
+export default async function SettingsPage() {
+  const { measurementTemplates, settingsItems, settings } =
+    await getRealSettingsData();
+  const readyCount = settingsItems.filter(
+    (item) => item.state === "ready",
+  ).length;
   const reviewCount = settingsItems.filter(
     (item) => item.state === "needs_review",
   ).length;
@@ -61,7 +65,7 @@ export default function SettingsPage() {
             icon={UsersRound}
             label="Roles"
             tone="neutral"
-            value="5"
+            value={`${settings.staff.length}`}
           />
           <MetricCard
             detail={`${reviewCount} review item before pilot`}

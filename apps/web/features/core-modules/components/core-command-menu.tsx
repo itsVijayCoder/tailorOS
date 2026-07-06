@@ -27,11 +27,6 @@ import {
 import { SearchField } from "@/components/ui/search-field";
 import { cn } from "@/lib/utils";
 
-import {
-  createCommandSearchMeta,
-  searchPilotRecordsAsync,
-  shouldApplyCommandSearchResponse,
-} from "../data";
 import type {
   CommandSearchMeta,
   CommandSearchResponse,
@@ -85,17 +80,11 @@ export function CoreCommandMenu() {
     const timeout = window.setTimeout(() => {
       setIsSearching(true);
 
-      searchPilotRecordsAsync(query, {
-        signal: controller.signal,
-        delayMs: query.trim().length >= 2 ? 96 : 48,
-      })
+      searchCommandRecordsAsync(query, controller.signal)
         .then((nextResponse) => {
           if (
-            !shouldApplyCommandSearchResponse({
-              requestId,
-              latestRequestId: latestRequestId.current,
-              aborted: controller.signal.aborted,
-            })
+            requestId !== latestRequestId.current ||
+            controller.signal.aborted
           ) {
             return;
           }
@@ -165,7 +154,7 @@ export function CoreCommandMenu() {
           </DialogTitle>
           <DialogDescription>
             Search mobile, customer code, order code, receipt code, garment, or
-            WhatsApp evidence. Pilot UI mirrors the tenant-local D1 strategy.
+            WhatsApp evidence. The UI mirrors the tenant-local D1 strategy.
           </DialogDescription>
         </DialogHeader>
 
@@ -294,7 +283,7 @@ function CommandEmptyState({
         </span>
         <div>
           <strong className="block font-ui text-sm text-ink-display">
-            {shortQuery ? "Type at least two characters" : "No pilot match"}
+            {shortQuery ? "Type at least two characters" : "No tenant match"}
           </strong>
           <p className="mt-1">
             {shortQuery
@@ -310,8 +299,38 @@ function CommandEmptyState({
 function createEmptyResponse(rawQuery: string): CommandSearchResponse {
   return {
     results: [],
-    meta: createCommandSearchMeta({ rawQuery, resultCount: 0 }),
+    meta: {
+      elapsedMs: 0,
+      latencyBudgetMs: null,
+      minLengthSatisfied: rawQuery.trim().length >= 2,
+      normalizedQuery: rawQuery.trim().toLowerCase(),
+      queryKind: rawQuery.trim().length >= 2 ? "text" : "empty",
+      rawQuery,
+      resultCount: 0,
+      source: "tenant-api",
+      strategy: "none",
+    },
   };
+}
+
+async function searchCommandRecordsAsync(
+  query: string,
+  signal: AbortSignal,
+): Promise<CommandSearchResponse> {
+  if (query.trim().length < 2) {
+    return createEmptyResponse(query);
+  }
+
+  const response = await fetch(
+    `/api/shop/search?q=${encodeURIComponent(query)}`,
+    { signal },
+  );
+
+  if (!response.ok) {
+    return createEmptyResponse(query);
+  }
+
+  return (await response.json()) as CommandSearchResponse;
 }
 
 function formatBudget(meta: CommandSearchMeta) {

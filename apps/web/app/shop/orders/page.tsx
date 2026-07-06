@@ -11,11 +11,16 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { createOrderAction } from "@/features/core-modules/actions";
 import {
   calculateOrderFinancials,
   formatPaise,
-  shopOrders,
-} from "@/features/core-modules/data";
+  getRealOrders,
+} from "@/features/core-modules/real-data";
 import {
   DataPanel,
   MetricCard,
@@ -67,9 +72,13 @@ export const metadata: Metadata = {
   title: "Order Book",
 };
 
-export default function OrdersPage() {
+export default async function OrdersPage() {
+  const { shopOrders } = await getRealOrders();
   const activeOrders = shopOrders;
-  const totalItems = shopOrders.reduce((total, order) => total + order.items.length, 0);
+  const totalItems = shopOrders.reduce(
+    (total, order) => total + order.items.length,
+    0,
+  );
 
   return (
     <>
@@ -152,10 +161,18 @@ export default function OrdersPage() {
               <table className="w-full min-w-[54rem] border-separate border-spacing-0 text-left text-sm">
                 <thead>
                   <tr className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                    <th className="border-b border-hairline pb-3 pr-4">Order</th>
-                    <th className="border-b border-hairline pb-3 pr-4">Profile</th>
-                    <th className="border-b border-hairline pb-3 pr-4">Dates</th>
-                    <th className="border-b border-hairline pb-3 pr-4">Items</th>
+                    <th className="border-b border-hairline pb-3 pr-4">
+                      Order
+                    </th>
+                    <th className="border-b border-hairline pb-3 pr-4">
+                      Profile
+                    </th>
+                    <th className="border-b border-hairline pb-3 pr-4">
+                      Dates
+                    </th>
+                    <th className="border-b border-hairline pb-3 pr-4">
+                      Items
+                    </th>
                     <th className="border-b border-hairline pb-3">Money</th>
                   </tr>
                 </thead>
@@ -254,6 +271,67 @@ export default function OrdersPage() {
                 ))}
               </div>
             </DataPanel>
+            <DataPanel title="Create simple order">
+              <form action={createOrderAction} className="grid gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="contactId">Contact ID</Label>
+                  <Input id="contactId" name="contactId" required />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="customerProfileId">Profile ID</Label>
+                  <Input
+                    id="customerProfileId"
+                    name="customerProfileId"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="garmentTypeCode">Garment</Label>
+                  <Select
+                    defaultValue="alteration"
+                    id="garmentTypeCode"
+                    name="garmentTypeCode"
+                  >
+                    <option value="alteration">Alteration</option>
+                    <option value="sari_fall">Sari fall and pico</option>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="quantity">Qty</Label>
+                    <Input
+                      defaultValue="1"
+                      id="quantity"
+                      min="1"
+                      name="quantity"
+                      type="number"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="priceRupees">Price</Label>
+                    <Input id="priceRupees" name="priceRupees" required />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="promisedDeliveryDate">Due date</Label>
+                  <Input
+                    id="promisedDeliveryDate"
+                    name="promisedDeliveryDate"
+                    type="date"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="advanceRupees">Advance</Label>
+                  <Input id="advanceRupees" name="advanceRupees" />
+                </div>
+                <input
+                  name="simpleServiceReason"
+                  type="hidden"
+                  value="Simple service without measurement"
+                />
+                <Button type="submit">Create order</Button>
+              </form>
+            </DataPanel>
             <DataPanel title="Acceptance targets">
               <div className="grid gap-3">
                 {[
@@ -267,7 +345,9 @@ export default function OrdersPage() {
                     key={label}
                   >
                     <span className="text-sm text-ink-muted">{label}</span>
-                    <strong className="text-sm text-ink-display">{value}</strong>
+                    <strong className="text-sm text-ink-display">
+                      {value}
+                    </strong>
                   </div>
                 ))}
               </div>

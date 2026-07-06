@@ -29,10 +29,10 @@ import {
   getPhase08SecuritySignals,
   publicEndpointControls,
   receiptAccessCases,
-  securityRoleRows,
   supportAccessCases,
   tenantIsolationChecks,
 } from "@/features/core-modules/data";
+import { getRealRoleRows } from "@/features/core-modules/real-data";
 import {
   DataPanel,
   MetricCard,
@@ -116,6 +116,7 @@ const launchChecklist = [
 
 export default function SecurityPrivacyRbacPage() {
   const signals = getPhase08SecuritySignals();
+  const securityRoleRows = getRealRoleRows();
 
   return (
     <>

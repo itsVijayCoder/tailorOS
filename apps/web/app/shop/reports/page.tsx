@@ -13,11 +13,8 @@ import {
 import {
   calculateOrderFinancials,
   formatPaise,
-  productionTasks,
-  reportMetrics,
-  shopOrders,
-  whatsAppFailures,
-} from "@/features/core-modules/data";
+  getRealReportsData,
+} from "@/features/core-modules/real-data";
 import {
   DataPanel,
   MetricCard,
@@ -31,8 +28,12 @@ export const metadata: Metadata = {
   title: "Reports",
 };
 
-export default function ReportsPage() {
-  const overdueOrders = shopOrders.filter((order) => order.promisedDate <= "2026-07-06");
+export default async function ReportsPage() {
+  const { productionTasks, reportMetrics, shopOrders, whatsAppFailures } =
+    await getRealReportsData();
+  const overdueOrders = shopOrders.filter(
+    (order) => order.promisedDate <= "2026-07-06",
+  );
   const tailorLoad = Array.from(
     productionTasks.reduce<Map<string, number>>((load, task) => {
       load.set(task.assignedTo, (load.get(task.assignedTo) ?? 0) + 1);
@@ -180,7 +181,9 @@ export default function ReportsPage() {
                       aria-hidden
                       className="size-5 text-accent"
                     />
-                    <StatusBadge tone={failure.retryable ? "warning" : "danger"}>
+                    <StatusBadge
+                      tone={failure.retryable ? "warning" : "danger"}
+                    >
                       {failure.retryable ? "Retry" : "Blocked"}
                     </StatusBadge>
                   </div>

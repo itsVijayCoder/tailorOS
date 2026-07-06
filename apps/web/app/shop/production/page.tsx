@@ -9,10 +9,7 @@ import {
   UserRoundCheck,
 } from "lucide-react";
 
-import {
-  productionTasks,
-  shopOrders,
-} from "@/features/core-modules/data";
+import { getRealProductionData } from "@/features/core-modules/real-data";
 import {
   DataPanel,
   MetricCard,
@@ -42,8 +39,11 @@ export const metadata: Metadata = {
   title: "Production Board",
 };
 
-export default function ProductionPage() {
-  const assignedTailors = new Set(productionTasks.map((task) => task.assignedTo));
+export default async function ProductionPage() {
+  const { productionTasks, shopOrders } = await getRealProductionData();
+  const assignedTailors = new Set(
+    productionTasks.map((task) => task.assignedTo),
+  );
   const exceptionTasks = productionTasks.filter((task) => task.exceptionReason);
   const readyTasks = productionTasks.filter(
     (task) => task.lane === "ready_for_pickup",
@@ -96,7 +96,9 @@ export default function ProductionPage() {
           />
           <div className="mt-5 grid gap-4 xl:grid-cols-4">
             {laneOrder.map((lane) => {
-              const laneTasks = productionTasks.filter((task) => task.lane === lane);
+              const laneTasks = productionTasks.filter(
+                (task) => task.lane === lane,
+              );
 
               return (
                 <DataPanel

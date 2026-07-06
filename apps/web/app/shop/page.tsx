@@ -16,13 +16,11 @@ import { cn } from "@/lib/utils";
 import {
   calculateOrderFinancials,
   formatPaise,
-  getDashboardSignals,
   getPartialDeliveryOrders,
+  getRealDashboardData,
+  getRealOrders,
   isWhatsAppFailureRetryable,
-  productionTasks,
-  shopOrders,
-  whatsAppFailures,
-} from "@/features/core-modules/data";
+} from "@/features/core-modules/real-data";
 import {
   DataPanel,
   MetricCard,
@@ -30,15 +28,25 @@ import {
   SectionHeader,
   StatusBadge,
 } from "@/features/core-modules/components/module-primitives";
-import { formatShortDate, humanizeStatus, statusTone } from "@/features/core-modules/presenters";
+import {
+  formatShortDate,
+  humanizeStatus,
+  statusTone,
+} from "@/features/core-modules/presenters";
 
 export const metadata: Metadata = {
   title: "Shop Dashboard",
 };
 
-export default function ShopDashboardPage() {
-  const signals = getDashboardSignals();
-  const partialDeliveryOrders = getPartialDeliveryOrders();
+export default async function ShopDashboardPage() {
+  const [{ shopOrders }, dashboard] = await Promise.all([
+    getRealOrders(),
+    getRealDashboardData(),
+  ]);
+  const signals = dashboard.signals;
+  const productionTasks = dashboard.productionTasks;
+  const whatsAppFailures = dashboard.whatsAppFailures;
+  const partialDeliveryOrders = getPartialDeliveryOrders(shopOrders);
   const blockedTasks = productionTasks.filter((task) => task.exceptionReason);
   const balanceOrders = shopOrders
     .map((order) => ({ order, financials: calculateOrderFinancials(order) }))
@@ -107,54 +115,60 @@ export default function ShopDashboardPage() {
               <table className="w-full border-separate border-spacing-0 text-left text-sm">
                 <thead>
                   <tr className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                    <th className="border-b border-hairline pb-3 pr-4">Order</th>
-                    <th className="border-b border-hairline pb-3 pr-4">Customer</th>
-                    <th className="border-b border-hairline pb-3 pr-4">Items</th>
+                    <th className="border-b border-hairline pb-3 pr-4">
+                      Order
+                    </th>
+                    <th className="border-b border-hairline pb-3 pr-4">
+                      Customer
+                    </th>
+                    <th className="border-b border-hairline pb-3 pr-4">
+                      Items
+                    </th>
                     <th className="border-b border-hairline pb-3 pr-4">Due</th>
                   </tr>
                 </thead>
                 <tbody>
                   {shopOrders.map((order) => (
-                      <tr
-                        className="group transition duration-200 ease-premium hover:bg-accent-faded/60 motion-reduce:transition-none"
-                        key={order.id}
-                      >
-                        <td className="whitespace-nowrap border-b border-hairline py-4 pr-4 align-top">
-                          <Link
-                            className="font-ui font-semibold text-ink-display hover:text-accent"
-                            href="/shop/orders"
-                          >
-                            {order.orderCode}
-                          </Link>
-                          <p className="mt-1 text-xs text-ink-muted">
-                            {humanizeStatus(order.status)}
-                          </p>
-                        </td>
-                        <td className="border-b border-hairline py-4 pr-4 align-top">
-                          <strong className="block text-ink-display">
-                            {order.customerName}
-                          </strong>
-                          <span className="text-xs text-ink-muted">
-                            {order.customerCode}
-                          </span>
-                        </td>
-                        <td className="border-b border-hairline py-4 pr-4 align-top">
-                          <div className="flex flex-wrap gap-1.5">
-                            {order.items.map((item) => (
-                              <StatusBadge
-                                key={item.id}
-                                tone={statusTone(item.status)}
-                              >
-                                {item.garment}: {humanizeStatus(item.status)}
-                              </StatusBadge>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap border-b border-hairline py-4 pr-4 align-top">
-                          {formatShortDate(order.promisedDate)}
-                        </td>
-                      </tr>
-                    ))}
+                    <tr
+                      className="group transition duration-200 ease-premium hover:bg-accent-faded/60 motion-reduce:transition-none"
+                      key={order.id}
+                    >
+                      <td className="whitespace-nowrap border-b border-hairline py-4 pr-4 align-top">
+                        <Link
+                          className="font-ui font-semibold text-ink-display hover:text-accent"
+                          href="/shop/orders"
+                        >
+                          {order.orderCode}
+                        </Link>
+                        <p className="mt-1 text-xs text-ink-muted">
+                          {humanizeStatus(order.status)}
+                        </p>
+                      </td>
+                      <td className="border-b border-hairline py-4 pr-4 align-top">
+                        <strong className="block text-ink-display">
+                          {order.customerName}
+                        </strong>
+                        <span className="text-xs text-ink-muted">
+                          {order.customerCode}
+                        </span>
+                      </td>
+                      <td className="border-b border-hairline py-4 pr-4 align-top">
+                        <div className="flex flex-wrap gap-1.5">
+                          {order.items.map((item) => (
+                            <StatusBadge
+                              key={item.id}
+                              tone={statusTone(item.status)}
+                            >
+                              {item.garment}: {humanizeStatus(item.status)}
+                            </StatusBadge>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap border-b border-hairline py-4 pr-4 align-top">
+                        {formatShortDate(order.promisedDate)}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
