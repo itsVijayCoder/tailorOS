@@ -1,4 +1,8 @@
-import type { OrderStatus } from "@tailoros/core";
+import type {
+  OrderStatus,
+  SecurityPermission,
+  TailorOsRole,
+} from "@tailoros/core";
 
 export type ModuleKey =
   | "dashboard"
@@ -10,6 +14,7 @@ export type ModuleKey =
   | "whatsapp"
   | "payments"
   | "reports"
+  | "security"
   | "settings";
 
 export type CoreNavItem = Readonly<{
@@ -260,6 +265,74 @@ export type SettingsItem = Readonly<{
   state: "ready" | "needs_review" | "blocked";
   owner: string;
   detail: string;
+}>;
+
+export type SecurityRoleRow = Readonly<{
+  role: TailorOsRole;
+  label: string;
+  scope: string;
+  permissions: readonly SecurityPermission[];
+  allowedHighlights: readonly string[];
+  blockedHighlights: readonly string[];
+}>;
+
+export type TenantIsolationCheck = Readonly<{
+  id: string;
+  layer: string;
+  title: string;
+  state: "pass" | "warn" | "block";
+  evidence: string;
+}>;
+
+export type CredentialVaultRecord = Readonly<{
+  id: string;
+  channelLabel: string;
+  businessId: string;
+  phoneNumberId: string;
+  tokenStatus: "valid" | "invalid" | "expired" | "permission_issue";
+  tokenLastRotatedAt: string;
+  tokenRotationDueAt: string;
+  healthSummary: string;
+}>;
+
+export type ReceiptAccessCase = Readonly<{
+  id: string;
+  asset: string;
+  storage: string;
+  retention: string;
+  decision: {
+    allowed: boolean;
+    reason: string;
+  };
+}>;
+
+export type PublicEndpointControl = Readonly<{
+  id: string;
+  endpoint: string;
+  state: "pass" | "warn" | "block";
+  protection: string;
+  failureMode: string;
+}>;
+
+export type SupportAccessCase = Readonly<{
+  id: string;
+  actor: string;
+  tenantCode: string;
+  reason: string;
+  expiresAt: string;
+  decision: {
+    allowed: boolean;
+    reason: string;
+  };
+}>;
+
+export type AuditCoverageRow = Readonly<{
+  id: string;
+  action: string;
+  actor: string;
+  record: string;
+  state: "pass" | "warn" | "block";
+  evidence: string;
 }>;
 
 export type SearchEntityType =

@@ -5,6 +5,7 @@ import {
   Gauge,
   MessageCircle,
   Search,
+  ShieldCheck,
   Ruler,
   Settings2,
   Shirt,
@@ -30,6 +31,7 @@ const iconByKey: Record<ModuleKey, typeof Gauge> = {
   payments: CreditCard,
   production: Shirt,
   reports: WalletCards,
+  security: ShieldCheck,
   settings: Settings2,
   whatsapp: MessageCircle,
 };

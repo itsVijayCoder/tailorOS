@@ -1,23 +1,36 @@
 import {
+  authorizeTenantPermission,
   calculatePaymentLedger,
+  createCredentialPublicView,
+  evaluateSignedAccess,
+  getDeniedPermissionsForRole,
+  getRolePermissions,
   normalizeSearchText,
   parseTenantSearchQuery,
+  requiresSecurityAudit,
 } from "@tailoros/core";
 
 import type {
+  AuditCoverageRow,
   CommandSearchMeta,
   CommandSearchResponse,
   CommandSearchResult,
   CoreNavItem,
+  CredentialVaultRecord,
   FamilyAccount,
   MeasurementTemplate,
   MeasurementVersion,
   ConnectorPolicyCheck,
   ProductionTask,
+  PublicEndpointControl,
+  ReceiptAccessCase,
   ReportMetric,
+  SecurityRoleRow,
   SettingsItem,
   ShopOrder,
   SharedMobileCase,
+  SupportAccessCase,
+  TenantIsolationCheck,
   WhatsAppChannel,
   WhatsAppFailure,
   WhatsAppMessageRequest,
@@ -89,6 +102,12 @@ export const coreNavItems = [
     href: "/shop/reports",
     label: "Reports",
     description: "Collections, pending balance, workload, WhatsApp failures.",
+  },
+  {
+    key: "security",
+    href: "/shop/security",
+    label: "Security",
+    description: "RBAC, tenant isolation, privacy, audit, signed access.",
   },
   {
     key: "settings",
@@ -1030,12 +1049,476 @@ export const settingsItems = [
   },
 ] as const satisfies readonly SettingsItem[];
 
+const phase08Now = new Date("2026-07-06T10:00:00.000Z");
+
+const criticalSecurityPermissions = [
+  "payments.correct",
+  "reports.read",
+  "exports.create",
+  "settings.manage",
+  "staff.manage",
+  "integrations.manage",
+  "credentials.raw.read",
+  "tenant.delete",
+] as const;
+
+export const securityRoleRows = [
+  {
+    role: "owner",
+    label: "Owner",
+    scope: "Full shop control, staff, exports, integrations, privacy requests.",
+    permissions: getRolePermissions("owner"),
+    allowedHighlights: [
+      "Exports and privacy requests",
+      "Staff and integration settings",
+      "Payment correction with audit reason",
+    ],
+    blockedHighlights: ["Raw credential values", "Unscoped platform support"],
+  },
+  {
+    role: "manager",
+    label: "Manager",
+    scope: "Daily operations across customers, orders, payments, reports.",
+    permissions: getRolePermissions("manager"),
+    allowedHighlights: [
+      "Customer and order operations",
+      "Reports and normal exports",
+      "WhatsApp health checks",
+    ],
+    blockedHighlights: [
+      "Tenant deletion",
+      "Billing plan changes",
+      "Raw tokens",
+    ],
+  },
+  {
+    role: "counter_staff",
+    label: "Counter staff",
+    scope:
+      "Fast counter workflow: lookup, order creation, receipts, normal payment.",
+    permissions: getRolePermissions("counter_staff"),
+    allowedHighlights: [
+      "Family/customer lookup",
+      "Order creation",
+      "Receipt link issue",
+    ],
+    blockedHighlights: ["Payment correction", "Customer export", "Settings"],
+  },
+  {
+    role: "measurement_taker",
+    label: "Measurement taker",
+    scope: "Customer fit data with historical version discipline.",
+    permissions: getRolePermissions("measurement_taker"),
+    allowedHighlights: [
+      "Measurement create/update",
+      "Customer identity read",
+      "Order context read",
+    ],
+    blockedHighlights: ["Money reports", "Exports", "WhatsApp settings"],
+  },
+  {
+    role: "tailor",
+    label: "Tailor",
+    scope: "Assigned work, measurement snapshot, production notes.",
+    permissions: getRolePermissions("tailor"),
+    allowedHighlights: [
+      "Assigned task list",
+      "Measurement snapshot",
+      "Production status update",
+    ],
+    blockedHighlights: ["Reports", "Payments", "Customer export"],
+  },
+  {
+    role: "cutter",
+    label: "Cutter",
+    scope: "Cutting board and measurement context for assigned items.",
+    permissions: getRolePermissions("cutter"),
+    allowedHighlights: [
+      "Assigned item status",
+      "Garment measurement read",
+      "Production exception note",
+    ],
+    blockedHighlights: ["Receipts", "Payment correction", "Settings"],
+  },
+  {
+    role: "cashier",
+    label: "Cashier",
+    scope:
+      "Collection, receipt, and balance workflow without measurement deletion.",
+    permissions: getRolePermissions("cashier"),
+    allowedHighlights: [
+      "Payment collection",
+      "Receipt links",
+      "Balance report",
+    ],
+    blockedHighlights: [
+      "Measurement deletion",
+      "Exports",
+      "Production settings",
+    ],
+  },
+  {
+    role: "viewer",
+    label: "Viewer",
+    scope: "Read-only dashboard and lookup for low-risk staff.",
+    permissions: getRolePermissions("viewer"),
+    allowedHighlights: ["Dashboard", "Customer lookup", "Order lookup"],
+    blockedHighlights: ["Writes", "Reports", "Receipts and exports"],
+  },
+  {
+    role: "platform_support",
+    label: "Platform support",
+    scope: "Reasoned, time-limited tenant support access with audit evidence.",
+    permissions: getRolePermissions("platform_support"),
+    allowedHighlights: [
+      "Scoped tenant support",
+      "Credential health state",
+      "Audit review",
+    ],
+    blockedHighlights: ["Raw tokens", "Unscoped browsing", "Tenant deletion"],
+  },
+] as const satisfies readonly SecurityRoleRow[];
+
+export const tenantIsolationChecks = [
+  {
+    id: "iso_session",
+    layer: "Session/auth",
+    title: "Authenticate before tenant dispatch",
+    state: "warn",
+    evidence:
+      "Current Workers expose health/demo routes. Production login/session provider still needs to become the front door before real tenant data.",
+  },
+  {
+    id: "iso_membership",
+    layer: "Membership",
+    title: "Tenant ID must come from resolved membership",
+    state: "pass",
+    evidence:
+      "Core authorization rejects mismatched tenant membership even when the role itself has the permission.",
+  },
+  {
+    id: "iso_role",
+    layer: "Role permissions",
+    title: "Action-level RBAC matrix is code-owned",
+    state: "pass",
+    evidence:
+      "Owner, manager, counter, measurement, tailor, cutter, cashier, viewer, and support roles map to explicit permissions.",
+  },
+  {
+    id: "iso_binding",
+    layer: "Tenant DB binding",
+    title: "Dispatch only active tenants with healthy worker mapping",
+    state: "pass",
+    evidence:
+      "API gateway resolves slug through control DB and blocks suspended tenants before invoking the tenant API.",
+  },
+  {
+    id: "iso_audit",
+    layer: "Audit trail",
+    title: "Sensitive actions require audit rows",
+    state: "warn",
+    evidence:
+      "Core action list is implemented; production D1 audit writes must be connected to auth/session once login lands.",
+  },
+] as const satisfies readonly TenantIsolationCheck[];
+
+export const credentialVaultRecords = [
+  {
+    id: "cred_mdu",
+    channelLabel: "Madurai main counter",
+    healthSummary: "Valid token; rotation window opens in 15 days.",
+    ...createCredentialPublicView({
+      businessId: "102938475610293",
+      phoneNumberId: "123456789012345",
+      tokenLastRotatedAt: "2026-06-22T10:00:00+05:30",
+      tokenRotationDueAt: "2026-07-21T10:00:00+05:30",
+      tokenStatus: "valid",
+    }),
+  },
+  {
+    id: "cred_cbe",
+    channelLabel: "Coimbatore school batch",
+    healthSummary: "Permission warning after template sync lag.",
+    ...createCredentialPublicView({
+      businessId: "203948576120394",
+      phoneNumberId: "223456789012345",
+      tokenLastRotatedAt: "2026-05-25T10:00:00+05:30",
+      tokenRotationDueAt: "2026-07-10T10:00:00+05:30",
+      tokenStatus: "permission_issue",
+    }),
+  },
+  {
+    id: "cred_tnj",
+    channelLabel: "Thanjavur pilot shop",
+    healthSummary: "Expired rotation; sends remain blocked.",
+    ...createCredentialPublicView({
+      businessId: "304958671230495",
+      phoneNumberId: "323456789012345",
+      tokenLastRotatedAt: "2026-04-01T10:00:00+05:30",
+      tokenRotationDueAt: "2026-07-06T10:00:00+05:30",
+      tokenStatus: "expired",
+    }),
+  },
+] as const satisfies readonly CredentialVaultRecord[];
+
+export const receiptAccessCases = [
+  {
+    id: "r2_measurement_photo",
+    asset: "Measurement/reference photos",
+    storage: "R2 media bucket",
+    retention:
+      "Retain while customer/order active; owner export/delete workflow required.",
+    decision: evaluateSignedAccess({
+      confirmationRequired: false,
+      expiresAt: "2026-07-06T10:15:00.000Z",
+      now: phase08Now,
+      signatureValid: true,
+    }),
+  },
+  {
+    id: "r2_receipt_snapshot",
+    asset: "Receipt snapshot link",
+    storage: "R2 + D1 metadata",
+    retention: "Retain per accounting policy; signed public link expires.",
+    decision: evaluateSignedAccess({
+      confirmationRequired: true,
+      confirmationSatisfied: true,
+      expiresAt: "2026-07-06T10:05:00.000Z",
+      now: phase08Now,
+      signatureValid: true,
+    }),
+  },
+  {
+    id: "r2_expired_receipt",
+    asset: "Expired receipt share",
+    storage: "R2 signed token",
+    retention: "Regenerate only after authorized staff opens order context.",
+    decision: evaluateSignedAccess({
+      expiresAt: "2026-07-06T09:55:00.000Z",
+      now: phase08Now,
+      signatureValid: true,
+    }),
+  },
+  {
+    id: "r2_export_download",
+    asset: "Tenant export download",
+    storage: "R2 export bucket",
+    retention: "Expire quickly; owner/platform-admin only.",
+    decision: evaluateSignedAccess({
+      confirmationRequired: true,
+      confirmationSatisfied: false,
+      expiresAt: "2026-07-06T10:30:00.000Z",
+      now: phase08Now,
+      signatureValid: true,
+    }),
+  },
+] as const satisfies readonly ReceiptAccessCase[];
+
+export const publicEndpointControls = [
+  {
+    id: "endpoint_signup",
+    endpoint: "Signup",
+    state: "warn",
+    protection:
+      "Turnstile server validation, IP/email/mobile rate limit, idempotent slug reservation.",
+    failureMode:
+      "Bot registrations or duplicate tenant slugs before provisioning.",
+  },
+  {
+    id: "endpoint_login",
+    endpoint: "Login",
+    state: "warn",
+    protection: "Rate limit by IP and account, secure cookie, failed audit.",
+    failureMode: "Credential stuffing against staff accounts.",
+  },
+  {
+    id: "endpoint_search",
+    endpoint: "Search API",
+    state: "pass",
+    protection:
+      "Authenticated-only contract, min query length, user/tenant limits.",
+    failureMode: "Wildcard dump of customer/order records.",
+  },
+  {
+    id: "endpoint_receipts",
+    endpoint: "Receipt links",
+    state: "pass",
+    protection:
+      "Signed token, expiry, optional mobile-last-4 or order-code confirmation.",
+    failureMode: "Guessable public receipts or stale links.",
+  },
+  {
+    id: "endpoint_webhook",
+    endpoint: "WhatsApp webhook",
+    state: "pass",
+    protection:
+      "Verify challenge, signature validation, dedupe, quick response, queue processing.",
+    failureMode: "Forged provider events or duplicate sends.",
+  },
+  {
+    id: "endpoint_exports",
+    endpoint: "Exports",
+    state: "warn",
+    protection: "Owner-only request, async generation, expiring signed link.",
+    failureMode: "Bulk customer export by staff role.",
+  },
+] as const satisfies readonly PublicEndpointControl[];
+
+export const supportAccessCases = [
+  {
+    id: "support_active",
+    actor: "Platform support · Anika",
+    tenantCode: "TEN-MDU",
+    reason: "Debug failed receipt link",
+    expiresAt: "2026-07-06T10:30:00.000Z",
+    decision: authorizeTenantPermission({
+      membershipTenantId: "ten_mdu",
+      now: phase08Now,
+      permission: "customers.read",
+      role: "platform_support",
+      supportGrant: {
+        expiresAt: "2026-07-06T10:30:00.000Z",
+        reason: "Debug failed receipt link",
+        status: "active",
+        tenantId: "ten_mdu",
+      },
+      tenantId: "ten_mdu",
+      tenantStatus: "active",
+    }),
+  },
+  {
+    id: "support_expired",
+    actor: "Platform support · Bala",
+    tenantCode: "TEN-CBE",
+    reason: "Template audit",
+    expiresAt: "2026-07-06T09:50:00.000Z",
+    decision: authorizeTenantPermission({
+      membershipTenantId: "ten_cbe",
+      now: phase08Now,
+      permission: "reports.read",
+      role: "platform_support",
+      supportGrant: {
+        expiresAt: "2026-07-06T09:50:00.000Z",
+        reason: "Template audit",
+        status: "active",
+        tenantId: "ten_cbe",
+      },
+      tenantId: "ten_cbe",
+      tenantStatus: "active",
+    }),
+  },
+  {
+    id: "support_no_scope",
+    actor: "Platform support · Unscoped",
+    tenantCode: "All tenants",
+    reason: "Browse",
+    expiresAt: "Not issued",
+    decision: authorizeTenantPermission({
+      membershipTenantId: "ten_mdu",
+      now: phase08Now,
+      permission: "support.unscoped_access",
+      role: "platform_support",
+      supportGrant: null,
+      tenantId: "ten_mdu",
+      tenantStatus: "active",
+    }),
+  },
+] as const satisfies readonly SupportAccessCase[];
+
+export const auditCoverageRows = [
+  {
+    id: "audit_measurement",
+    action: "measurement.edit",
+    actor: "Measurement taker",
+    record: "CUS-MDU-000231 · Blouse v4",
+    state: requiresSecurityAudit("measurement.edit") ? "pass" : "block",
+    evidence: "Before/after field summary and reason are required.",
+  },
+  {
+    id: "audit_payment",
+    action: "payment.correct",
+    actor: "Owner",
+    record: "PAY-MDU-000188",
+    state: requiresSecurityAudit("payment.correct") ? "pass" : "block",
+    evidence: "Correction reason is required before ledger mutation.",
+  },
+  {
+    id: "audit_export",
+    action: "export.create",
+    actor: "Owner",
+    record: "TEN-MDU customer export",
+    state: requiresSecurityAudit("export.create") ? "pass" : "block",
+    evidence: "Export runs async and returns an expiring signed R2 link.",
+  },
+  {
+    id: "audit_credential",
+    action: "credential.rotate",
+    actor: "Platform support",
+    record: "wa_channel_tnj",
+    state: requiresSecurityAudit("credential.rotate") ? "pass" : "block",
+    evidence:
+      "Credential values stay hidden; only rotation metadata is logged.",
+  },
+  {
+    id: "audit_support",
+    action: "support.access.start",
+    actor: "Platform support",
+    record: "TEN-CBE support session",
+    state: requiresSecurityAudit("support.access.start") ? "pass" : "block",
+    evidence: "Reason, tenant, actor, expiry, and request id are captured.",
+  },
+  {
+    id: "audit_delete",
+    action: "privacy.delete",
+    actor: "Owner",
+    record: "FAM-CBE-00044 privacy request",
+    state: "warn",
+    evidence:
+      "Policy is modeled; production anonymization/delete workflow still needs a runbook-backed implementation.",
+  },
+] as const satisfies readonly AuditCoverageRow[];
+
 export function formatPaise(amountPaise: number): string {
   return new Intl.NumberFormat("en-IN", {
     currency: "INR",
     maximumFractionDigits: 0,
     style: "currency",
   }).format(amountPaise / 100);
+}
+
+export function getPhase08SecuritySignals() {
+  const blockedCriticalEdges = securityRoleRows.reduce(
+    (total, row) =>
+      total +
+      getDeniedPermissionsForRole(row.role, criticalSecurityPermissions).length,
+    0,
+  );
+  const rawCredentialExposureCount = credentialVaultRecords.filter((record) =>
+    [record.businessId, record.phoneNumberId].some(
+      (value) => !value.includes("*"),
+    ),
+  ).length;
+
+  return {
+    auditCoveredActions: auditCoverageRows.filter((row) => row.state === "pass")
+      .length,
+    blockedCriticalEdges,
+    credentialRecords: credentialVaultRecords.length,
+    publicEndpointGaps: publicEndpointControls.filter(
+      (control) => control.state !== "pass",
+    ).length,
+    rawCredentialExposureCount,
+    receiptAccessBlocks: receiptAccessCases.filter(
+      (item) => !item.decision.allowed,
+    ).length,
+    roles: securityRoleRows.length,
+    supportAccessAlerts: supportAccessCases.filter(
+      (item) => !item.decision.allowed,
+    ).length,
+    tenantControlsPassing: tenantIsolationChecks.filter(
+      (check) => check.state === "pass",
+    ).length,
+  };
 }
 
 export function calculateOrderFinancials(order: ShopOrder) {

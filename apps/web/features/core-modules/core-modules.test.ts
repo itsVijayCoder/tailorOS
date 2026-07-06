@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   calculateOrderFinancials,
+  credentialVaultRecords,
   getDashboardSignals,
+  getPhase08SecuritySignals,
   getPartialDeliveryOrders,
   getWhatsAppConnectorSignals,
   getWhatsAppTemplateReadiness,
@@ -10,10 +12,14 @@ import {
   isWhatsAppFailureRetryable,
   isWhatsAppRequestDeadLettered,
   isWhatsAppRequestRetryable,
+  receiptAccessCases,
   searchPilotRecordsAsync,
   searchPilotRecords,
+  securityRoleRows,
   shouldApplyCommandSearchResponse,
   shopOrders,
+  supportAccessCases,
+  tenantIsolationChecks,
   whatsAppFailures,
   whatsAppMessageRequests,
 } from "./data";
@@ -209,5 +215,57 @@ describe("Phase 05 core modules", () => {
         aborted: false,
       }),
     ).toBe(true);
+  });
+
+  it("summarizes Phase 08 security posture from RBAC, support, receipt, and endpoint controls", () => {
+    expect(getPhase08SecuritySignals()).toMatchObject({
+      auditCoveredActions: 5,
+      credentialRecords: 3,
+      publicEndpointGaps: 3,
+      rawCredentialExposureCount: 0,
+      receiptAccessBlocks: 2,
+      roles: 9,
+      supportAccessAlerts: 2,
+      tenantControlsPassing: 3,
+    });
+  });
+
+  it("keeps tailor access scoped away from money reports and exports", () => {
+    const tailor = securityRoleRows.find((row) => row.role === "tailor");
+
+    expect(tailor).toBeDefined();
+    expect(tailor?.permissions).toContain("production.update");
+    expect(tailor?.permissions).not.toContain("reports.read");
+    expect(tailor?.permissions).not.toContain("exports.create");
+  });
+
+  it("renders only masked WhatsApp credential identifiers in Phase 08 data", () => {
+    expect(
+      credentialVaultRecords.every(
+        (record) =>
+          record.businessId.includes("*") && record.phoneNumberId.includes("*"),
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps support and receipt access decisions visible for edge cases", () => {
+    expect(supportAccessCases.map((item) => item.decision.reason)).toEqual([
+      "ALLOWED",
+      "SUPPORT_SCOPE_EXPIRED",
+      "SUPPORT_SCOPE_REQUIRED",
+    ]);
+    expect(receiptAccessCases.map((item) => item.decision.reason)).toEqual([
+      "ALLOWED",
+      "ALLOWED",
+      "EXPIRED",
+      "CONFIRMATION_REQUIRED",
+    ]);
+    expect(tenantIsolationChecks.map((check) => check.state)).toEqual([
+      "warn",
+      "pass",
+      "pass",
+      "pass",
+      "warn",
+    ]);
   });
 });
