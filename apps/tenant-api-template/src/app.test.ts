@@ -98,4 +98,31 @@ describe("tenant-api-template Worker", () => {
     expect(response.status).toBe(400);
     expect(body.error.code).toBe("VALIDATION_ERROR");
   });
+
+  it("does not bypass the WhatsApp connector with direct queue writes", async () => {
+    const response = await app.request(
+      "/v1/orders/ORD-MDU-100/notification-outbox",
+      {
+        method: "POST",
+        headers: { "x-request-id": "req_notification_bridge" },
+      },
+      {
+        WHATSAPP_SEND_QUEUE: {
+          send: async () => {
+            throw new Error("Tenant API must not write WhatsApp queue directly.");
+          },
+        },
+      } as unknown as Env,
+    );
+    const body = (await response.json()) as {
+      ok: false;
+      error: { code: string; message: string };
+      requestId: string;
+    };
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("SERVICE_UNAVAILABLE");
+    expect(body.error.message).toContain("internal send API");
+    expect(body.requestId).toBe("req_notification_bridge");
+  });
 });

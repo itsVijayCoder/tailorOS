@@ -7,7 +7,6 @@ import {
   createContactWithProfilesSchema,
   createMeasurementVersionSchema,
   createOrderSchema,
-  createQueueEnvelope,
   recordPaymentSchema,
   searchTenantDomainQuerySchema,
   zodIssuesToFieldErrors,
@@ -222,19 +221,14 @@ app.get("/v1/search", async (c) => {
   return jsonSuccess(c, { results });
 });
 
-app.post("/v1/orders/:orderId/notification-outbox", async (c) => {
-  const orderId = c.req.param("orderId");
-  const envelope = createQueueEnvelope({
-    type: "whatsapp.send-template",
-    version: 1,
-    id: `JOB-${orderId.toUpperCase().slice(0, 24)}`,
-    idempotencyKey: `order:${orderId}:notification`,
-    payload: { orderId },
-  });
-
-  await c.env.WHATSAPP_SEND_QUEUE.send(envelope);
-  return jsonSuccess(c, { queuedJobId: envelope.id }, 202);
-});
+app.post("/v1/orders/:orderId/notification-outbox", (c) =>
+  jsonError(c, {
+    code: "SERVICE_UNAVAILABLE",
+    message:
+      "Tenant APIs must call the WhatsApp connector internal send API with a signed service token and full template payload; direct queue writes are disabled.",
+    status: 503,
+  }),
+);
 
 app.notFound(createNotFoundHandler<TenantApiEnv>());
 app.onError(createErrorHandler<TenantApiEnv>());
