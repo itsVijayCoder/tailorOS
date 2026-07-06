@@ -14,6 +14,15 @@ import type {
   TenantSettingsRead,
   TodayReportRead,
 } from "@tailoros/schemas";
+import { cookies } from "next/headers";
+
+import {
+  defaultShopSlug,
+  localDevToken,
+  SESSION_COOKIE,
+  SHOP_SLUG_COOKIE,
+  tenantApiBaseUrlForSlug,
+} from "@/features/auth/session";
 
 export type TenantApiState<T> =
   | {
@@ -26,8 +35,6 @@ export type TenantApiState<T> =
       error: string;
       source: "offline";
     };
-
-const localDevToken = "pilot_owner_session_token_dev_2026";
 
 export async function readDashboard(): Promise<
   TenantApiState<{ dashboard: TenantDashboardRead }>
@@ -128,8 +135,7 @@ export async function tenantPost<T>(
   body: unknown,
   fallback: T,
 ): Promise<TenantApiState<T>> {
-  const baseUrl = tenantApiBaseUrl();
-  const token = tenantSessionToken();
+  const { baseUrl, token } = await tenantApiContext();
 
   if (!baseUrl || !token) {
     return {
@@ -175,8 +181,7 @@ async function tenantGet<T>(
   path: string,
   fallback: T,
 ): Promise<TenantApiState<T>> {
-  const baseUrl = tenantApiBaseUrl();
-  const token = tenantSessionToken();
+  const { baseUrl, token } = await tenantApiContext();
 
   if (!baseUrl || !token) {
     return {
@@ -215,20 +220,26 @@ async function tenantGet<T>(
   }
 }
 
-function tenantApiBaseUrl() {
-  return (
-    process.env.TAILOROS_API_BASE_URL ??
-    (process.env.NODE_ENV === "production"
-      ? ""
-      : "http://127.0.0.1:8788/v1/tenant/sri-raja-tailors")
-  ).replace(/\/$/, "");
-}
-
-function tenantSessionToken() {
-  return (
-    process.env.TAILOROS_SESSION_TOKEN ??
-    (process.env.NODE_ENV === "production" ? "" : localDevToken)
+async function tenantApiContext() {
+  const cookieStore = await cookies();
+  const shopSlug =
+    cookieStore.get(SHOP_SLUG_COOKIE)?.value ||
+    process.env.TAILOROS_SHOP_SLUG ||
+    (process.env.NODE_ENV === "production" ? "" : defaultShopSlug);
+  const token =
+    cookieStore.get(SESSION_COOKIE)?.value ||
+    process.env.TAILOROS_SESSION_TOKEN ||
+    (process.env.NODE_ENV === "production" ? "" : localDevToken);
+  const configuredBaseUrl = process.env.TAILOROS_API_BASE_URL?.replace(
+    /\/$/,
+    "",
   );
+
+  return {
+    baseUrl:
+      configuredBaseUrl || (shopSlug ? tenantApiBaseUrlForSlug(shopSlug) : ""),
+    token,
+  };
 }
 
 function emptyDashboard(): TenantDashboardRead {

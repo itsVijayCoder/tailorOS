@@ -44,6 +44,33 @@ type SummaryRow = {
   updatedAt: string;
 };
 
+export type AuthIdentityRow = {
+  tenantId: string;
+  tenantSlug: string;
+  businessName: string;
+  tenantStatus: string;
+  userId: string;
+  displayName: string;
+  email: string;
+  userStatus: string;
+  passwordHash: string | null;
+  membershipId: string;
+  membershipStatus: string;
+  role: string;
+};
+
+export type SetupTokenIdentityRow = AuthIdentityRow & {
+  sessionId: string;
+  sessionStatus: string;
+  sessionExpiresAt: string;
+};
+
+export type PasswordResetIdentityRow = AuthIdentityRow & {
+  resetId: string;
+  resetStatus: string;
+  resetExpiresAt: string;
+};
+
 const summarySelect = `
 SELECT
   t.id AS tenantId,
@@ -122,6 +149,202 @@ LIMIT ?`,
       .all<SummaryRow>();
 
     return result.results.map((row) => parseSummaryRow(row));
+  }
+
+  async findAuthIdentityBySlugAndEmail(input: { slug: string; email: string }) {
+    return this.db
+      .prepare(
+        `SELECT
+          t.id AS tenantId,
+          t.slug AS tenantSlug,
+          t.business_name AS businessName,
+          t.status AS tenantStatus,
+          u.id AS userId,
+          u.display_name AS displayName,
+          u.email AS email,
+          u.status AS userStatus,
+          u.password_hash AS passwordHash,
+          m.id AS membershipId,
+          m.status AS membershipStatus,
+          m.role AS role
+        FROM tenants t
+        INNER JOIN memberships m ON m.tenant_id = t.id
+        INNER JOIN users u ON u.id = m.user_id
+        WHERE t.slug = ?
+          AND lower(u.email) = lower(?)
+        LIMIT 1`,
+      )
+      .bind(input.slug, input.email)
+      .first<AuthIdentityRow>();
+  }
+
+  async findAuthIdentityBySetupToken(input: {
+    slug: string;
+    email: string;
+    tokenHash: string;
+  }) {
+    return this.db
+      .prepare(
+        `SELECT
+          t.id AS tenantId,
+          t.slug AS tenantSlug,
+          t.business_name AS businessName,
+          t.status AS tenantStatus,
+          u.id AS userId,
+          u.display_name AS displayName,
+          u.email AS email,
+          u.status AS userStatus,
+          u.password_hash AS passwordHash,
+          m.id AS membershipId,
+          m.status AS membershipStatus,
+          m.role AS role,
+          s.id AS sessionId,
+          s.status AS sessionStatus,
+          s.expires_at AS sessionExpiresAt
+        FROM staff_sessions s
+        INNER JOIN users u ON u.id = s.user_id
+        INNER JOIN memberships m ON m.user_id = u.id
+        INNER JOIN tenants t ON t.id = m.tenant_id
+        WHERE t.slug = ?
+          AND lower(u.email) = lower(?)
+          AND s.session_token_hash = ?
+        LIMIT 1`,
+      )
+      .bind(input.slug, input.email, input.tokenHash)
+      .first<SetupTokenIdentityRow>();
+  }
+
+  async createStaffSession(input: {
+    sessionId: string;
+    userId: string;
+    sessionTokenHash: string;
+    expiresAt: string;
+    now: string;
+  }) {
+    await this.db
+      .prepare(
+        `INSERT INTO staff_sessions (
+          id,
+          user_id,
+          session_token_hash,
+          status,
+          expires_at,
+          created_at,
+          updated_at
+        ) VALUES (?, ?, ?, 'active', ?, ?, ?)`,
+      )
+      .bind(
+        input.sessionId,
+        input.userId,
+        input.sessionTokenHash,
+        input.expiresAt,
+        input.now,
+        input.now,
+      )
+      .run();
+  }
+
+  async setUserPassword(input: {
+    userId: string;
+    passwordHash: string;
+    now: string;
+  }) {
+    await this.db
+      .prepare(
+        `UPDATE users
+        SET password_hash = ?,
+            password_updated_at = ?,
+            updated_at = ?
+        WHERE id = ?`,
+      )
+      .bind(input.passwordHash, input.now, input.now, input.userId)
+      .run();
+  }
+
+  async revokeStaffSession(input: { sessionId: string; now: string }) {
+    await this.db
+      .prepare(
+        `UPDATE staff_sessions
+        SET status = 'revoked',
+            updated_at = ?
+        WHERE id = ?`,
+      )
+      .bind(input.now, input.sessionId)
+      .run();
+  }
+
+  async createPasswordResetToken(input: {
+    id: string;
+    userId: string;
+    tenantId: string;
+    tokenHash: string;
+    expiresAt: string;
+    now: string;
+  }) {
+    await this.db
+      .prepare(
+        `INSERT INTO password_reset_tokens (
+          id,
+          user_id,
+          tenant_id,
+          token_hash,
+          status,
+          expires_at,
+          created_at,
+          used_at
+        ) VALUES (?, ?, ?, ?, 'active', ?, ?, NULL)`,
+      )
+      .bind(
+        input.id,
+        input.userId,
+        input.tenantId,
+        input.tokenHash,
+        input.expiresAt,
+        input.now,
+      )
+      .run();
+  }
+
+  async findPasswordResetIdentityByTokenHash(tokenHash: string) {
+    return this.db
+      .prepare(
+        `SELECT
+          t.id AS tenantId,
+          t.slug AS tenantSlug,
+          t.business_name AS businessName,
+          t.status AS tenantStatus,
+          u.id AS userId,
+          u.display_name AS displayName,
+          u.email AS email,
+          u.status AS userStatus,
+          u.password_hash AS passwordHash,
+          m.id AS membershipId,
+          m.status AS membershipStatus,
+          m.role AS role,
+          p.id AS resetId,
+          p.status AS resetStatus,
+          p.expires_at AS resetExpiresAt
+        FROM password_reset_tokens p
+        INNER JOIN users u ON u.id = p.user_id
+        INNER JOIN tenants t ON t.id = p.tenant_id
+        INNER JOIN memberships m ON m.user_id = u.id AND m.tenant_id = t.id
+        WHERE p.token_hash = ?
+        LIMIT 1`,
+      )
+      .bind(tokenHash)
+      .first<PasswordResetIdentityRow>();
+  }
+
+  async markPasswordResetTokenUsed(input: { resetId: string; now: string }) {
+    await this.db
+      .prepare(
+        `UPDATE password_reset_tokens
+        SET status = 'used',
+            used_at = ?
+        WHERE id = ?`,
+      )
+      .bind(input.now, input.resetId)
+      .run();
   }
 
   async createSignupReservation(input: SignupReservationInput) {

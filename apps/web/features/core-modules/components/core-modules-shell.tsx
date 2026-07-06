@@ -17,6 +17,7 @@ import {
 import type { ReactNode } from "react";
 
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { LogoutButton } from "@/features/auth/components/logout-button";
 import { cn } from "@/lib/utils";
 
 import { coreNavItems } from "../data";
@@ -77,19 +78,22 @@ export function CoreModulesShell({ children }: { children: ReactNode }) {
           </nav>
         </div>
         <div className="shrink-0 border-t border-hairline p-3">
-          <Link
-            className="group grid grid-cols-[1.75rem_minmax(0,1fr)] items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition duration-200 ease-premium hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
-            href="/admin/tenants"
-          >
-            <span className="grid size-7 place-items-center rounded-lg border border-hairline bg-page text-accent transition duration-200 ease-premium group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground motion-reduce:transition-none">
-              <Building2 aria-hidden className="size-4" />
-            </span>
-            <span className="min-w-0">
-              <strong className="block font-ui text-sm text-ink-display">
-                Super admin
-              </strong>
-            </span>
-          </Link>
+          <div className="grid gap-1">
+            <Link
+              className="group grid grid-cols-[1.75rem_minmax(0,1fr)] items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition duration-200 ease-premium hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
+              href="/admin/tenants"
+            >
+              <span className="grid size-7 place-items-center rounded-lg border border-hairline bg-page text-accent transition duration-200 ease-premium group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground motion-reduce:transition-none">
+                <Building2 aria-hidden className="size-4" />
+              </span>
+              <span className="min-w-0">
+                <strong className="block font-ui text-sm text-ink-display">
+                  Super admin
+                </strong>
+              </span>
+            </Link>
+            <LogoutButton />
+          </div>
         </div>
       </aside>
 
@@ -159,6 +163,7 @@ export function CoreModulesShell({ children }: { children: ReactNode }) {
               <Building2 aria-hidden className="size-4" />
               Admin
             </Link>
+            <LogoutButton variant="chip" />
           </div>
         </nav>
         <div className="min-w-0">{children}</div>

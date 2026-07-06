@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { z } from "zod";
 
 import {
@@ -15,7 +15,12 @@ import {
   requestIdMiddleware,
 } from "@tailoros/worker-runtime";
 
-import { D1ControlPlaneStore } from "./control-store";
+import {
+  D1ControlPlaneStore,
+  type AuthIdentityRow,
+  type PasswordResetIdentityRow,
+  type SetupTokenIdentityRow,
+} from "./control-store";
 import type { ControlPlaneEnv } from "./env";
 import {
   createOwnerAccessIds,
@@ -28,12 +33,63 @@ import {
   TenantSlugConflictError,
 } from "./provisioning";
 import { verifyTurnstileToken } from "./turnstile";
+import {
+  createPasswordResetId,
+  createPasswordResetToken,
+  createSessionId,
+  createSessionToken,
+  hashPassword,
+  resetExpiresAt,
+  sessionExpiresAt,
+  sha256Hex as sha256AuthHex,
+  verifyPassword,
+} from "./auth-service";
 
 export const app = new Hono<ControlPlaneEnv>();
 
 const tenantListQuerySchema = z
   .object({
     limit: z.coerce.number().int().min(1).max(100).default(50),
+  })
+  .strict();
+
+const emailPasswordLoginSchema = z
+  .object({
+    shopSlug: z
+      .string()
+      .trim()
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Enter a valid shop slug."),
+    email: z.string().trim().email(),
+    password: z.string().min(8).max(256),
+  })
+  .strict();
+
+const setupPasswordSchema = z
+  .object({
+    shopSlug: z
+      .string()
+      .trim()
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Enter a valid shop slug."),
+    email: z.string().trim().email(),
+    setupToken: z.string().trim().min(24).max(256),
+    newPassword: z.string().min(10).max(128),
+  })
+  .strict();
+
+const passwordResetRequestSchema = z
+  .object({
+    shopSlug: z
+      .string()
+      .trim()
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Enter a valid shop slug."),
+    email: z.string().trim().email(),
+  })
+  .strict();
+
+const passwordResetConfirmSchema = z
+  .object({
+    token: z.string().trim().min(24).max(256),
+    newPassword: z.string().min(10).max(128),
   })
   .strict();
 
@@ -46,6 +102,238 @@ app.get("/health", (c) =>
     status: "ok",
   }),
 );
+
+app.post("/v1/auth/login", async (c) => {
+  const body = (await c.req.json().catch(() => null)) as unknown;
+  const parsed = emailPasswordLoginSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return jsonError(c, {
+      code: "VALIDATION_ERROR",
+      message: "Login request is invalid.",
+      status: 400,
+      fields: zodIssuesToFieldErrors(parsed.error.issues),
+    });
+  }
+
+  const store = new D1ControlPlaneStore(c.env.CONTROL_DB);
+  const identity = await store.findAuthIdentityBySlugAndEmail({
+    slug: parsed.data.shopSlug,
+    email: parsed.data.email,
+  });
+
+  if (!isLoginIdentityUsable(identity)) {
+    return invalidLogin(c);
+  }
+
+  if (!identity.passwordHash) {
+    const setupIdentity = await store.findAuthIdentityBySetupToken({
+      slug: parsed.data.shopSlug,
+      email: parsed.data.email,
+      tokenHash: await sha256AuthHex(parsed.data.password),
+    });
+
+    if (!isSetupIdentityUsable(setupIdentity)) {
+      return invalidLogin(c);
+    }
+
+    return jsonSuccess(c, {
+      session: {
+        token: parsed.data.password,
+        expiresAt: setupIdentity.sessionExpiresAt,
+        requiresPasswordSetup: true,
+      },
+      tenant: authTenantView(setupIdentity),
+      user: authUserView(setupIdentity),
+    });
+  }
+
+  const passwordOk = await verifyPassword({
+    password: parsed.data.password,
+    storedHash: identity.passwordHash,
+  });
+
+  if (!passwordOk) {
+    return invalidLogin(c);
+  }
+
+  const now = new Date();
+  const token = createSessionToken();
+  const expiresAt = sessionExpiresAt(now);
+
+  await store.createStaffSession({
+    sessionId: createSessionId(),
+    userId: identity.userId,
+    sessionTokenHash: await sha256AuthHex(token),
+    expiresAt: expiresAt.toISOString(),
+    now: now.toISOString(),
+  });
+
+  return jsonSuccess(c, {
+    session: {
+      token,
+      expiresAt: expiresAt.toISOString(),
+      requiresPasswordSetup: false,
+    },
+    tenant: authTenantView(identity),
+    user: authUserView(identity),
+  });
+});
+
+app.post("/v1/auth/setup-password", async (c) => {
+  const body = (await c.req.json().catch(() => null)) as unknown;
+  const parsed = setupPasswordSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return jsonError(c, {
+      code: "VALIDATION_ERROR",
+      message: "Password setup request is invalid.",
+      status: 400,
+      fields: zodIssuesToFieldErrors(parsed.error.issues),
+    });
+  }
+
+  const store = new D1ControlPlaneStore(c.env.CONTROL_DB);
+  const setupIdentity = await store.findAuthIdentityBySetupToken({
+    slug: parsed.data.shopSlug,
+    email: parsed.data.email,
+    tokenHash: await sha256AuthHex(parsed.data.setupToken),
+  });
+
+  if (!isSetupIdentityUsable(setupIdentity)) {
+    return invalidLogin(c);
+  }
+
+  const now = new Date();
+  const token = createSessionToken();
+  const expiresAt = sessionExpiresAt(now);
+
+  await store.setUserPassword({
+    userId: setupIdentity.userId,
+    passwordHash: await hashPassword(parsed.data.newPassword),
+    now: now.toISOString(),
+  });
+  await store.revokeStaffSession({
+    sessionId: setupIdentity.sessionId,
+    now: now.toISOString(),
+  });
+  await store.createStaffSession({
+    sessionId: createSessionId(),
+    userId: setupIdentity.userId,
+    sessionTokenHash: await sha256AuthHex(token),
+    expiresAt: expiresAt.toISOString(),
+    now: now.toISOString(),
+  });
+
+  return jsonSuccess(c, {
+    session: {
+      token,
+      expiresAt: expiresAt.toISOString(),
+      requiresPasswordSetup: false,
+    },
+    tenant: authTenantView(setupIdentity),
+    user: authUserView(setupIdentity),
+  });
+});
+
+app.post("/v1/auth/password-reset/request", async (c) => {
+  const body = (await c.req.json().catch(() => null)) as unknown;
+  const parsed = passwordResetRequestSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return jsonError(c, {
+      code: "VALIDATION_ERROR",
+      message: "Password reset request is invalid.",
+      status: 400,
+      fields: zodIssuesToFieldErrors(parsed.error.issues),
+    });
+  }
+
+  const store = new D1ControlPlaneStore(c.env.CONTROL_DB);
+  const identity = await store.findAuthIdentityBySlugAndEmail({
+    slug: parsed.data.shopSlug,
+    email: parsed.data.email,
+  });
+  let devResetToken: string | null = null;
+
+  if (isLoginIdentityUsable(identity)) {
+    const now = new Date();
+    const token = createPasswordResetToken();
+    devResetToken = token;
+
+    await store.createPasswordResetToken({
+      id: createPasswordResetId(),
+      userId: identity.userId,
+      tenantId: identity.tenantId,
+      tokenHash: await sha256AuthHex(token),
+      expiresAt: resetExpiresAt(now).toISOString(),
+      now: now.toISOString(),
+    });
+  }
+
+  return jsonSuccess(c, {
+    accepted: true,
+    devResetToken: isLocalEnvironment(c.env) ? devResetToken : null,
+  });
+});
+
+app.post("/v1/auth/password-reset/confirm", async (c) => {
+  const body = (await c.req.json().catch(() => null)) as unknown;
+  const parsed = passwordResetConfirmSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return jsonError(c, {
+      code: "VALIDATION_ERROR",
+      message: "Password reset confirmation is invalid.",
+      status: 400,
+      fields: zodIssuesToFieldErrors(parsed.error.issues),
+    });
+  }
+
+  const store = new D1ControlPlaneStore(c.env.CONTROL_DB);
+  const identity = await store.findPasswordResetIdentityByTokenHash(
+    await sha256AuthHex(parsed.data.token),
+  );
+
+  if (!isPasswordResetIdentityUsable(identity)) {
+    return jsonError(c, {
+      code: "VALIDATION_ERROR",
+      message: "Reset link is invalid or expired.",
+      status: 400,
+    });
+  }
+
+  const now = new Date();
+  const token = createSessionToken();
+  const expiresAt = sessionExpiresAt(now);
+
+  await store.setUserPassword({
+    userId: identity.userId,
+    passwordHash: await hashPassword(parsed.data.newPassword),
+    now: now.toISOString(),
+  });
+  await store.markPasswordResetTokenUsed({
+    resetId: identity.resetId,
+    now: now.toISOString(),
+  });
+  await store.createStaffSession({
+    sessionId: createSessionId(),
+    userId: identity.userId,
+    sessionTokenHash: await sha256AuthHex(token),
+    expiresAt: expiresAt.toISOString(),
+    now: now.toISOString(),
+  });
+
+  return jsonSuccess(c, {
+    session: {
+      token,
+      expiresAt: expiresAt.toISOString(),
+      requiresPasswordSetup: false,
+    },
+    tenant: authTenantView(identity),
+    user: authUserView(identity),
+  });
+});
 
 app.post("/v1/tenants/provision", async (c) => {
   const body = (await c.req.json().catch(() => null)) as unknown;
@@ -370,6 +658,76 @@ app.post("/v1/tenants/:tenantId/suspend", async (c) => {
 
 app.notFound(createNotFoundHandler<ControlPlaneEnv>());
 app.onError(createErrorHandler<ControlPlaneEnv>());
+
+function invalidLogin(c: Context<ControlPlaneEnv>) {
+  return jsonError(c, {
+    code: "UNAUTHORIZED",
+    message: "Shop, email, or password is incorrect.",
+    status: 401,
+  });
+}
+
+function isLoginIdentityUsable(
+  identity: AuthIdentityRow | null | undefined,
+): identity is AuthIdentityRow {
+  return Boolean(
+    identity &&
+    identity.tenantStatus === "active" &&
+    identity.userStatus === "active" &&
+    identity.membershipStatus === "active",
+  );
+}
+
+function isSetupIdentityUsable(
+  identity: SetupTokenIdentityRow | null | undefined,
+): identity is SetupTokenIdentityRow {
+  const expiresAt = identity
+    ? new Date(identity.sessionExpiresAt).getTime()
+    : Number.NaN;
+
+  return Boolean(
+    isLoginIdentityUsable(identity) &&
+    identity.sessionStatus === "active" &&
+    Number.isFinite(expiresAt) &&
+    expiresAt > Date.now(),
+  );
+}
+
+function isPasswordResetIdentityUsable(
+  identity: PasswordResetIdentityRow | null | undefined,
+): identity is PasswordResetIdentityRow {
+  const expiresAt = identity
+    ? new Date(identity.resetExpiresAt).getTime()
+    : Number.NaN;
+
+  return Boolean(
+    isLoginIdentityUsable(identity) &&
+    identity.resetStatus === "active" &&
+    Number.isFinite(expiresAt) &&
+    expiresAt > Date.now(),
+  );
+}
+
+function authTenantView(identity: AuthIdentityRow) {
+  return {
+    id: identity.tenantId,
+    slug: identity.tenantSlug,
+    businessName: identity.businessName,
+  };
+}
+
+function authUserView(identity: AuthIdentityRow) {
+  return {
+    id: identity.userId,
+    displayName: identity.displayName,
+    email: identity.email,
+    role: identity.role,
+  };
+}
+
+function isLocalEnvironment(env: Env) {
+  return env.ENVIRONMENT === "local" || env.ENVIRONMENT === "development";
+}
 
 function authorizePlatformAdmin(authorization: string | undefined, env: Env) {
   const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
