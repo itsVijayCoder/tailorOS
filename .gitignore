@@ -27,6 +27,7 @@ apps/**/.next/
 apps/**/dist/
 .turbo/
 apps/**/.turbo/
+.wrangler/
 
 # misc
 .DS_Store

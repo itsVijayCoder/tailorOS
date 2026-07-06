@@ -13,7 +13,11 @@
     "test:watch": "vitest",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
-    "arch": "dependency-cruiser --config .dependency-cruiser.cjs apps packages"
+    "arch": "dependency-cruiser --config .dependency-cruiser.cjs apps packages",
+    "realdata:dev:gateway": "pnpm --filter @tailoros/api-gateway exec wrangler dev --local --persist-to ../../.wrangler/state --port 8788",
+    "realdata:dev:tenant": "pnpm --filter @tailoros/tenant-api-template exec wrangler dev --local --persist-to ../../.wrangler/state --port 8787",
+    "realdata:migrate:local": "pnpm --filter @tailoros/control-plane exec wrangler d1 migrations apply CONTROL_DB --local --persist-to ../../.wrangler/state && pnpm --filter @tailoros/tenant-api-template exec wrangler d1 migrations apply TENANT_DB --local --persist-to ../../.wrangler/state && pnpm --filter @tailoros/whatsapp-connector exec wrangler d1 migrations apply CONNECTOR_DB --local --persist-to ../../.wrangler/state",
+    "realdata:smoke": "node scripts/real-data-smoke.mjs"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.4",
