@@ -2,6 +2,7 @@ import { tenantSlugSchema, type TenantStatus } from "@tailoros/schemas";
 
 export type ResolvedTenantDispatch = {
   tenantId: string;
+  tenantCode: string;
   slug: string;
   status: TenantStatus;
   workerName: string | null;
@@ -10,6 +11,7 @@ export type ResolvedTenantDispatch = {
 
 type TenantDispatchRow = {
   tenantId: string;
+  tenantCode: string;
   slug: string;
   status: TenantStatus;
   workerName: string | null;
@@ -30,6 +32,7 @@ export async function resolveTenantForDispatch(input: {
     .prepare(
       `SELECT
         t.id AS tenantId,
+        t.tenant_code AS tenantCode,
         t.slug AS slug,
         t.status AS status,
         w.worker_name AS workerName,

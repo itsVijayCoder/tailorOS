@@ -229,6 +229,14 @@ export type OrderItemCreateRecord = {
     values: Record<string, string | number | boolean | null>;
     override: Record<string, string | number | boolean | null> | null;
   };
+  productionTask: {
+    id: string;
+    taskStatus: string;
+    assignedStaffUserId: string | null;
+    dueDate: string | null;
+    delayReason: string | null;
+    notes: string | null;
+  };
 };
 
 export type OrderCreateRecord = {
@@ -1056,6 +1064,15 @@ async function buildOrderItem(input: {
       sourceMeasurementVersionId: measurementVersion?.id ?? null,
       values,
       override: input.item.measurementOverride ?? null,
+    },
+    productionTask: {
+      id: createDomainId("TSK", input.runtime),
+      taskStatus: "booked",
+      assignedStaffUserId: input.item.assignedStaffUserId ?? null,
+      dueDate: input.item.promisedDeliveryDate ?? null,
+      delayReason: null,
+      notes:
+        input.item.notes ?? input.item.allowWithoutMeasurementReason ?? null,
     },
   };
 }

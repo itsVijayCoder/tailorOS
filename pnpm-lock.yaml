@@ -69,6 +69,9 @@ importers:
 
   apps/api-gateway:
     dependencies:
+      '@tailoros/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@tailoros/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas

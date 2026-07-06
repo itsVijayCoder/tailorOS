@@ -490,6 +490,31 @@ export class D1TenantDomainRepository implements TenantDomainRepository {
               : null,
             record.order.createdAt,
           ),
+        this.db
+          .prepare(
+            `INSERT INTO production_tasks (
+              id,
+              order_item_id,
+              assigned_staff_user_id,
+              task_status,
+              due_date,
+              delay_reason,
+              notes,
+              created_at,
+              updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          )
+          .bind(
+            item.productionTask.id,
+            item.id,
+            item.productionTask.assignedStaffUserId,
+            item.productionTask.taskStatus,
+            item.productionTask.dueDate,
+            item.productionTask.delayReason,
+            item.productionTask.notes,
+            record.order.createdAt,
+            record.order.createdAt,
+          ),
       ]),
       ...(record.initialPayment
         ? [paymentStatement(this.db, record.initialPayment)]

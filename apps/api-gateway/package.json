@@ -12,6 +12,7 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@tailoros/core": "workspace:*",
     "@tailoros/schemas": "workspace:*",
     "@tailoros/worker-runtime": "workspace:*",
     "hono": "^4.11.1",
