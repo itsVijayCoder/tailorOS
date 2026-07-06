@@ -54,7 +54,10 @@ export function CoreCommandMenu() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className={cn(buttonVariants({ variant: "secondary" }))}>
+      <DialogTrigger
+        aria-label="Open command search"
+        className={cn(buttonVariants({ variant: "secondary" }))}
+      >
         <Search aria-hidden className="size-4" />
         <span className="hidden sm:inline">Command search</span>
         <span className="ml-1 hidden rounded-full border border-hairline bg-page px-2 py-0.5 text-[11px] font-semibold text-ink-muted lg:inline">

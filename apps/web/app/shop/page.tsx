@@ -98,32 +98,28 @@ export default function ShopDashboardPage() {
           />
         </section>
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(22rem,0.75fr)]">
+        <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(22rem,0.75fr)]">
           <DataPanel
             description="Item-level status is shown before order-level status so partial delivery cannot be hidden."
             title="Today delivery board"
           >
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[46rem] border-separate border-spacing-0 text-left text-sm">
+              <table className="w-full border-separate border-spacing-0 text-left text-sm">
                 <thead>
                   <tr className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                     <th className="border-b border-hairline pb-3 pr-4">Order</th>
                     <th className="border-b border-hairline pb-3 pr-4">Customer</th>
                     <th className="border-b border-hairline pb-3 pr-4">Items</th>
                     <th className="border-b border-hairline pb-3 pr-4">Due</th>
-                    <th className="border-b border-hairline pb-3">Balance</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {shopOrders.map((order) => {
-                    const financials = calculateOrderFinancials(order);
-
-                    return (
+                  {shopOrders.map((order) => (
                       <tr
                         className="group transition duration-200 ease-premium hover:bg-accent-faded/60 motion-reduce:transition-none"
                         key={order.id}
                       >
-                        <td className="border-b border-hairline py-4 pr-4 align-top">
+                        <td className="whitespace-nowrap border-b border-hairline py-4 pr-4 align-top">
                           <Link
                             className="font-ui font-semibold text-ink-display hover:text-accent"
                             href="/shop/orders"
@@ -154,15 +150,11 @@ export default function ShopDashboardPage() {
                             ))}
                           </div>
                         </td>
-                        <td className="border-b border-hairline py-4 pr-4 align-top">
+                        <td className="whitespace-nowrap border-b border-hairline py-4 pr-4 align-top">
                           {formatShortDate(order.promisedDate)}
                         </td>
-                        <td className="border-b border-hairline py-4 align-top font-semibold text-ink-display">
-                          {formatPaise(financials.balanceDuePaise)}
-                        </td>
                       </tr>
-                    );
-                  })}
+                    ))}
                 </tbody>
               </table>
             </div>

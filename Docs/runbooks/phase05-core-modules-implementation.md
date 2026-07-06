@@ -97,11 +97,12 @@ The phase needs a pilot-ready operating cockpit with these modules:
 - `pnpm --filter @tailoros/web lint` passed, including the theme-token check.
 - `pnpm --filter @tailoros/web typecheck` passed.
 - `pnpm --filter @tailoros/web build` passed and generated the `/shop` route tree.
+- Playwright smoke check passed for `/shop` desktop and mobile layouts.
+- Playwright command-search check passed for shared mobile query `09876543210`.
 
-## Commits
+## History
 
-- `96ef335 docs: analyze phase 05 core modules`
-- `87715ca feat: implement phase 05 shop modules`
+- Work was committed as separate documentation, implementation, completion-summary, and UI-polish commits to keep the history reviewable.
 
 ## Remaining Work
 
