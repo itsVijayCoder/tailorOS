@@ -1,0 +1,9 @@
+.next
+apps/web/.next
+coverage
+dist
+Docs/**/*.html
+apps/web/public/docs/**/*.html
+node_modules
+pnpm-lock.yaml
+**/worker-configuration.d.ts

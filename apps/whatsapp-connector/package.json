@@ -1,0 +1,26 @@
+{
+  "name": "@tailoros/whatsapp-connector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "lint": "tsc --noEmit --pretty false",
+    "typecheck": "tsc --noEmit",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@tailoros/message-policy": "workspace:*",
+    "@tailoros/schemas": "workspace:*",
+    "@tailoros/whatsapp": "workspace:*",
+    "@tailoros/worker-runtime": "workspace:*",
+    "hono": "^4.11.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "wrangler": "^4.54.0"
+  }
+}

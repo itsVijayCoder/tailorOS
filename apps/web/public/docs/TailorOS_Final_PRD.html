@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TailorOS - Final Production PRD</title>
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --paper: #ffffff;
+      --ink: #171512;
+      --muted: #635f57;
+      --line: #ddd7cc;
+      --soft: #f0ede6;
+      --teal: #0f766e;
+      --blue: #2563eb;
+      --amber: #b45309;
+      --green: #047857;
+      --red: #b91c1c;
+      --slate: #334155;
+      --shadow: 0 18px 45px rgba(24, 20, 15, 0.08);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    a { color: var(--teal); text-decoration: none; border-bottom: 1px solid rgba(15, 118, 110, 0.35); }
+    a:hover { border-bottom-color: var(--teal); }
+    .page { max-width: 1220px; margin: 0 auto; padding: 28px; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.28fr) minmax(300px, 0.72fr);
+      gap: 24px;
+      padding: 42px;
+      background: linear-gradient(135deg, #ffffff 0%, #fbfaf6 54%, #eef8f6 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, h4 { margin: 0; line-height: 1.16; letter-spacing: 0; }
+    h1 { max-width: 900px; font-size: clamp(38px, 5vw, 66px); }
+    h2 { font-size: clamp(27px, 3vw, 40px); margin-bottom: 18px; }
+    h3 { font-size: 21px; margin-bottom: 10px; }
+    h4 { font-size: 16px; margin-bottom: 7px; }
+    p { margin: 0 0 14px; }
+    .lead { max-width: 900px; margin-top: 18px; color: var(--muted); font-size: 19px; }
+    .hero-panel {
+      padding: 22px;
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+    .stamp {
+      display: inline-flex;
+      width: fit-content;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #e6f4f1;
+      border: 1px solid #b9dfd8;
+      color: #115e59;
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .toc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+    .toc a {
+      padding: 7px 10px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--slate);
+      font-size: 12px;
+      font-weight: 750;
+    }
+    section {
+      margin-top: 32px;
+      padding: 34px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 8px 26px rgba(24, 20, 15, 0.04);
+    }
+    .section-kicker {
+      margin-bottom: 10px;
+      color: var(--amber);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .muted { color: var(--muted); }
+    .grid { display: grid; gap: 16px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card {
+      padding: 20px;
+      background: #fffdf8;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .card.alt { background: #f8fbfa; border-color: #c8ded9; }
+    .card.warn { background: #fff8ed; border-color: #f1d4ab; }
+    .card.danger { background: #fff5f5; border-color: #fecaca; }
+    .callout {
+      padding: 20px;
+      background: #eaf7f4;
+      border: 1px solid #b9dfd8;
+      border-left: 5px solid var(--teal);
+      border-radius: 14px;
+    }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .pill.good { background: #dcfce7; color: #166534; }
+    .pill.warn { background: #ffedd5; color: #9a3412; }
+    .pill.bad { background: #fee2e2; color: #991b1b; }
+    ul.clean { margin: 12px 0 0; padding: 0; list-style: none; }
+    ul.clean li {
+      position: relative;
+      padding-left: 20px;
+      margin: 9px 0;
+      color: var(--muted);
+    }
+    ul.clean li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.72em;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+    .number-list { counter-reset: item; margin: 14px 0 0; padding: 0; list-style: none; }
+    .number-list li {
+      counter-increment: item;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      margin: 12px 0;
+      color: var(--muted);
+    }
+    .number-list li::before {
+      content: counter(item);
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; min-width: 980px; }
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      background: #f3f1ea;
+      color: #3f3b36;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    tr:last-child td { border-bottom: 0; }
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: #f1f5f9;
+      color: #334155;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.92em;
+    }
+    .metric {
+      padding: 18px;
+      background: #fbfaf6;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .metric .value { display: block; font-size: 25px; font-weight: 900; }
+    .metric .label { display: block; color: var(--muted); font-size: 13px; }
+    .milestone {
+      margin-top: 18px;
+      padding: 22px;
+      background: #fffdf8;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .milestone-head {
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      gap: 16px;
+      align-items: start;
+      margin-bottom: 16px;
+    }
+    .phase {
+      color: var(--teal);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+    .footer { margin: 30px 0 8px; color: var(--muted); text-align: center; font-size: 13px; }
+    @media (max-width: 980px) {
+      .hero, .grid.two, .grid.three, .grid.four { grid-template-columns: 1fr; }
+      .hero { padding: 26px; }
+      section { padding: 24px; }
+      .page { padding: 16px; }
+      .milestone-head { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: #fff; }
+      .page { max-width: none; padding: 0; }
+      .hero, section { box-shadow: none; break-inside: avoid; }
+      .toc { display: none; }
+      a { color: inherit; border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Final production PRD</p>
+        <h1>TailorOS</h1>
+        <p class="lead">TailorOS is a mobile-first operating system for Tamil Nadu tailor shops. It replaces scattered notebooks, phone calls, and manual receipts with searchable family-aware customer records, measurement history, order tracking, production workflow, payments, receipts, reports, and event hooks for a separate WhatsApp Chat Connector.</p>
+        <nav class="toc" aria-label="Report sections">
+          <a href="#decision">Decision</a>
+          <a href="#scope">Scope</a>
+          <a href="#users">Users</a>
+          <a href="#features">Features</a>
+          <a href="#data-model">Data model</a>
+          <a href="#flows">Flows</a>
+          <a href="#milestones">Milestones</a>
+          <a href="#readiness">Readiness</a>
+        </nav>
+      </div>
+      <aside class="hero-panel">
+        <span class="stamp">Prepared July 3, 2026</span>
+        <ul class="clean">
+          <li>Recommended v1: mobile-responsive web app, not native app.</li>
+          <li>Core rule: mobile number is a contact channel, not the customer identity.</li>
+          <li>Every family, customer, measurement, order, item, payment, and receipt gets a stable ID.</li>
+          <li>WhatsApp is integrated through a separate reusable connector, not hardcoded into TailorOS.</li>
+        </ul>
+      </aside>
+    </header>
+
+    <section id="decision">
+      <p class="section-kicker">Product decision</p>
+      <h2>Build a shop operating system first, then automate communication</h2>
+      <div class="callout">
+        <h3>Production-grade recommendation</h3>
+        <p>TailorOS should launch as an operational tool for the shop counter and owner, not as a customer portal. The first win is faster order entry, fewer measurement mistakes, fewer missed delivery dates, clearer balances, and reduced customer status calls. WhatsApp should amplify those workflows only after TailorOS has clean customer, order, payment, and status data.</p>
+      </div>
+      <div class="grid three" style="margin-top: 18px;">
+        <div class="card alt">
+          <h3>Primary buyer</h3>
+          <p class="muted">Owner of a tailor shop, boutique, uniform shop, or alteration-focused store that manages many repeat customers and family orders.</p>
+        </div>
+        <div class="card alt">
+          <h3>Primary daily users</h3>
+          <p class="muted">Owner, manager, counter staff, measurement taker, tailor, production supervisor, and platform support admin.</p>
+        </div>
+        <div class="card alt">
+          <h3>Primary business result</h3>
+          <p class="muted">A shop can confidently answer: who is the customer, what was ordered, what measurements were used, where is the garment, what is due, and what was paid.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="scope">
+      <p class="section-kicker">Scope boundary</p>
+      <h2>What TailorOS v1 includes and excludes</h2>
+      <div class="grid two">
+        <div class="card alt">
+          <h3>In scope for v1</h3>
+          <ul class="clean">
+            <li>Tenant/shop setup, branch setup, staff roles, and configurable ID prefixes.</li>
+            <li>Family-aware customer directory where one mobile number can have multiple customer profiles.</li>
+            <li>Universal search by mobile, name, family ID, customer ID, order ID, receipt ID, and status.</li>
+            <li>Garment-specific measurement templates, version history, photos, fit notes, and order-specific overrides.</li>
+            <li>New order wizard with multiple order items, trial date, promised date, price, advance, balance, and receipt.</li>
+            <li>Production workflow with item-level statuses, tailor assignment, exception reasons, and daily work board.</li>
+            <li>Payments, receipts, balance tracking, payment correction audit trail, and owner reports.</li>
+            <li>WhatsApp-ready event hooks, notification logs, opt-in capture, and inbound status lookup support.</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h3>Out of scope for v1</h3>
+          <ul class="clean">
+            <li>Native Android or iOS app. Use mobile-responsive web first.</li>
+            <li>Full GST accounting, tax filing, purchase ledger, and financial ERP.</li>
+            <li>Advanced inventory for fabric rolls, supplier purchase orders, and stock valuation.</li>
+            <li>Payroll, tailor commission automation, and HR attendance.</li>
+            <li>Public ecommerce website or customer self-service portal.</li>
+            <li>AI fashion design recommendations or automated measurement capture.</li>
+            <li>Bulk marketing campaigns. Start with utility and service communication only.</li>
+            <li>Offline-first full app. Add offline draft capture after the pilot proves core usage.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="users">
+      <p class="section-kicker">Users and jobs</p>
+      <h2>Design around actual shop work</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Main job</th>
+              <th>Needs from TailorOS</th>
+              <th>Risk if ignored</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Owner</strong></td>
+              <td>Control deliveries, money, staff, and customer trust.</td>
+              <td>Today dashboard, overdue list, production board, balance report, staff permissions, audit trail.</td>
+              <td>The owner keeps a notebook because the app does not answer business questions quickly.</td>
+            </tr>
+            <tr>
+              <td><strong>Counter staff</strong></td>
+              <td>Find customers, create orders, collect payments, print or share receipts.</td>
+              <td>One search box, fast order wizard, duplicate detection, quick payment, receipt share, status update.</td>
+              <td>Busy-hour order entry becomes too slow and staff bypass the system.</td>
+            </tr>
+            <tr>
+              <td><strong>Measurement taker</strong></td>
+              <td>Capture accurate garment measurements and special fit notes.</td>
+              <td>Garment templates, version history, photos, unit clarity, warnings, order-specific overrides.</td>
+              <td>Old measurements are overwritten and disputes become hard to resolve.</td>
+            </tr>
+            <tr>
+              <td><strong>Tailor or master</strong></td>
+              <td>See assigned work and update progress.</td>
+              <td>Assigned task list, garment notes, measurement snapshot, due date, status buttons, delay reason.</td>
+              <td>Production progress stays invisible until the customer asks.</td>
+            </tr>
+            <tr>
+              <td><strong>Platform admin</strong></td>
+              <td>Onboard shops and support them without mixing client data.</td>
+              <td>Tenant setup, plan status, support access audit, WhatsApp connection status, import tools.</td>
+              <td>Client support becomes manual and risky as the SaaS scales.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="principles">
+      <p class="section-kicker">Product principles</p>
+      <h2>Rules that should guide every screen</h2>
+      <div class="grid three">
+        <div class="card"><h3>Search first</h3><p class="muted">The first action is almost always search. The app should not force staff to choose a module before finding the customer or order.</p></div>
+        <div class="card"><h3>Mobile is not identity</h3><p class="muted">A phone number may represent a whole family. Measurements and orders belong to individual customer profiles.</p></div>
+        <div class="card"><h3>Order is the record</h3><p class="muted">Receipts, payments, statuses, tasks, notifications, and disputes must trace back to a stable order ID and item IDs.</p></div>
+        <div class="card"><h3>Measurements are historical</h3><p class="muted">Past orders must keep the measurement version used at that time, even if the customer's current measurement changes.</p></div>
+        <div class="card"><h3>Promises need dates</h3><p class="muted">Every order item needs a promised date or a visible reason why the date is missing.</p></div>
+        <div class="card"><h3>WhatsApp is controlled</h3><p class="muted">Customers should receive useful updates, not every internal status change. Opt-in, opt-out, and message history matter.</p></div>
+      </div>
+    </section>
+
+    <section id="features">
+      <p class="section-kicker">Feature requirements</p>
+      <h2>Production-grade feature set</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>Must include</th>
+              <th>Important details</th>
+              <th>Not in v1</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Shop foundation</strong></td>
+              <td>Tenant, branch, staff, roles, settings, ID formats, receipt branding.</td>
+              <td>Shop code should prefix key IDs. Roles should protect payments, exports, settings, and credential visibility.</td>
+              <td>Multi-brand franchise hierarchy and advanced subscription billing.</td>
+            </tr>
+            <tr>
+              <td><strong>Customer directory</strong></td>
+              <td>Family account, customer profile, contact methods, duplicate warnings, notes, timeline.</td>
+              <td>One mobile can contain multiple profiles such as self, spouse, child, parent, or staff-defined relation.</td>
+              <td>Customer portal login and public profile editing.</td>
+            </tr>
+            <tr>
+              <td><strong>Universal search</strong></td>
+              <td>Search by phone, name, ID, order ID, receipt ID, status, garment keyword.</td>
+              <td>Exact ID matches first, active orders before old orders, family grouping for shared mobiles.</td>
+              <td>Advanced fuzzy search tuning and saved search filters.</td>
+            </tr>
+            <tr>
+              <td><strong>Measurement center</strong></td>
+              <td>Garment templates, values, units, versioning, photos, warnings, fit preferences.</td>
+              <td>Order-specific overrides must not change the permanent measurement profile unless staff intentionally creates a new version.</td>
+              <td>AI body scanning and automatic size prediction.</td>
+            </tr>
+            <tr>
+              <td><strong>Order wizard</strong></td>
+              <td>Customer selection, garment items, measurement snapshot, dates, price, advance, balance, notes, receipt.</td>
+              <td>Repeat order creation must be fast: copy prior measurements, default dates, reuse common garment templates.</td>
+              <td>Complex quotation approval workflows and ecommerce checkout.</td>
+            </tr>
+            <tr>
+              <td><strong>Production board</strong></td>
+              <td>Status lanes, tailor assignment, due dates, exceptions, alteration logs, task comments.</td>
+              <td>Statuses should include Draft, Booked, Measurement Taken, Material Confirmed, Cutting, Stitching, Finishing, Trial Required, Alteration Required, Ready for Pickup, Delivered, Closed.</td>
+              <td>Payroll, productivity bonuses, and automated production optimization.</td>
+            </tr>
+            <tr>
+              <td><strong>Payments and receipts</strong></td>
+              <td>Advance, balance, discounts, payment modes, receipts, share links, payment corrections.</td>
+              <td>Payments should be corrected through adjustment history, not silently overwritten.</td>
+              <td>Full accounting ledger and tax return filing.</td>
+            </tr>
+            <tr>
+              <td><strong>Reports</strong></td>
+              <td>Today, overdue, ready for pickup, pending balances, collections, tailor workload, opt-in rate.</td>
+              <td>Reports should lead to action: update status, call customer, collect payment, or reassign work.</td>
+              <td>Complex BI dashboards and custom report builder.</td>
+            </tr>
+            <tr>
+              <td><strong>WhatsApp readiness</strong></td>
+              <td>Consent capture, event emission, notification logs, status lookup rules, opt-out record.</td>
+              <td>TailorOS emits events; WhatsApp Chat Connector handles templates, provider credentials, delivery, and inbound messages.</td>
+              <td>Direct hardcoded WhatsApp provider logic inside TailorOS.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="data-model">
+      <p class="section-kicker">Data model</p>
+      <h2>Things TailorOS needs to remember</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Entity</th>
+              <th>Purpose</th>
+              <th>Key information</th>
+              <th>Relationships</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Tenant shop</strong></td><td>The client business using TailorOS.</td><td>Shop name, shop code, owner, address, plan, language, branding, active status.</td><td>Owns branches, staff, customers, orders, receipts, and settings.</td></tr>
+            <tr><td><strong>Branch</strong></td><td>Physical shop location.</td><td>Branch name, address, contact number, hours, branch code.</td><td>Belongs to tenant; orders and staff can belong to branch.</td></tr>
+            <tr><td><strong>Staff user</strong></td><td>Someone using the system.</td><td>Name, mobile, role, permissions, branch, active status.</td><td>Creates orders, captures measurements, records payments, updates statuses.</td></tr>
+            <tr><td><strong>Family account</strong></td><td>Shared contact group for a family or household.</td><td>Family ID, primary mobile, alternate mobiles, address, preferred contact person, notes.</td><td>Contains multiple customer profiles and contact methods.</td></tr>
+            <tr><td><strong>Customer profile</strong></td><td>One actual person measured and served by the shop.</td><td>Customer ID, name, relation label, gender or garment context, age group, notes, status.</td><td>Belongs to family; has measurements, orders, media, and timeline.</td></tr>
+            <tr><td><strong>Contact method</strong></td><td>Phone numbers and communication preferences.</td><td>Phone number, label, WhatsApp capable, verified, opt-in, opt-out, default for receipts.</td><td>Linked to family or customer profile; used by WhatsApp Connector.</td></tr>
+            <tr><td><strong>Garment type</strong></td><td>Reusable garment category.</td><td>Name, measurement fields, default expected days, default price, default workflow.</td><td>Used by measurements and order items.</td></tr>
+            <tr><td><strong>Measurement profile</strong></td><td>Current measurement set for a customer and garment type.</td><td>Measurement ID, garment type, values, unit, fit preference, notes, current version.</td><td>Belongs to customer; has versions and photos.</td></tr>
+            <tr><td><strong>Measurement version</strong></td><td>Historical snapshot of measurement changes.</td><td>Version number, changed values, reason, changed by, changed date, photo references.</td><td>Used by order items to preserve historical accuracy.</td></tr>
+            <tr><td><strong>Order</strong></td><td>Main business transaction.</td><td>Order ID, customer, order date, trial date, promised date, status, total, advance, balance.</td><td>Has items, tasks, payments, receipts, notifications, and status events.</td></tr>
+            <tr><td><strong>Order item</strong></td><td>One garment or alteration inside an order.</td><td>Item ID, garment type, quantity, price, status, assigned tailor, measurement version used.</td><td>Belongs to order; has production tasks and overrides.</td></tr>
+            <tr><td><strong>Order item measurement override</strong></td><td>Temporary changes for one order item.</td><td>Field changed, original value, override value, reason, staff note.</td><td>Belongs to order item; does not replace the customer's base measurement.</td></tr>
+            <tr><td><strong>Production task</strong></td><td>Work item for tailoring and progress tracking.</td><td>Task ID, order item, assigned staff, status, due date, delay reason, notes.</td><td>Belongs to order item and staff; appears on production board.</td></tr>
+            <tr><td><strong>Alteration log</strong></td><td>History of fitting changes and corrections.</td><td>Issue, requested change, trial note, chargeable flag, completion status.</td><td>Belongs to order item and production task.</td></tr>
+            <tr><td><strong>Appointment</strong></td><td>Trial, fitting, pickup, or delivery appointment.</td><td>Date, time, type, order, customer, reminder status, completed status.</td><td>Can trigger reminders through WhatsApp Connector.</td></tr>
+            <tr><td><strong>Payment</strong></td><td>Money movement on an order.</td><td>Payment ID, amount, mode, date, staff, reference, correction flag.</td><td>Belongs to order; contributes to receipt and balance.</td></tr>
+            <tr><td><strong>Receipt</strong></td><td>Customer-facing proof of order and payment.</td><td>Receipt ID, order ID, item summary, paid amount, balance, terms, share link.</td><td>Belongs to order; can be printed, downloaded, or shared.</td></tr>
+            <tr><td><strong>Status event</strong></td><td>Audit timeline of changes.</td><td>From status, to status, changed by, date, notify flag, reason.</td><td>Belongs to order or item; can emit integration events.</td></tr>
+            <tr><td><strong>Notification log</strong></td><td>Record of messages requested or received.</td><td>Type, recipient, order, template, status, delivery result, failure reason.</td><td>Connects TailorOS events with WhatsApp Connector activity.</td></tr>
+            <tr><td><strong>Audit log</strong></td><td>Important edits and corrections.</td><td>Actor, action, record, before summary, after summary, timestamp.</td><td>Protects payments, measurements, statuses, exports, and settings.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="flows">
+      <p class="section-kicker">Core flows</p>
+      <h2>End-to-end workflows to support</h2>
+      <div class="grid two">
+        <div class="card">
+          <h3>New walk-in order</h3>
+          <ol class="number-list">
+            <li>Counter staff searches mobile number first.</li>
+            <li>If no family exists, staff creates a family account and then the exact customer profile.</li>
+            <li>Staff selects garment type, captures or copies measurements, and adds fit notes.</li>
+            <li>Staff creates the order, adds items, dates, price, advance, and balance.</li>
+            <li>TailorOS generates order ID, receipt ID, and optional WhatsApp confirmation event.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Repeat customer with family mobile</h3>
+          <ol class="number-list">
+            <li>Staff searches the shared mobile number.</li>
+            <li>TailorOS shows grouped profiles under the family account.</li>
+            <li>Staff selects the right person before viewing measurements.</li>
+            <li>Staff copies latest garment-specific measurement and adds item override if needed.</li>
+            <li>Receipt clearly shows customer name, order ID, and balance due.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Production and trial</h3>
+          <ol class="number-list">
+            <li>Owner or manager assigns item tasks to tailors.</li>
+            <li>Tailor moves work through material confirmed, cutting, stitching, finishing, and trial.</li>
+            <li>If alteration is needed, staff adds alteration log and updated trial note.</li>
+            <li>Delays require a reason such as customer delay, material shortage, or on hold.</li>
+            <li>When all items are ready, TailorOS emits ready-for-pickup event.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Pickup and payment close</h3>
+          <ol class="number-list">
+            <li>Staff opens order by order ID, customer search, or ready-for-pickup dashboard.</li>
+            <li>Staff confirms item completion and collects remaining balance.</li>
+            <li>Payment is recorded with mode and reference.</li>
+            <li>Receipt updates to paid or partial status.</li>
+            <li>Order is marked delivered and closed after final handover.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="events">
+      <p class="section-kicker">Integration events</p>
+      <h2>Events TailorOS emits to WhatsApp Chat Connector</h2>
+      <p class="muted">These are product-level contracts, not implementation code. They describe what the messaging product needs to know.</p>
+      <div class="table-wrap" style="margin-top: 16px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>When it fires</th>
+              <th>Payload must include</th>
+              <th>Customer message use</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>ORDER_BOOKED</code></td><td>Order is confirmed.</td><td>tenant_id, product_id, order_id, customer_id, family_id, contact_method_id, language, idempotency_key.</td><td>Order confirmation.</td></tr>
+            <tr><td><code>RECEIPT_GENERATED</code></td><td>Receipt is created or updated.</td><td>receipt_id, order_id, paid amount, balance due, receipt link, recipient preference.</td><td>Receipt share.</td></tr>
+            <tr><td><code>PAYMENT_RECEIVED</code></td><td>Advance or balance payment is recorded.</td><td>payment_id, order_id, receipt_id, amount, mode, balance_after_payment.</td><td>Payment receipt or balance update.</td></tr>
+            <tr><td><code>TRIAL_SCHEDULED</code></td><td>Fitting or trial appointment is added or changed.</td><td>appointment_id, order_id, date_time, branch, reminder_allowed.</td><td>Trial reminder.</td></tr>
+            <tr><td><code>ORDER_STATUS_CHANGED</code></td><td>Order or item status changes.</td><td>old_status, new_status, changed_by, notify_customer flag, reason.</td><td>Selective status updates, not every change.</td></tr>
+            <tr><td><code>ORDER_READY_FOR_PICKUP</code></td><td>All required items are ready.</td><td>order_id, item summary, balance due, pickup branch, preferred language.</td><td>Pickup alert.</td></tr>
+            <tr><td><code>CUSTOMER_OPTED_IN</code></td><td>Consent is captured.</td><td>contact_method_id, customer_id or family_id, source, timestamp, staff user.</td><td>Allow future utility messages.</td></tr>
+            <tr><td><code>CUSTOMER_OPTED_OUT</code></td><td>Customer asks to stop messages.</td><td>contact_method_id, source, timestamp, reason if supplied.</td><td>Block future non-required messages.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="milestones">
+      <p class="section-kicker">Milestone plan</p>
+      <h2>Deep production milestone analysis</h2>
+      <p class="muted">Each milestone must leave the app usable in the browser and testable by a shop owner. Later milestones build on data quality created earlier.</p>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M1</div>
+          <div><h3>Shop foundation, roles, and ID system</h3><p class="muted">Create the control base for a multi-client TailorOS installation: shop setup, branch setup, staff roles, and stable IDs.</p></div>
+        </div>
+        <div class="grid three">
+          <div><h4>Build scope</h4><ul class="clean"><li>Tenant/shop profile with branding and default language.</li><li>Branch records and shop code prefixes.</li><li>Owner, manager, front desk, tailor, and platform admin roles.</li><li>ID format rules for family, customer, order, item, receipt, payment, and measurement.</li></ul></div>
+          <div><h4>Deep analysis</h4><ul class="clean"><li>This milestone prevents future migration pain. If IDs and roles are weak, every later module becomes fragile.</li><li>Use simple defaults but make prefixes configurable before pilot.</li><li>Support access must be audited because platform staff may see client data.</li></ul></div>
+          <div><h4>Done when</h4><ul class="clean"><li>A platform admin can create a shop and branch.</li><li>An owner can invite staff and assign roles.</li><li>New records generate readable, stable IDs with the shop prefix.</li><li>Restricted users cannot access payment corrections or settings.</li></ul></div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M2</div>
+          <div><h3>Family-aware customer directory and universal search</h3><p class="muted">Make customer lookup fast enough for busy counter work while preventing family-member measurement mixups.</p></div>
+        </div>
+        <div class="grid three">
+          <div><h4>Build scope</h4><ul class="clean"><li>Family account creation with primary and alternate mobile numbers.</li><li>Multiple customer profiles under one family account.</li><li>Search by mobile, name, family ID, customer ID, and alternate phone.</li><li>Duplicate warning when the same number or similar name exists.</li></ul></div>
+          <div><h4>Deep analysis</h4><ul class="clean"><li>This is the adoption milestone. If staff cannot find a person quickly, they return to notebooks.</li><li>Search results should group family members and highlight active orders later.</li><li>Mobile number normalization is required so +91, leading zero, and spacing do not create duplicates.</li></ul></div>
+          <div><h4>Done when</h4><ul class="clean"><li>One mobile number can show several family members.</li><li>Staff must choose the exact profile before measurements appear.</li><li>Customer details can be edited with audit history.</li><li>Search works from the first screen.</li></ul></div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M3</div>
+          <div><h3>Measurement center with versioning and overrides</h3><p class="muted">Capture garment-specific measurements in a way that protects historical orders and supports real tailoring exceptions.</p></div>
+        </div>
+        <div class="grid three">
+          <div><h4>Build scope</h4><ul class="clean"><li>Measurement templates for blouse, shirt, pant, salwar or kurta, uniform, and alteration.</li><li>Measurement profile per customer and garment type.</li><li>Version history with reason, changed by, and changed date.</li><li>Photos, fit preferences, unit handling, warning notes, and current/old flags.</li></ul></div>
+          <div><h4>Deep analysis</h4><ul class="clean"><li>Measurements are the highest trust area. Never overwrite without history.</li><li>Units must be visible because inch/cm confusion creates costly errors.</li><li>Order-specific overrides belong to order items, not the permanent customer profile.</li></ul></div>
+          <div><h4>Done when</h4><ul class="clean"><li>Staff can create and update measurements by garment type.</li><li>Old versions remain visible.</li><li>Staff can attach photos and warning notes.</li><li>A changed measurement never breaks an older order's snapshot.</li></ul></div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M4</div>
+          <div><h3>New order wizard and order book</h3><p class="muted">Create the daily revenue flow: repeat customer selection, garment items, measurement snapshots, dates, pricing, and receipt draft.</p></div>
+        </div>
+        <div class="grid three">
+          <div><h4>Build scope</h4><ul class="clean"><li>Order wizard from search result or customer profile.</li><li>Multiple garments per order with item IDs.</li><li>Measurement snapshot and item-level override fields.</li><li>Trial date, promised date, price, discount, advance, balance, and notes.</li></ul></div>
+          <div><h4>Deep analysis</h4><ul class="clean"><li>Order entry should target under 5 minutes for new customers and around 2 minutes for repeat customers.</li><li>The wizard should default common garment data but never hide the selected customer identity.</li><li>Items need independent statuses because one garment may be ready while another is delayed.</li></ul></div>
+          <div><h4>Done when</h4><ul class="clean"><li>Staff can create an order from an existing or new customer.</li><li>Order and item IDs are generated.</li><li>The order stores measurement version used and any override.</li><li>The order summary is printable or ready for receipt generation.</li></ul></div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M5</div>
+          <div><h3>Production board, task assignment, and alteration logs</h3><p class="muted">Give owners and tailors a shared view of what is due, what is stuck, and who owns each item.</p></div>
+        </div>
+        <div class="grid three">
+          <div><h4>Build scope</h4><ul class="clean"><li>Status lanes for material confirmed, cutting, stitching, finishing, trial, alteration, ready, delivered, closed.</li><li>Exception statuses: on hold, customer delay, material shortage, cancelled, refunded.</li><li>Tailor assignment and task comments.</li><li>Alteration log with issue, requested change, trial result, and chargeable flag.</li></ul></div>
+          <div><h4>Deep analysis</h4><ul class="clean"><li>This milestone makes TailorOS useful beyond the counter.</li><li>Status design should not spam customers; only selected statuses become message events.</li><li>Delay reasons are required for owner visibility and future reporting.</li></ul></div>
+          <div><h4>Done when</h4><ul class="clean"><li>Owner can view work by status, tailor, and due date.</li><li>Tailor can update assigned item status without seeing financial reports.</li><li>Ready orders appear in a pickup list.</li><li>Alteration history is visible on order item timeline.</li></ul></div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M6</div>
+          <div><h3>Payments, receipts, and balance control</h3><p class="muted">Make money records clear enough for the owner while keeping receipts simple for local shop use.</p></div>
+        </div>
+        <div class="grid three">
+          <div><h4>Build scope</h4><ul class="clean"><li>Advance and balance payment capture.</li><li>Payment modes: cash, UPI, card, bank, credit, and adjustment.</li><li>Receipt page with item summary, paid amount, balance, and shop branding.</li><li>Correction workflow with audit trail.</li></ul></div>
+          <div><h4>Deep analysis</h4><ul class="clean"><li>Payments are dispute-sensitive. Avoid silent edits.</li><li>Simple receipts are enough for v1; GST mode can be a later configuration.</li><li>Receipts must link to order ID and customer profile, not only phone number.</li></ul></div>
+          <div><h4>Done when</h4><ul class="clean"><li>Staff can record advance and final payment.</li><li>Owner can see pending balances and today's collection.</li><li>Receipt can be printed or shared as a link/PDF.</li><li>Payment corrections show who changed what and why.</li></ul></div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M7</div>
+          <div><h3>Dashboards, reports, and operating visibility</h3><p class="muted">Turn TailorOS from a record system into a daily operating cockpit.</p></div>
+        </div>
+        <div class="grid three">
+          <div><h4>Build scope</h4><ul class="clean"><li>Today dashboard for due, overdue, ready, trial, and payment due.</li><li>Production board summary by tailor and status.</li><li>Customer history and repeat order report.</li><li>Money report for collection, pending balance, refunds, and corrections.</li></ul></div>
+          <div><h4>Deep analysis</h4><ul class="clean"><li>Reports should answer what to do next, not only show totals.</li><li>Owners need scanning views more than decorative charts.</li><li>Every report row should open the related order, customer, or task.</li></ul></div>
+          <div><h4>Done when</h4><ul class="clean"><li>Owner can open TailorOS and know today's work in under 30 seconds.</li><li>Pending balances are visible by order and customer.</li><li>Delayed orders show reason and owner action.</li><li>Reports support export only for authorized roles.</li></ul></div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M8</div>
+          <div><h3>WhatsApp readiness and notification log</h3><p class="muted">Prepare TailorOS to work with the separate WhatsApp Chat Connector without embedding provider logic inside TailorOS.</p></div>
+        </div>
+        <div class="grid three">
+          <div><h4>Build scope</h4><ul class="clean"><li>Consent capture on customer contact methods.</li><li>Event emission for orders, receipts, payments, appointments, pickup, and opt-out.</li><li>Notification log on customer and order pages.</li><li>Customer status lookup rules for shared mobile numbers.</li></ul></div>
+          <div><h4>Deep analysis</h4><ul class="clean"><li>TailorOS should know business events; the connector should know WhatsApp rules.</li><li>Shared phone numbers require disambiguation before revealing order details.</li><li>Failed sends need staff-visible fallback actions.</li></ul></div>
+          <div><h4>Done when</h4><ul class="clean"><li>Staff can see opt-in and opt-out state before sending.</li><li>Events are visible in a local notification log even before provider connection.</li><li>Incoming status requests can map to active orders or ask for customer/order choice.</li><li>TailorOS does not store provider access tokens.</li></ul></div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M9</div>
+          <div><h3>Pilot onboarding, imports, privacy, and audit hardening</h3><p class="muted">Make the product safe and usable for the first real shop pilot.</p></div>
+        </div>
+        <div class="grid three">
+          <div><h4>Build scope</h4><ul class="clean"><li>Shop onboarding checklist and initial settings review.</li><li>Spreadsheet import for historical customers and active orders.</li><li>Privacy controls for measurement photos, exports, and support access.</li><li>Consent wording, data retention policy fields, and audit review screen.</li></ul></div>
+          <div><h4>Deep analysis</h4><ul class="clean"><li>The first shop should start with 50 historical customers and 20 active orders.</li><li>Run parallel with the notebook for two weeks and compare accuracy.</li><li>Support access must be permissioned and logged before scaling to many clients.</li></ul></div>
+          <div><h4>Done when</h4><ul class="clean"><li>A pilot shop can be onboarded with real data.</li><li>Owner can review privacy, consent, and export controls.</li><li>Staff training checklist exists inside the admin flow.</li><li>Pilot metrics can be captured weekly.</li></ul></div>
+        </div>
+      </article>
+
+      <article class="milestone">
+        <div class="milestone-head">
+          <div class="phase">M10</div>
+          <div><h3>v1 launch hardening and v1.5 planning</h3><p class="muted">Stabilize for 3 to 5 shop rollout and prepare the next useful additions without bloating v1.</p></div>
+        </div>
+        <div class="grid three">
+          <div><h4>Build scope</h4><ul class="clean"><li>Error states, empty states, export permissions, backup review, and support workflows.</li><li>Owner-facing success dashboard for pilot metrics.</li><li>Configuration review for garment templates, statuses, and receipt layout.</li><li>v1.5 plan for simple inventory ledger and offline draft capture.</li></ul></div>
+          <div><h4>Deep analysis</h4><ul class="clean"><li>Do not add every requested feature before the pilot. First stabilize order, measurement, payment, and production flows.</li><li>Simple stock ledger is useful after order volume is proven.</li><li>Offline drafts are valuable, but risky if conflict handling is not designed carefully.</li></ul></div>
+          <div><h4>Done when</h4><ul class="clean"><li>First shop can use TailorOS daily without notebook dependency for active orders.</li><li>Known pilot issues are tracked and prioritized.</li><li>Onboarding package is ready for 3 to 5 more shops.</li><li>v1.5 scope is documented but not mixed into v1 acceptance.</li></ul></div>
+        </div>
+      </article>
+    </section>
+
+    <section id="readiness">
+      <p class="section-kicker">Production readiness</p>
+      <h2>Launch checklist and success metrics</h2>
+      <div class="grid four">
+        <div class="metric"><span class="value">80%+</span><span class="label">Pilot orders entered into TailorOS during week two.</span></div>
+        <div class="metric"><span class="value">2 min</span><span class="label">Repeat-customer order creation target.</span></div>
+        <div class="metric"><span class="value">95%+</span><span class="label">Orders tied to the correct customer profile.</span></div>
+        <div class="metric"><span class="value">30%+</span><span class="label">Reduction in customer status calls.</span></div>
+        <div class="metric"><span class="value">70%+</span><span class="label">Customers with WhatsApp consent captured.</span></div>
+        <div class="metric"><span class="value">90%+</span><span class="label">Orders with promised date and item statuses.</span></div>
+        <div class="metric"><span class="value">100%</span><span class="label">Payment corrections visible in audit trail.</span></div>
+        <div class="metric"><span class="value">5 shops</span><span class="label">Pilot proof before broad sales push.</span></div>
+      </div>
+      <div class="grid two" style="margin-top: 18px;">
+        <div class="card warn">
+          <h3>Critical risks</h3>
+          <ul class="clean">
+            <li>Order entry takes too long and staff return to notebooks.</li>
+            <li>Phone number is treated as the customer identity and family records mix up.</li>
+            <li>Measurements are overwritten without historical versions.</li>
+            <li>Status workflow becomes too complex for small shops.</li>
+            <li>Payments are edited without audit and owner trust drops.</li>
+            <li>WhatsApp messages are overused and customers opt out.</li>
+          </ul>
+        </div>
+        <div class="card alt">
+          <h3>Launch controls</h3>
+          <ul class="clean">
+            <li>Use default garment templates but allow shop-level edits.</li>
+            <li>Require reason for payment corrections, measurement changes, and delay exceptions.</li>
+            <li>Keep marketing out of v1 WhatsApp workflows.</li>
+            <li>Make export, delete, and support access owner/platform-admin only.</li>
+            <li>Run one-shop pilot before onboarding multiple shops.</li>
+            <li>Document local Tamil consent wording with owner review before production use.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <p class="section-kicker">Method</p>
+      <h2>How this final PRD was created</h2>
+      <p class="muted">This PRD consolidates the earlier TailorOS analysis, the comparison against the reference reports, and the bm-prd-creator structure from Builder Methods. The WhatsApp-specific implementation boundary is covered in the companion WhatsApp Chat Connector PRD.</p>
+      <ul class="clean">
+        <li><a href="https://github.com/buildermethods/bm-skills">Builder Methods bm-skills</a> - used as the PRD structuring method.</li>
+        <li><a href="https://whatsappbusiness.com/products/platform-pricing/">WhatsApp Business Platform Pricing</a> - used for current messaging category and pricing-model assumptions.</li>
+        <li><a href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started">Meta WhatsApp Cloud API Get Started</a> - referenced for the companion connector setup path.</li>
+      </ul>
+    </section>
+
+    <p class="footer">TailorOS Final Production PRD - generated July 3, 2026.</p>
+  </main>
+</body>
+</html>

@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,13 +13,20 @@
 
 # testing
 /coverage
+Markdown
+.playwright-cli/
+output/playwright/
 
 # next.js
 /.next/
+apps/**/.next/
 /out/
 
 # production
 /build
+apps/**/dist/
+.turbo/
+apps/**/.turbo/
 
 # misc
 .DS_Store
