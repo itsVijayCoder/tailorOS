@@ -135,6 +135,30 @@ export async function tenantPost<T>(
   body: unknown,
   fallback: T,
 ): Promise<TenantApiState<T>> {
+  return tenantWrite("POST", path, body, fallback);
+}
+
+export async function tenantPatch<T>(
+  path: string,
+  body: unknown,
+  fallback: T,
+): Promise<TenantApiState<T>> {
+  return tenantWrite("PATCH", path, body, fallback);
+}
+
+export async function tenantDelete<T>(
+  path: string,
+  fallback: T,
+): Promise<TenantApiState<T>> {
+  return tenantWrite("DELETE", path, undefined, fallback);
+}
+
+async function tenantWrite<T>(
+  method: "DELETE" | "PATCH" | "POST",
+  path: string,
+  body: unknown,
+  fallback: T,
+): Promise<TenantApiState<T>> {
   const { baseUrl, token } = await tenantApiContext();
 
   if (!baseUrl || !token) {
@@ -147,13 +171,13 @@ export async function tenantPost<T>(
 
   try {
     const response = await fetch(`${baseUrl}${path}`, {
-      body: JSON.stringify(body),
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       cache: "no-store",
       headers: {
         authorization: `Bearer ${token}`,
         "content-type": "application/json",
       },
-      method: "POST",
+      method,
     });
     const responseBody = (await response.json()) as ApiResponse<T>;
 
@@ -177,7 +201,7 @@ export async function tenantPost<T>(
   }
 }
 
-async function tenantGet<T>(
+export async function tenantGet<T>(
   path: string,
   fallback: T,
 ): Promise<TenantApiState<T>> {

@@ -110,6 +110,17 @@ export const measurementTemplateReadSchema = z
   })
   .strict();
 
+export const upsertMeasurementTemplateSchema = z
+  .object({
+    code: garmentTypeCodeSchema.optional(),
+    displayName: z.string().trim().min(2).max(120),
+    measurementSchema: jsonObjectSchema,
+    defaultExpectedDays: z.number().int().nonnegative().max(365).default(7),
+    defaultPricePaise: z.number().int().nonnegative().default(0),
+    isActive: z.boolean().default(true),
+  })
+  .strict();
+
 export const measurementVersionReadSchema = z
   .object({
     measurementProfileId: domainIdSchema,
@@ -355,6 +366,9 @@ export type CustomerContactRead = z.infer<typeof customerContactReadSchema>;
 export type CustomerTimelineEvent = z.infer<typeof customerTimelineEventSchema>;
 export type MeasurementTemplateRead = z.infer<
   typeof measurementTemplateReadSchema
+>;
+export type UpsertMeasurementTemplate = z.infer<
+  typeof upsertMeasurementTemplateSchema
 >;
 export type MeasurementVersionRead = z.infer<
   typeof measurementVersionReadSchema

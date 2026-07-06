@@ -5,6 +5,7 @@ import { z } from "zod";
 import { orderStatuses, transitionOrder } from "@tailoros/core";
 import {
   createContactWithProfilesSchema,
+  createCustomerProfileSchema,
   createMeasurementVersionSchema,
   createOrderSchema,
   createTenantStaffMemberSchema,
@@ -16,6 +17,9 @@ import {
   recordPaymentSchema,
   reportTodayQuerySchema,
   searchTenantDomainQuerySchema,
+  updateContactSchema,
+  updateCustomerProfileSchema,
+  upsertMeasurementTemplateSchema,
   zodIssuesToFieldErrors,
 } from "@tailoros/schemas";
 import {
@@ -39,6 +43,8 @@ import { D1TenantDomainRepository } from "./domain-store";
 import type { TenantApiEnv } from "./env";
 import {
   createStaffMember,
+  createCustomerProfile,
+  deleteMeasurementTemplate,
   getCustomer,
   getCustomerTimeline,
   getDashboard,
@@ -56,7 +62,10 @@ import {
   listProductionTasks,
   renderReceiptHtml,
   transitionOrderStatus,
+  updateCustomerContact,
+  updateCustomerProfile,
   updateProductionTask,
+  upsertMeasurementTemplate,
 } from "./read-models";
 
 const transitionSchema = z
@@ -151,7 +160,11 @@ app.get("/v1/dashboard", async (c) => {
 });
 
 app.get("/v1/customers/search", async (c) => {
-  const parsed = listCustomersQuerySchema.safeParse(c.req.query());
+  const searchParams = new URL(c.req.url).searchParams;
+  const parsed = listCustomersQuerySchema.safeParse({
+    limit: searchParams.get("limit") ?? undefined,
+    q: searchParams.get("q") ?? undefined,
+  });
 
   if (!parsed.success) {
     return validationError(
@@ -210,6 +223,69 @@ app.get("/v1/customers/:customerProfileId/measurements", async (c) => {
 app.get("/v1/measurements/templates", async (c) => {
   const templates = await listMeasurementTemplates(c.env.TENANT_DB);
   return jsonSuccess(c, { templates });
+});
+
+app.post("/v1/measurements/templates", async (c) => {
+  const body = (await c.req.json().catch(() => null)) as unknown;
+  const parsed = upsertMeasurementTemplateSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return jsonError(c, {
+      code: "VALIDATION_ERROR",
+      message: "Garment template payload is invalid.",
+      status: 400,
+      fields: zodIssuesToFieldErrors(parsed.error.issues),
+    });
+  }
+
+  const template = await upsertMeasurementTemplate({
+    data: parsed.data,
+    db: c.env.TENANT_DB,
+    runtime: getDomainRuntime(c),
+  });
+
+  return jsonSuccess(c, { template }, 201);
+});
+
+app.patch("/v1/measurements/templates/:code", async (c) => {
+  const body = (await c.req.json().catch(() => null)) as unknown;
+  const parsed = upsertMeasurementTemplateSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return jsonError(c, {
+      code: "VALIDATION_ERROR",
+      message: "Garment template payload is invalid.",
+      status: 400,
+      fields: zodIssuesToFieldErrors(parsed.error.issues),
+    });
+  }
+
+  const template = await upsertMeasurementTemplate({
+    code: c.req.param("code"),
+    data: parsed.data,
+    db: c.env.TENANT_DB,
+    runtime: getDomainRuntime(c),
+  });
+
+  return jsonSuccess(c, { template });
+});
+
+app.delete("/v1/measurements/templates/:code", async (c) => {
+  const template = await deleteMeasurementTemplate({
+    code: c.req.param("code"),
+    db: c.env.TENANT_DB,
+    runtime: getDomainRuntime(c),
+  });
+
+  if (!template) {
+    return jsonError(c, {
+      code: "NOT_FOUND",
+      message: "Garment template was not found.",
+      status: 404,
+    });
+  }
+
+  return jsonSuccess(c, { template });
 });
 
 app.get("/v1/measurements", async (c) => {
@@ -506,6 +582,118 @@ app.post("/v1/contacts", async (c) => {
 
     throw error;
   }
+});
+
+app.patch("/v1/contacts/:contactId", async (c) => {
+  const body = (await c.req.json().catch(() => null)) as unknown;
+  const parsed = updateContactSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return jsonError(c, {
+      code: "VALIDATION_ERROR",
+      message: "Contact payload is invalid.",
+      status: 400,
+      fields: zodIssuesToFieldErrors(parsed.error.issues),
+    });
+  }
+
+  const contact = await updateCustomerContact({
+    contactId: c.req.param("contactId"),
+    data: parsed.data,
+    db: c.env.TENANT_DB,
+    runtime: getDomainRuntime(c),
+  });
+
+  if (!contact) {
+    return jsonError(c, {
+      code: "NOT_FOUND",
+      message: "Customer contact was not found.",
+      status: 404,
+    });
+  }
+
+  return jsonSuccess(c, { contact });
+});
+
+app.post("/v1/contacts/:contactId/profiles", async (c) => {
+  const body = (await c.req.json().catch(() => null)) as unknown;
+  const parsed = createCustomerProfileSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return jsonError(c, {
+      code: "VALIDATION_ERROR",
+      message: "Family profile payload is invalid.",
+      status: 400,
+      fields: zodIssuesToFieldErrors(parsed.error.issues),
+    });
+  }
+
+  const contact = await createCustomerProfile({
+    contactId: c.req.param("contactId"),
+    data: parsed.data,
+    db: c.env.TENANT_DB,
+    runtime: getDomainRuntime(c),
+  });
+
+  if (!contact) {
+    return jsonError(c, {
+      code: "NOT_FOUND",
+      message: "Customer contact was not found.",
+      status: 404,
+    });
+  }
+
+  return jsonSuccess(c, { contact }, 201);
+});
+
+app.patch("/v1/profiles/:profileId", async (c) => {
+  const body = (await c.req.json().catch(() => null)) as unknown;
+  const parsed = updateCustomerProfileSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return jsonError(c, {
+      code: "VALIDATION_ERROR",
+      message: "Customer profile payload is invalid.",
+      status: 400,
+      fields: zodIssuesToFieldErrors(parsed.error.issues),
+    });
+  }
+
+  const contact = await updateCustomerProfile({
+    data: parsed.data,
+    db: c.env.TENANT_DB,
+    profileId: c.req.param("profileId"),
+    runtime: getDomainRuntime(c),
+  });
+
+  if (!contact) {
+    return jsonError(c, {
+      code: "NOT_FOUND",
+      message: "Customer profile was not found.",
+      status: 404,
+    });
+  }
+
+  return jsonSuccess(c, { contact });
+});
+
+app.delete("/v1/profiles/:profileId", async (c) => {
+  const contact = await updateCustomerProfile({
+    data: { isActive: false },
+    db: c.env.TENANT_DB,
+    profileId: c.req.param("profileId"),
+    runtime: getDomainRuntime(c),
+  });
+
+  if (!contact) {
+    return jsonError(c, {
+      code: "NOT_FOUND",
+      message: "Customer profile was not found.",
+      status: 404,
+    });
+  }
+
+  return jsonSuccess(c, { contact });
 });
 
 app.post("/v1/measurements", async (c) => {

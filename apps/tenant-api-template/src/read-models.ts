@@ -18,6 +18,7 @@ import {
   tenantSettingsReadSchema,
   todayReportReadSchema,
   type AuditLogRead,
+  type CreateCustomerProfile,
   type CustomerContactRead,
   type CustomerTimelineEvent,
   type MeasurementTemplateRead,
@@ -30,6 +31,9 @@ import {
   type TenantSettingsRead,
   type TenantStaffMember,
   type TodayReportRead,
+  type UpdateContact,
+  type UpdateCustomerProfile,
+  type UpsertMeasurementTemplate,
 } from "@tailoros/schemas";
 
 import type { TenantDomainRuntime } from "./domain-service";
@@ -232,15 +236,15 @@ export async function listCustomers(input: {
       c.primary_mobile_e164 LIKE ?
       OR c.primary_mobile_national LIKE ?
       OR p.search_name LIKE ?
-      OR p.customer_code LIKE ?
-      OR p.full_name LIKE ?
+      OR LOWER(p.customer_code) LIKE ?
+      OR LOWER(p.full_name) LIKE ?
     )`);
     values.push(
       `${mobile ?? query}%`,
       `%${query.replace(/\D/g, "")}%`,
       normalizedName,
-      `${query}%`,
-      `%${query}%`,
+      `${query.toLowerCase()}%`,
+      `%${query.toLowerCase()}%`,
     );
   }
 
@@ -273,6 +277,183 @@ export async function getCustomer(input: {
     .all<CustomerRow>();
 
   return parseCustomerRows(rows.results)[0] ?? null;
+}
+
+export async function updateCustomerContact(input: {
+  db: D1Database;
+  contactId: string;
+  data: UpdateContact;
+  runtime: TenantDomainRuntime;
+}): Promise<CustomerContactRead | null> {
+  const existing = await getCustomer({
+    contactId: input.contactId,
+    db: input.db,
+  });
+
+  if (!existing) {
+    return null;
+  }
+
+  const now = toIso(input.runtime.now);
+  const primaryMobile = input.data.primaryMobile
+    ? normalizeIndianMobile(input.data.primaryMobile)
+    : null;
+  const whatsappMobile = input.data.whatsappMobile
+    ? normalizeIndianMobile(input.data.whatsappMobile)
+    : null;
+
+  await input.db
+    .prepare(
+      `UPDATE customer_contacts
+      SET primary_mobile_e164 = ?,
+          primary_mobile_national = ?,
+          whatsapp_mobile_e164 = ?,
+          whatsapp_opt_in = ?,
+          address_json = ?,
+          notes = ?,
+          updated_at = ?
+      WHERE id = ?`,
+    )
+    .bind(
+      primaryMobile?.e164 ?? existing.primaryMobileE164,
+      primaryMobile?.nationalNumber ?? existing.primaryMobileNational,
+      whatsappMobile?.e164 ?? existing.whatsappMobileE164,
+      input.data.whatsappOptIn === undefined
+        ? existing.whatsappOptIn
+          ? 1
+          : 0
+        : input.data.whatsappOptIn
+          ? 1
+          : 0,
+      input.data.address ? JSON.stringify(input.data.address) : null,
+      input.data.notes ?? existing.notes,
+      now,
+      input.contactId,
+    )
+    .run();
+
+  return getCustomer({ contactId: input.contactId, db: input.db });
+}
+
+export async function createCustomerProfile(input: {
+  db: D1Database;
+  contactId: string;
+  data: CreateCustomerProfile;
+  runtime: TenantDomainRuntime;
+}): Promise<CustomerContactRead | null> {
+  const existing = await getCustomer({
+    contactId: input.contactId,
+    db: input.db,
+  });
+
+  if (!existing) {
+    return null;
+  }
+
+  const now = toIso(input.runtime.now);
+  const profileId = createLocalId("CUS");
+
+  await input.db.batch([
+    input.db
+      .prepare(
+        `INSERT INTO customer_profiles (
+          id,
+          customer_code,
+          contact_id,
+          full_name,
+          search_name,
+          relation_label,
+          gender_context,
+          is_active,
+          created_by_user_id,
+          created_at,
+          updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
+      )
+      .bind(
+        profileId,
+        profileId,
+        input.contactId,
+        input.data.fullName,
+        normalizeSearchText(input.data.fullName),
+        input.data.relationLabel ?? null,
+        input.data.genderContext ?? null,
+        input.data.createdByUserId,
+        now,
+        now,
+      ),
+    input.db
+      .prepare("UPDATE customer_contacts SET updated_at = ? WHERE id = ?")
+      .bind(now, input.contactId),
+  ]);
+
+  return getCustomer({ contactId: input.contactId, db: input.db });
+}
+
+export async function updateCustomerProfile(input: {
+  db: D1Database;
+  profileId: string;
+  data: UpdateCustomerProfile;
+  runtime: TenantDomainRuntime;
+}): Promise<CustomerContactRead | null> {
+  const current = await input.db
+    .prepare(
+      `SELECT contact_id AS contactId,
+              full_name AS fullName,
+              relation_label AS relationLabel,
+              gender_context AS genderContext,
+              is_active AS isActive
+      FROM customer_profiles
+      WHERE id = ?
+      LIMIT 1`,
+    )
+    .bind(input.profileId)
+    .first<{
+      contactId: string;
+      fullName: string;
+      relationLabel: string | null;
+      genderContext: string | null;
+      isActive: number;
+    }>();
+
+  if (!current) {
+    return null;
+  }
+
+  const now = toIso(input.runtime.now);
+  const fullName = input.data.fullName ?? current.fullName;
+
+  await input.db.batch([
+    input.db
+      .prepare(
+        `UPDATE customer_profiles
+        SET full_name = ?,
+            search_name = ?,
+            relation_label = ?,
+            gender_context = ?,
+            is_active = ?,
+            updated_at = ?
+        WHERE id = ?`,
+      )
+      .bind(
+        fullName,
+        normalizeSearchText(fullName),
+        input.data.relationLabel ?? current.relationLabel,
+        input.data.genderContext ?? current.genderContext,
+        input.data.isActive === undefined
+          ? current.isActive
+          : input.data.isActive
+            ? 1
+            : 0,
+        now,
+        input.profileId,
+      ),
+    input.db
+      .prepare("UPDATE customer_contacts SET updated_at = ? WHERE id = ?")
+      .bind(now, current.contactId),
+  ]);
+
+  return getCustomer({ contactId: current.contactId, db: input.db });
 }
 
 export async function getCustomerTimeline(input: {
@@ -369,6 +550,126 @@ export async function listMeasurementTemplates(
     .all<TemplateRow>();
 
   return rows.results.map(parseTemplateRow);
+}
+
+export async function upsertMeasurementTemplate(input: {
+  db: D1Database;
+  code?: string;
+  data: UpsertMeasurementTemplate;
+  runtime: TenantDomainRuntime;
+}): Promise<MeasurementTemplateRead> {
+  const now = toIso(input.runtime.now);
+  const code =
+    input.code ??
+    input.data.code ??
+    input.data.displayName
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 48);
+
+  await input.db
+    .prepare(
+      `INSERT INTO garment_types (
+        code,
+        display_name,
+        measurement_schema_json,
+        default_expected_days,
+        default_price_paise,
+        is_active,
+        created_at,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(code) DO UPDATE SET
+        display_name = excluded.display_name,
+        measurement_schema_json = excluded.measurement_schema_json,
+        default_expected_days = excluded.default_expected_days,
+        default_price_paise = excluded.default_price_paise,
+        is_active = excluded.is_active,
+        updated_at = excluded.updated_at`,
+    )
+    .bind(
+      code,
+      input.data.displayName,
+      JSON.stringify(input.data.measurementSchema),
+      input.data.defaultExpectedDays,
+      input.data.defaultPricePaise,
+      input.data.isActive ? 1 : 0,
+      now,
+      now,
+    )
+    .run();
+
+  const row = await input.db
+    .prepare(
+      `SELECT
+        code,
+        display_name AS displayName,
+        measurement_schema_json AS measurementSchemaJson,
+        default_expected_days AS defaultExpectedDays,
+        default_price_paise AS defaultPricePaise,
+        is_active AS isActive,
+        updated_at AS updatedAt
+      FROM garment_types
+      WHERE code = ?
+      LIMIT 1`,
+    )
+    .bind(code)
+    .first<TemplateRow>();
+
+  if (!row) {
+    throw new Error("Garment template was not readable after save.");
+  }
+
+  return parseTemplateRow(row);
+}
+
+export async function deleteMeasurementTemplate(input: {
+  db: D1Database;
+  code: string;
+  runtime: TenantDomainRuntime;
+}): Promise<MeasurementTemplateRead | null> {
+  const existing = await input.db
+    .prepare(
+      `SELECT
+        code,
+        display_name AS displayName,
+        measurement_schema_json AS measurementSchemaJson,
+        default_expected_days AS defaultExpectedDays,
+        default_price_paise AS defaultPricePaise,
+        is_active AS isActive,
+        updated_at AS updatedAt
+      FROM garment_types
+      WHERE code = ?
+      LIMIT 1`,
+    )
+    .bind(input.code)
+    .first<TemplateRow>();
+
+  if (!existing) {
+    return null;
+  }
+
+  const inUse = await countFirst(input.db, "SELECT COUNT(*) AS count FROM order_items WHERE garment_type_code = ?", [
+    input.code,
+  ]);
+
+  if (inUse > 0) {
+    await input.db
+      .prepare(
+        "UPDATE garment_types SET is_active = 0, updated_at = ? WHERE code = ?",
+      )
+      .bind(toIso(input.runtime.now), input.code)
+      .run();
+  } else {
+    await input.db
+      .prepare("DELETE FROM garment_types WHERE code = ?")
+      .bind(input.code)
+      .run();
+  }
+
+  return parseTemplateRow({ ...existing, isActive: 0 });
 }
 
 export async function listMeasurementVersions(input: {
@@ -1338,9 +1639,11 @@ function parseTemplateRow(row: TemplateRow): MeasurementTemplateRead {
 function parseMeasurementVersionRow(
   row: MeasurementVersionRow,
 ): MeasurementVersionRead {
+  const { valuesJson, ...readRow } = row;
+
   return measurementVersionReadSchema.parse({
-    ...row,
-    values: parseJsonRecord(row.valuesJson),
+    ...readRow,
+    values: parseJsonRecord(valuesJson),
   });
 }
 

@@ -259,8 +259,12 @@ function resolveTenantPermission(input: {
 
   if (input.method === "POST") {
     if (path === "/contacts") return "customers.write";
+    if (/^\/contacts\/[^/]+\/profiles$/.test(path)) {
+      return "customers.write";
+    }
     if (path === "/staff") return "staff.manage";
     if (path === "/measurements") return "measurements.write";
+    if (path === "/measurements/templates") return "settings.manage";
     if (path === "/orders") return "orders.write";
     if (/^\/orders\/[^/]+\/payments$/.test(path)) {
       return paymentMutationPermission(input.bodyText);
@@ -270,7 +274,15 @@ function resolveTenantPermission(input: {
   }
 
   if (input.method === "PATCH") {
+    if (path.startsWith("/contacts/")) return "customers.write";
+    if (path.startsWith("/profiles/")) return "customers.write";
+    if (path.startsWith("/measurements/templates/")) return "settings.manage";
     if (path.startsWith("/production/tasks/")) return "production.update";
+  }
+
+  if (input.method === "DELETE") {
+    if (path.startsWith("/profiles/")) return "customers.write";
+    if (path.startsWith("/measurements/templates/")) return "settings.manage";
   }
 
   return null;
