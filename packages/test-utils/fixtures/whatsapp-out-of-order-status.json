@@ -1,0 +1,7 @@
+{
+  "provider": "meta",
+  "providerMessageId": "wamid.tailoros.001",
+  "currentStatus": "delivered",
+  "incomingStatus": "sent",
+  "expectedHandling": "stale_ignored"
+}

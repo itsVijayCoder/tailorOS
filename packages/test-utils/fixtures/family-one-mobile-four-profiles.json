@@ -1,0 +1,10 @@
+{
+  "familyCode": "FAM-MDU-P090004",
+  "primaryMobileE164": "+919876543210",
+  "profiles": [
+    { "customerCode": "CUS-P090006", "fullName": "Meena Ravi", "relationLabel": "Self" },
+    { "customerCode": "CUS-P090007", "fullName": "Ravi Kumar", "relationLabel": "Spouse" },
+    { "customerCode": "CUS-P090008", "fullName": "Ananya Ravi", "relationLabel": "Daughter" },
+    { "customerCode": "CUS-P090009", "fullName": "Meena R.", "relationLabel": "Mother" }
+  ]
+}

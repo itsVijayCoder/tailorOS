@@ -1,0 +1,7 @@
+{
+  "provider": "meta",
+  "providerMessageId": "wamid.tailoros.001",
+  "firstProviderEventId": "wamid.event.P090021",
+  "duplicateProviderEventId": "wamid.event.P090021",
+  "expectedHandling": "duplicate_ignored"
+}
