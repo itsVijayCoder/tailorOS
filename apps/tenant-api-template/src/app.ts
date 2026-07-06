@@ -7,6 +7,7 @@ import {
   createContactWithProfilesSchema,
   createMeasurementVersionSchema,
   createOrderSchema,
+  createTenantStaffMemberSchema,
   listCustomersQuerySchema,
   listMeasurementsQuerySchema,
   listOrdersQuerySchema,
@@ -37,6 +38,7 @@ import {
 import { D1TenantDomainRepository } from "./domain-store";
 import type { TenantApiEnv } from "./env";
 import {
+  createStaffMember,
   getCustomer,
   getCustomerTimeline,
   getDashboard,
@@ -400,6 +402,27 @@ app.get("/v1/reports/today", async (c) => {
 app.get("/v1/settings", async (c) => {
   const settings = await getSettings(c.env.TENANT_DB);
   return jsonSuccess(c, { settings });
+});
+
+app.post("/v1/staff", async (c) => {
+  const body = (await c.req.json().catch(() => null)) as unknown;
+  const parsed = createTenantStaffMemberSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return validationError(c, "Staff payload is invalid.", parsed.error);
+  }
+
+  const staff = await createStaffMember({
+    db: c.env.TENANT_DB,
+    displayName: parsed.data.displayName,
+    role: parsed.data.role,
+    status: parsed.data.status,
+    ...(parsed.data.email ? { email: parsed.data.email } : {}),
+    ...(parsed.data.mobileE164 ? { mobileE164: parsed.data.mobileE164 } : {}),
+    ...(parsed.data.userId ? { userId: parsed.data.userId } : {}),
+  });
+
+  return jsonSuccess(c, { staff }, 201);
 });
 
 app.get("/v1/notifications", async (c) => {

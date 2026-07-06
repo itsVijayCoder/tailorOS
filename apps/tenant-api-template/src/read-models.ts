@@ -13,6 +13,7 @@ import {
   orderReadSchema,
   productionTaskReadSchema,
   receiptReadSchema,
+  tenantStaffMemberSchema,
   tenantDashboardReadSchema,
   tenantSettingsReadSchema,
   todayReportReadSchema,
@@ -27,6 +28,7 @@ import {
   type ReceiptRead,
   type TenantDashboardRead,
   type TenantSettingsRead,
+  type TenantStaffMember,
   type TodayReportRead,
 } from "@tailoros/schemas";
 
@@ -759,6 +761,64 @@ export async function getSettings(db: D1Database): Promise<TenantSettingsRead> {
           ? receiptBranding.footerNote
           : null,
     },
+  });
+}
+
+export async function createStaffMember(input: {
+  db: D1Database;
+  userId?: string;
+  displayName: string;
+  email?: string;
+  mobileE164?: string;
+  role: TenantStaffMember["role"];
+  status: TenantStaffMember["status"];
+}): Promise<TenantStaffMember> {
+  const now = new Date().toISOString();
+  const userId =
+    input.userId ??
+    `usr_${crypto.randomUUID().replaceAll("-", "").slice(0, 20)}`;
+
+  await input.db
+    .prepare(
+      `INSERT INTO staff_profiles (
+        user_id,
+        display_name,
+        email,
+        mobile_e164,
+        role,
+        status,
+        created_at,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(user_id) DO UPDATE SET
+        display_name = excluded.display_name,
+        email = excluded.email,
+        mobile_e164 = excluded.mobile_e164,
+        role = excluded.role,
+        status = excluded.status,
+        updated_at = excluded.updated_at`,
+    )
+    .bind(
+      userId,
+      input.displayName,
+      input.email ?? null,
+      input.mobileE164 ?? null,
+      input.role,
+      input.status,
+      now,
+      now,
+    )
+    .run();
+
+  return tenantStaffMemberSchema.parse({
+    createdAt: now,
+    displayName: input.displayName,
+    email: input.email ?? null,
+    mobileE164: input.mobileE164 ?? null,
+    role: input.role,
+    status: input.status,
+    updatedAt: now,
+    userId,
   });
 }
 

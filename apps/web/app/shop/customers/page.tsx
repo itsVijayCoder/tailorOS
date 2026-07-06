@@ -10,12 +10,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { SearchField } from "@/components/ui/search-field";
-import { Textarea } from "@/components/ui/textarea";
-import { createCustomerAction } from "@/features/core-modules/actions";
 import {
   getRealDashboardData,
   getRealFamilyAccounts,
@@ -32,10 +27,13 @@ import {
   formatShortDate,
   statusTone,
 } from "@/features/core-modules/presenters";
+import { CustomerCreateForm } from "./customer-create-form";
 
 export const metadata: Metadata = {
   title: "Customers and Family",
 };
+
+export const dynamic = "force-dynamic";
 
 export default async function CustomersPage() {
   const [customers, orders, dashboard] = await Promise.all([
@@ -157,94 +155,56 @@ export default async function CustomersPage() {
             </div>
           </DataPanel>
 
-          <DataPanel
-            description="The customer page should surface why staff must pick a person before opening measurements."
-            title="Safety rules"
-          >
-            <div className="grid gap-3">
-              {[
-                {
-                  icon: Phone,
-                  title: "Normalize every phone input",
-                  body: "Leading zero, spaces, and +91 variants resolve to the same E.164 number.",
-                },
-                {
-                  icon: UserRoundCheck,
-                  title: "Select exact person",
-                  body: "Measurements and orders belong to a customer profile, never directly to a mobile number.",
-                },
-                {
-                  icon: ShieldCheck,
-                  title: "Override duplicate with reason",
-                  body: "Duplicate profile creation is allowed only with a staff reason and audit record.",
-                },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <article
-                    className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 rounded-lg border border-hairline bg-surface p-3"
-                    key={item.title}
-                  >
-                    <span className="grid size-9 place-items-center rounded-lg border border-hairline bg-page text-accent">
-                      <Icon aria-hidden className="size-4" />
-                    </span>
-                    <div>
-                      <h3 className="text-sm font-semibold text-ink-display">
-                        {item.title}
-                      </h3>
-                      <p className="mt-1 text-sm leading-6 text-ink-muted">
-                        {item.body}
-                      </p>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </DataPanel>
+          <div className="grid content-start gap-5">
+            <DataPanel title="Create family contact">
+              <CustomerCreateForm />
+            </DataPanel>
 
-          <DataPanel title="Create family contact">
-            <form action={createCustomerAction} className="grid gap-3">
-              <div className="grid gap-2">
-                <Label htmlFor="primaryMobile">Mobile</Label>
-                <Input
-                  id="primaryMobile"
-                  name="primaryMobile"
-                  placeholder="+91 98765 43210"
-                  required
-                />
+            <DataPanel
+              description="The customer page should surface why staff must pick a person before opening measurements."
+              title="Safety rules"
+            >
+              <div className="grid gap-3">
+                {[
+                  {
+                    icon: Phone,
+                    title: "Normalize every phone input",
+                    body: "Leading zero, spaces, and +91 variants resolve to the same E.164 number.",
+                  },
+                  {
+                    icon: UserRoundCheck,
+                    title: "Select exact person",
+                    body: "Measurements and orders belong to a customer profile, never directly to a mobile number.",
+                  },
+                  {
+                    icon: ShieldCheck,
+                    title: "Override duplicate with reason",
+                    body: "Duplicate profile creation is allowed only with a staff reason and audit record.",
+                  },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <article
+                      className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 rounded-lg border border-hairline bg-surface p-3"
+                      key={item.title}
+                    >
+                      <span className="grid size-9 place-items-center rounded-lg border border-hairline bg-page text-accent">
+                        <Icon aria-hidden className="size-4" />
+                      </span>
+                      <div>
+                        <h3 className="text-sm font-semibold text-ink-display">
+                          {item.title}
+                        </h3>
+                        <p className="mt-1 text-sm leading-6 text-ink-muted">
+                          {item.body}
+                        </p>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="profileName">Primary profile</Label>
-                <Input
-                  id="profileName"
-                  name="profileName"
-                  placeholder="Customer full name"
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="profileName2">Family profile</Label>
-                <Input
-                  id="profileName2"
-                  name="profileName"
-                  placeholder="Optional family member"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  name="notes"
-                  placeholder="Notebook import, address hint, or staff note"
-                />
-              </div>
-              <label className="flex items-center gap-2 text-sm text-ink-body">
-                <input name="whatsappOptIn" type="checkbox" />
-                WhatsApp opt-in
-              </label>
-              <Button type="submit">Create customer</Button>
-            </form>
-          </DataPanel>
+            </DataPanel>
+          </div>
         </section>
 
         <section>

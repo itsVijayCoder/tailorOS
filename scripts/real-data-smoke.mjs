@@ -189,6 +189,23 @@ async function main() {
   );
   assert(search.data.results.length > 0, "Search did not return smoke rows.");
 
+  const staff = await postJson("/staff", "req_smoke_staff", {
+    displayName: `Smoke Tailor ${requestSeed}`,
+    email: `smoke.tailor.${requestSeed}@example.com`,
+    mobileE164: `+91${primaryMobile}`,
+    role: "tailor",
+    status: "active",
+  });
+  assert(staff.data.staff.role === "tailor", "Staff role was not persisted.");
+
+  const settings = await getJson("/settings", "req_smoke_settings");
+  assert(
+    settings.data.settings.staff.some(
+      (member) => member.userId === staff.data.staff.userId,
+    ),
+    "Settings did not include the created staff member.",
+  );
+
   console.log("Real-data smoke passed.");
   console.log(
     JSON.stringify(

@@ -22,10 +22,13 @@ import {
   humanizeStatus,
   settingTone,
 } from "@/features/core-modules/presenters";
+import { StaffCreateForm } from "./staff-create-form";
 
 export const metadata: Metadata = {
   title: "Settings",
 };
+
+export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const { measurementTemplates, settingsItems, settings } =
@@ -109,6 +112,9 @@ export default async function SettingsPage() {
           </DataPanel>
 
           <div className="grid gap-5">
+            <DataPanel title="Add employee">
+              <StaffCreateForm />
+            </DataPanel>
             <DataPanel title="Role guardrails">
               <div className="grid gap-3">
                 {[
@@ -191,6 +197,41 @@ export default async function SettingsPage() {
                     {template.optionalFields.length} optional
                   </StatusBadge>
                 </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <SectionHeader
+            body="Owner-managed staff profiles drive task ownership, payment audit names, and settings visibility."
+            eyebrow="Employees"
+            title="Staff roster"
+          />
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {settings.staff.map((staff) => (
+              <article
+                className="rounded-lg border border-hairline bg-surface-strong p-4 shadow-sm"
+                key={staff.userId}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-display text-xl font-medium text-ink-display">
+                      {staff.displayName}
+                    </h3>
+                    <p className="mt-1 text-sm text-ink-muted">
+                      {staff.email ?? staff.mobileE164 ?? staff.userId}
+                    </p>
+                  </div>
+                  <StatusBadge
+                    tone={staff.status === "active" ? "success" : "warning"}
+                  >
+                    {staff.status}
+                  </StatusBadge>
+                </div>
+                <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  {staff.role.replaceAll("_", " ")}
+                </p>
               </article>
             ))}
           </div>

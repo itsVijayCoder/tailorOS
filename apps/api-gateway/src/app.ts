@@ -259,6 +259,7 @@ function resolveTenantPermission(input: {
 
   if (input.method === "POST") {
     if (path === "/contacts") return "customers.write";
+    if (path === "/staff") return "staff.manage";
     if (path === "/measurements") return "measurements.write";
     if (path === "/orders") return "orders.write";
     if (/^\/orders\/[^/]+\/payments$/.test(path)) {

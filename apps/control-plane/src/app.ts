@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import {
   createTenantRequestSchema,
+  platformTenantOnboardingRequestSchema,
   tenantIdSchema,
   zodIssuesToFieldErrors,
 } from "@tailoros/schemas";
@@ -17,10 +18,13 @@ import {
 import { D1ControlPlaneStore } from "./control-store";
 import type { ControlPlaneEnv } from "./env";
 import {
+  createOwnerAccessIds,
+  createOwnerSetupSessionToken,
   createTenantSignup,
   ProvisioningQueueError,
   resolveIdempotencyKey,
   retryTenantProvisioning,
+  sha256Hex,
   TenantSlugConflictError,
 } from "./provisioning";
 import { verifyTurnstileToken } from "./turnstile";
@@ -96,6 +100,112 @@ app.post("/v1/tenants/provision", async (c) => {
     });
 
     return jsonSuccess(c, result, 202);
+  } catch (error) {
+    if (error instanceof TenantSlugConflictError) {
+      return jsonError(c, {
+        code: "CONFLICT",
+        message: error.message,
+        status: 409,
+        fields: {
+          preferredSlug: [
+            "This slug is already reserved. Try adding city, area, or shop code.",
+          ],
+        },
+      });
+    }
+
+    if (error instanceof ProvisioningQueueError) {
+      return jsonError(c, {
+        code: "SERVICE_UNAVAILABLE",
+        message: error.message,
+        status: 503,
+      });
+    }
+
+    throw error;
+  }
+});
+
+app.post("/v1/admin/tenants/onboard", async (c) => {
+  const admin = authorizePlatformAdmin(c.req.header("authorization"), c.env);
+
+  if (!admin.ok) {
+    return jsonError(c, {
+      code: admin.missing ? "UNAUTHORIZED" : "FORBIDDEN",
+      message: admin.missing
+        ? "A platform admin token is required."
+        : "Platform admin token is invalid.",
+      status: admin.missing ? 401 : 403,
+    });
+  }
+
+  const body = (await c.req.json().catch(() => null)) as unknown;
+  const parsed = platformTenantOnboardingRequestSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return jsonError(c, {
+      code: "VALIDATION_ERROR",
+      message: "Tenant onboarding request is invalid.",
+      status: 400,
+      fields: zodIssuesToFieldErrors(parsed.error.issues),
+    });
+  }
+
+  const store = new D1ControlPlaneStore(c.env.CONTROL_DB);
+  const idempotency = resolveIdempotencyKey({
+    headerValue: c.req.header("idempotency-key") ?? null,
+    request: {
+      ...parsed.data,
+      turnstileToken: "test_super_admin_onboarding",
+    },
+  });
+
+  if (!idempotency.ok) {
+    return jsonError(c, {
+      code: "VALIDATION_ERROR",
+      message: "Idempotency key is invalid.",
+      status: 400,
+      fields: { idempotencyKey: [idempotency.message] },
+    });
+  }
+
+  try {
+    const provisioning = await createTenantSignup({
+      request: {
+        ...parsed.data,
+        turnstileToken: "test_super_admin_onboarding",
+      },
+      idempotencyKey: idempotency.value,
+      store,
+      queue: c.env.TENANT_PROVISION_QUEUE,
+    });
+    const ids = createOwnerAccessIds();
+    const sessionToken = createOwnerSetupSessionToken(provisioning.slug);
+    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    const ownerAccess = await store.createOwnerAccess({
+      ...ids,
+      tenantId: provisioning.tenantId,
+      displayName: parsed.data.ownerName,
+      email: parsed.data.ownerEmail,
+      mobileE164: parsed.data.ownerMobile,
+      now: new Date().toISOString(),
+      sessionExpiresAt: expiresAt.toISOString(),
+      sessionTokenHash: await sha256Hex(sessionToken),
+    });
+
+    return jsonSuccess(
+      c,
+      {
+        provisioning,
+        ownerAccess: {
+          ...ownerAccess,
+          sessionToken,
+          loginHint: `Use Bearer ${sessionToken} for ${provisioning.slug} until login UI is connected.`,
+          tenantApiPath: `/v1/tenant/${provisioning.slug}`,
+        },
+      },
+      202,
+    );
   } catch (error) {
     if (error instanceof TenantSlugConflictError) {
       return jsonError(c, {
@@ -260,3 +370,20 @@ app.post("/v1/tenants/:tenantId/suspend", async (c) => {
 
 app.notFound(createNotFoundHandler<ControlPlaneEnv>());
 app.onError(createErrorHandler<ControlPlaneEnv>());
+
+function authorizePlatformAdmin(authorization: string | undefined, env: Env) {
+  const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+  const configuredToken =
+    (env as Env & { PLATFORM_ADMIN_TOKEN?: string }).PLATFORM_ADMIN_TOKEN ??
+    (env.ENVIRONMENT === "local" ? "local_super_admin_token_dev_2026" : "");
+
+  if (!token) {
+    return { ok: false as const, missing: true };
+  }
+
+  if (!configuredToken || token !== configuredToken) {
+    return { ok: false as const, missing: false };
+  }
+
+  return { ok: true as const };
+}

@@ -2,7 +2,27 @@
 
 import { revalidatePath } from "next/cache";
 
+import type { CoreFormActionState } from "./action-state";
 import { tenantPost } from "./tenant-api";
+
+export async function createCustomerFormAction(
+  _prevState: CoreFormActionState,
+  formData: FormData,
+): Promise<CoreFormActionState> {
+  try {
+    await createCustomerAction(formData);
+    return {
+      message: "Customer family contact created.",
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      message:
+        error instanceof Error ? error.message : "Customer creation failed.",
+      status: "error",
+    };
+  }
+}
 
 export async function createCustomerAction(formData: FormData): Promise<void> {
   const profileNames = formData
@@ -31,6 +51,45 @@ export async function createCustomerAction(formData: FormData): Promise<void> {
 
   revalidatePath("/shop/customers");
   revalidatePath("/shop");
+}
+
+export async function createStaffFormAction(
+  _prevState: CoreFormActionState,
+  formData: FormData,
+): Promise<CoreFormActionState> {
+  try {
+    await createStaffAction(formData);
+    return {
+      message: "Employee profile created.",
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      message:
+        error instanceof Error ? error.message : "Employee creation failed.",
+      status: "error",
+    };
+  }
+}
+
+export async function createStaffAction(formData: FormData): Promise<void> {
+  const result = await tenantPost(
+    "/staff",
+    {
+      displayName: requiredString(formData.get("displayName")),
+      email: optionalString(formData.get("email")),
+      mobileE164: optionalString(formData.get("mobileE164")),
+      role: requiredString(formData.get("role")),
+      status: formData.get("status") === "invited" ? "invited" : "active",
+    },
+    { staff: null },
+  );
+
+  if (result.error) {
+    throw new Error(result.error);
+  }
+
+  revalidatePath("/shop/settings");
 }
 
 export async function createMeasurementAction(

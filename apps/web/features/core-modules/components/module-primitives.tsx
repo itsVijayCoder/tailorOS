@@ -21,7 +21,7 @@ export function PageHeader({
 }) {
   return (
     <section className="border-b border-hairline bg-page px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex w-full flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-4xl">
           <Badge variant="signal">{eyebrow}</Badge>
           <h1 className="mt-4 text-balance font-display text-4xl font-medium leading-[0.96] text-ink-display sm:text-5xl lg:text-6xl">
@@ -31,7 +31,9 @@ export function PageHeader({
             {body}
           </p>
         </div>
-        {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
+        {actions ? (
+          <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>
+        ) : null}
       </div>
     </section>
   );
@@ -59,7 +61,11 @@ export function SectionHeader({
         <h2 className="mt-1 font-display text-3xl font-medium leading-none text-ink-display">
           {title}
         </h2>
-        {body ? <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-muted">{body}</p> : null}
+        {body ? (
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-muted">
+            {body}
+          </p>
+        ) : null}
       </div>
       {actionLabel && actionHref ? (
         <a
@@ -95,10 +101,12 @@ export function MetricCard({
             className={cn(
               "grid size-10 place-items-center rounded-lg border",
               tone === "neutral" && "border-hairline bg-surface text-ink-muted",
-              tone === "accent" && "border-accent bg-accent text-accent-foreground",
+              tone === "accent" &&
+                "border-accent bg-accent text-accent-foreground",
               tone === "success" &&
                 "border-state-success bg-state-success text-success-foreground",
-              tone === "warning" && "border-signal bg-signal text-signal-darker",
+              tone === "warning" &&
+                "border-signal bg-signal text-signal-darker",
               tone === "danger" &&
                 "border-state-danger bg-state-danger text-destructive-foreground",
             )}
@@ -158,10 +166,12 @@ export function StatusBadge({
         tone === "neutral" && "border-hairline bg-surface text-ink-muted",
         tone === "success" &&
           "border-state-success bg-state-success text-success-foreground",
-        tone === "warning" && "border-signal bg-signal-faded text-signal-darker",
+        tone === "warning" &&
+          "border-signal bg-signal-faded text-signal-darker",
         tone === "danger" && "border-state-danger bg-surface text-state-danger",
         tone === "accent" && "border-accent bg-accent-faded text-ink-display",
-        tone === "whatsapp" && "border-wa-read bg-wa-read text-primary-foreground",
+        tone === "whatsapp" &&
+          "border-wa-read bg-wa-read text-primary-foreground",
       )}
     >
       {children}
@@ -169,16 +179,12 @@ export function StatusBadge({
   );
 }
 
-export function EmptyState({
-  body,
-  title,
-}: {
-  body: string;
-  title: string;
-}) {
+export function EmptyState({ body, title }: { body: string; title: string }) {
   return (
     <div className="rounded-lg border border-dashed border-hairline bg-surface p-5 text-center">
-      <h3 className="font-display text-xl font-medium text-ink-display">{title}</h3>
+      <h3 className="font-display text-xl font-medium text-ink-display">
+        {title}
+      </h3>
       <p className="mt-2 text-sm leading-6 text-ink-muted">{body}</p>
     </div>
   );

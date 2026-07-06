@@ -8,6 +8,8 @@ import {
   type AuditLogInput,
   type ControlPlaneStore,
   type DatabaseRegistryInput,
+  type OwnerAccessInput,
+  type OwnerAccessRecord,
   type SignupReservationInput,
   type WorkerRegistryInput,
 } from "./provisioning";
@@ -236,6 +238,112 @@ LIMIT ?`,
     }
 
     return created;
+  }
+
+  async createOwnerAccess(input: OwnerAccessInput) {
+    const existingUser = await this.db
+      .prepare("SELECT id FROM users WHERE email = ? LIMIT 1")
+      .bind(input.email)
+      .first<{ id: string }>();
+    const userId = existingUser?.id ?? input.userId;
+
+    await this.db.batch([
+      this.db
+        .prepare(
+          `INSERT INTO users (
+            id,
+            display_name,
+            email,
+            primary_mobile_e164,
+            status,
+            created_at,
+            updated_at
+          ) VALUES (?, ?, ?, ?, 'active', ?, ?)
+          ON CONFLICT(email) DO UPDATE SET
+            display_name = excluded.display_name,
+            primary_mobile_e164 = excluded.primary_mobile_e164,
+            status = 'active',
+            updated_at = excluded.updated_at`,
+        )
+        .bind(
+          userId,
+          input.displayName,
+          input.email,
+          input.mobileE164,
+          input.now,
+          input.now,
+        ),
+      this.db
+        .prepare(
+          `INSERT INTO memberships (
+            id,
+            tenant_id,
+            user_id,
+            role,
+            status,
+            created_at,
+            updated_at
+          ) VALUES (?, ?, ?, 'owner', 'active', ?, ?)
+          ON CONFLICT(tenant_id, user_id) DO UPDATE SET
+            role = 'owner',
+            status = 'active',
+            updated_at = excluded.updated_at`,
+        )
+        .bind(input.membershipId, input.tenantId, userId, input.now, input.now),
+      this.db
+        .prepare(
+          `INSERT INTO staff_sessions (
+            id,
+            user_id,
+            session_token_hash,
+            status,
+            expires_at,
+            created_at,
+            updated_at
+          ) VALUES (?, ?, ?, 'active', ?, ?, ?)`,
+        )
+        .bind(
+          input.sessionId,
+          userId,
+          input.sessionTokenHash,
+          input.sessionExpiresAt,
+          input.now,
+          input.now,
+        ),
+      this.db
+        .prepare(
+          `INSERT INTO platform_audit_logs (
+            id,
+            tenant_id,
+            actor_type,
+            actor_id,
+            action,
+            target_type,
+            target_id,
+            reason_code,
+            summary,
+            metadata_json,
+            created_at
+          ) VALUES (?, ?, 'platform_admin', NULL, 'tenant.owner_access_created', 'user', ?, 'super_admin_onboarding', ?, ?, ?)`,
+        )
+        .bind(
+          `AUD-${input.sessionId}`,
+          input.tenantId,
+          userId,
+          "Owner access setup token issued by platform admin.",
+          JSON.stringify({ membershipId: input.membershipId }),
+          input.now,
+        ),
+    ]);
+
+    return {
+      email: input.email,
+      expiresAt: input.sessionExpiresAt,
+      membershipId: input.membershipId,
+      role: "owner",
+      sessionId: input.sessionId,
+      userId,
+    } satisfies OwnerAccessRecord;
   }
 
   async recordProvisioningAttempt(input: { tenantId: string; now: string }) {

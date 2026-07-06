@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   Clock3,
   Database,
-  FileWarning,
   KeyRound,
   LifeBuoy,
   LockKeyhole,
@@ -29,11 +28,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { TenantOnboardingForm } from "@/app/admin/tenants/onboarding-form";
+import { readControlPlaneTenants } from "@/features/admin/control-plane-api";
 import { cn } from "@/lib/utils";
+import type { TenantProvisioningSummary } from "@tailoros/schemas";
 
 export const metadata: Metadata = {
   title: "Tenant Control Plane | TailorOS",
@@ -41,101 +40,13 @@ export const metadata: Metadata = {
     "Phase 03 tenant provisioning, D1 registry, worker routing, recovery, and control-plane dashboard for TailorOS.",
 };
 
+export const dynamic = "force-dynamic";
+
 const navItems = [
   { href: "#dashboard", label: "Dashboard" },
   { href: "#provisioning", label: "Provisioning" },
   { href: "#registry", label: "Registry" },
   { href: "#recovery", label: "Recovery" },
-];
-
-const metrics = [
-  {
-    label: "Tenant records",
-    value: "12",
-    delta: "3 queued",
-    icon: Building2,
-  },
-  {
-    label: "Active shops",
-    value: "09",
-    delta: "healthy dispatch",
-    icon: CheckCircle2,
-  },
-  {
-    label: "Needs review",
-    value: "02",
-    delta: "recoverable",
-    icon: FileWarning,
-  },
-  {
-    label: "Schema target",
-    value: "v3",
-    delta: "tenant baseline",
-    icon: Database,
-  },
-];
-
-const tenants = [
-  {
-    name: "Sri Raja Tailors",
-    slug: "sri-raja-tailors",
-    tenantId: "ten_f4a91c83e0104b2d",
-    city: "Madurai",
-    status: "active",
-    plan: "pilot",
-    step: "active",
-    job: "succeeded",
-    attempts: 1,
-    schema: 3,
-    database: "tailoros_tenant_sri_raja_tailors_f4a91c83",
-    worker: "tailoros-tenant-sri-raja-tailors",
-    nextAction: "Dispatch allowed",
-  },
-  {
-    name: "Kovai Classic Fits",
-    slug: "kovai-classic-fits",
-    tenantId: "ten_d9266fa63f554d20",
-    city: "Coimbatore",
-    status: "failed_migration",
-    plan: "starter",
-    step: "failed_migration",
-    job: "failed",
-    attempts: 2,
-    schema: 0,
-    database: "tailoros_tenant_kovai_classic_fits_d9266fa6",
-    worker: "pending",
-    nextAction: "Retry migration",
-  },
-  {
-    name: "Velachery Bridal Lab",
-    slug: "velachery-bridal-lab",
-    tenantId: "ten_32c702e599d940aa",
-    city: "Chennai",
-    status: "db_creating",
-    plan: "growth",
-    step: "db_creating",
-    job: "running",
-    attempts: 1,
-    schema: 0,
-    database: "pending",
-    worker: "pending",
-    nextAction: "Await D1 create",
-  },
-  {
-    name: "Aruppukottai Alterations",
-    slug: "aruppukottai-alterations",
-    tenantId: "ten_8dcadf124f964f09",
-    city: "Virudhunagar",
-    status: "suspended",
-    plan: "pilot",
-    step: "active",
-    job: "succeeded",
-    attempts: 1,
-    schema: 3,
-    database: "tailoros_tenant_aruppukottai_alterations_8dcadf12",
-    worker: "tailoros-tenant-aruppukottai-alterations",
-    nextAction: "Dispatch blocked",
-  },
 ];
 
 const lifecycle = [
@@ -198,7 +109,11 @@ const registryRows = [
   },
 ];
 
-export default function TenantControlPlanePage() {
+export default async function TenantControlPlanePage() {
+  const tenantState = await readControlPlaneTenants();
+  const tenants = tenantState.data.tenants;
+  const metrics = buildMetrics(tenants);
+
   return (
     <main className="min-h-screen bg-page text-ink-body">
       <Header />
@@ -210,66 +125,54 @@ export default function TenantControlPlanePage() {
           <div className="space-y-7 motion-safe:animate-[route-enter_460ms_var(--ease-premium)_both]">
             <Badge variant="signal">
               <ShieldCheck aria-hidden className="size-3.5" />
-              Phase 03 control plane
+              Super admin
             </Badge>
             <div className="max-w-4xl">
               <h1 className="text-balance font-display text-5xl font-medium leading-[0.95] text-ink-display sm:text-6xl lg:text-7xl">
-                Tenant provisioning cockpit for isolated tailor shops.
+                Onboard tailor shops, owners, and access credentials.
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-7 text-ink-muted sm:text-lg">
-                Registration, slug reservation, D1 creation, schema migration,
-                worker registration, health checks, suspension, and recovery in
-                one platform-admin surface.
+                The platform builder can register a shop, reserve the slug,
+                queue tenant provisioning, issue owner access, and monitor the
+                registry from one control surface.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <a className={buttonVariants({ size: "lg" })} href="#registry">
-                Review registry
+              <a
+                className={buttonVariants({ size: "lg" })}
+                href="#provisioning"
+              >
+                Onboard shop
                 <ArrowRight aria-hidden className="size-4" />
               </a>
               <Link
                 className={buttonVariants({ variant: "secondary", size: "lg" })}
-                href="/docs/phase-wise/Phase03_control_plane_tenant_provisioning.html"
+                href="#registry"
               >
-                Phase 03 source
+                Review registry
               </Link>
             </div>
           </div>
 
           <Card className="overflow-hidden motion-safe:animate-[route-enter_620ms_var(--ease-premium)_both]">
             <CardHeader>
-              <CardTitle>Provisioning intake</CardTitle>
+              <CardTitle>Tailor shop onboarding</CardTitle>
               <CardDescription>
-                Current request shape accepted by the control-plane Worker.
+                Creates the tenant reservation, provisioning job, owner
+                membership, and setup session.
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="shop-name">Shop name</Label>
-                <Input id="shop-name" readOnly value="Sri Raja Tailors" />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label htmlFor="slug">Preferred slug</Label>
-                  <Input id="slug" readOnly value="sri-raja-tailors" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="plan">Plan</Label>
-                  <Select id="plan" defaultValue="pilot">
-                    <option value="pilot">Pilot</option>
-                    <option value="starter">Starter</option>
-                    <option value="growth">Growth</option>
-                  </Select>
-                </div>
-              </div>
-              <Callout variant="success">
-                <strong className="text-ink-display">Accepted:</strong> request
-                returns `202`, a tenant ID, queued job ID, and a stable
-                provisioning URL.
-              </Callout>
+            <CardContent>
+              <TenantOnboardingForm />
             </CardContent>
           </Card>
         </div>
+
+        {tenantState.error ? (
+          <div className="mx-auto mt-6 w-full max-w-7xl">
+            <Callout variant="warning">{tenantState.error}</Callout>
+          </div>
+        ) : null}
 
         <div className="mx-auto mt-8 grid w-full max-w-7xl gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {metrics.map((metric, index) => {
@@ -390,7 +293,7 @@ export default function TenantControlPlanePage() {
                 >
                   <div>
                     <h3 className="font-display text-xl font-medium text-ink-display">
-                      {tenant.name}
+                      {tenant.businessName}
                     </h3>
                     <p className="mt-1 text-sm text-ink-muted">
                       {tenant.slug} · {tenant.city}
@@ -402,22 +305,28 @@ export default function TenantControlPlanePage() {
                   <TenantBadge status={tenant.status} />
                   <div>
                     <p className="font-semibold text-ink-display">
-                      {tenant.step}
+                      {tenant.provisioningStep ?? "not queued"}
                     </p>
-                    <p className="mt-1 text-sm text-ink-muted">{tenant.job}</p>
+                    <p className="mt-1 text-sm text-ink-muted">
+                      {tenant.jobStatus ?? "no job"}
+                    </p>
                   </div>
-                  <Badge variant={tenant.schema > 0 ? "success" : "neutral"}>
-                    v{tenant.schema}
+                  <Badge
+                    variant={
+                      (tenant.schemaVersion ?? 0) > 0 ? "success" : "neutral"
+                    }
+                  >
+                    v{tenant.schemaVersion ?? 0}
                   </Badge>
                   <span className="font-display text-2xl font-medium text-ink-display">
                     {tenant.attempts}
                   </span>
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-sm font-semibold text-ink-display">
-                      {tenant.nextAction}
+                      {tenantNextAction(tenant)}
                     </span>
                     <Link
-                      aria-label={`Open ${tenant.name}`}
+                      aria-label={`Open ${tenant.businessName}`}
                       className={buttonVariants({
                         variant: "ghost",
                         size: "icon",
@@ -431,6 +340,12 @@ export default function TenantControlPlanePage() {
               ))}
             </div>
           </div>
+
+          {tenants.length === 0 ? (
+            <Callout className="mt-6" variant="warning">
+              Control-plane registry is unavailable or has no tenant rows.
+            </Callout>
+          ) : null}
 
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {registryRows.map((row) => {
@@ -530,6 +445,69 @@ export default function TenantControlPlanePage() {
       </section>
     </main>
   );
+}
+
+function buildMetrics(tenants: TenantProvisioningSummary[]) {
+  const active = tenants.filter((tenant) => tenant.status === "active").length;
+  const review = tenants.filter(
+    (tenant) =>
+      tenant.status.startsWith("failed") ||
+      tenant.status === "needs_manual_review",
+  ).length;
+  const queued = tenants.filter(
+    (tenant) =>
+      tenant.jobStatus === "queued" || tenant.status === "provisioning_pending",
+  ).length;
+  const targetSchema = tenants.reduce(
+    (max, tenant) => Math.max(max, tenant.schemaVersion ?? 0),
+    0,
+  );
+
+  return [
+    {
+      delta: `${queued} queued`,
+      icon: Building2,
+      label: "Tenant records",
+      value: String(tenants.length).padStart(2, "0"),
+    },
+    {
+      delta: "dispatch-ready",
+      icon: CheckCircle2,
+      label: "Active shops",
+      value: String(active).padStart(2, "0"),
+    },
+    {
+      delta: "recoverable",
+      icon: LifeBuoy,
+      label: "Needs review",
+      value: String(review).padStart(2, "0"),
+    },
+    {
+      delta: "tenant baseline",
+      icon: Database,
+      label: "Schema target",
+      value: `v${targetSchema}`,
+    },
+  ];
+}
+
+function tenantNextAction(tenant: TenantProvisioningSummary) {
+  if (tenant.status === "active" && tenant.workerStatus === "healthy") {
+    return "Dispatch allowed";
+  }
+
+  if (tenant.status === "suspended") {
+    return "Dispatch blocked";
+  }
+
+  if (
+    tenant.status.startsWith("failed") ||
+    tenant.status === "needs_manual_review"
+  ) {
+    return "Retry or repair";
+  }
+
+  return tenant.provisioningStep ?? "Monitor";
 }
 
 function Header() {

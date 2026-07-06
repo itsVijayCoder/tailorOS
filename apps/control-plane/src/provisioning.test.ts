@@ -15,13 +15,18 @@ import {
 } from "@tailoros/schemas";
 
 import {
+  createOwnerAccessIds,
+  createOwnerSetupSessionToken,
   createTenantSignup,
   processTenantProvisionEnvelope,
   retryTenantProvisioning,
+  sha256Hex,
   TenantSlugConflictError,
   type AuditLogInput,
   type ControlPlaneStore,
   type DatabaseRegistryInput,
+  type OwnerAccessInput,
+  type OwnerAccessRecord,
   type ProvisioningRuntimeConfig,
   type QueueProducer,
   type SignupReservationInput,
@@ -42,6 +47,18 @@ const request = {
 };
 
 describe("control-plane provisioning service", () => {
+  it("creates owner setup credentials with a gateway-compatible token hash", async () => {
+    const ids = createOwnerAccessIds();
+    const token = createOwnerSetupSessionToken("sri-raja-tailors");
+    const hash = await sha256Hex(token);
+
+    expect(ids.userId).toMatch(/^usr_[a-f0-9]{20}$/);
+    expect(ids.membershipId).toMatch(/^mem_[A-F0-9]{16}$/);
+    expect(ids.sessionId).toMatch(/^ses_[a-f0-9]{20}$/);
+    expect(token).toMatch(/^tos_owner_sri_raja_tailors_[a-f0-9]{32}$/);
+    expect(hash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
   it("creates one tenant and one queue message for repeated idempotency keys", async () => {
     const store = new InMemoryControlPlaneStore();
     const queue = new InMemoryQueueProducer();
@@ -322,6 +339,17 @@ class InMemoryControlPlaneStore implements ControlPlaneStore {
     this.summaries.set(input.tenantId, summary);
     this.idempotency.set(input.idempotencyKey, input.tenantId);
     return summary;
+  }
+
+  async createOwnerAccess(input: OwnerAccessInput): Promise<OwnerAccessRecord> {
+    return {
+      email: input.email,
+      expiresAt: input.sessionExpiresAt,
+      membershipId: input.membershipId,
+      role: "owner",
+      sessionId: input.sessionId,
+      userId: input.userId,
+    };
   }
 
   async recordProvisioningAttempt(input: { tenantId: string; now: string }) {

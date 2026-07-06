@@ -42,6 +42,17 @@ export const tenantStaffMemberSchema = z
   })
   .strict();
 
+export const createTenantStaffMemberSchema = z
+  .object({
+    userId: domainIdSchema.optional(),
+    displayName: z.string().trim().min(2).max(120),
+    email: z.string().trim().email().optional(),
+    mobileE164: z.string().trim().min(8).max(32).optional(),
+    role: tenantRoleSchema.exclude(["platform_support"]),
+    status: staffStatusSchema.default("active"),
+  })
+  .strict();
+
 export const customerProfileReadSchema = z
   .object({
     id: domainIdSchema,
@@ -336,6 +347,9 @@ export const reportTodayQuerySchema = z
 
 export type TenantRole = z.infer<typeof tenantRoleSchema>;
 export type TenantStaffMember = z.infer<typeof tenantStaffMemberSchema>;
+export type CreateTenantStaffMember = z.infer<
+  typeof createTenantStaffMemberSchema
+>;
 export type CustomerProfileRead = z.infer<typeof customerProfileReadSchema>;
 export type CustomerContactRead = z.infer<typeof customerContactReadSchema>;
 export type CustomerTimelineEvent = z.infer<typeof customerTimelineEventSchema>;

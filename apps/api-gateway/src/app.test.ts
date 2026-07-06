@@ -205,6 +205,47 @@ describe("api-gateway Worker", () => {
     expect(body.error.message).toContain("ROLE_FORBIDDEN");
     expect(calls.tenantApi).toBe(0);
   });
+
+  it("requires staff.manage before creating tenant employees", async () => {
+    const { env, calls } = createEnvWithTenant(
+      {
+        tenantId: "ten_1234567890abcd",
+        tenantCode: "MDU",
+        slug: "sri-raja-tailors",
+        status: "active",
+        workerName: "tailoros-tenant-sri-raja-tailors",
+        workerStatus: "healthy",
+      },
+      createSessionRow("manager"),
+    );
+
+    const response = await app.request(
+      "/v1/tenant/sri-raja-tailors/staff",
+      {
+        body: JSON.stringify({
+          displayName: "New Tailor",
+          role: "tailor",
+          status: "active",
+        }),
+        headers: {
+          authorization: "Bearer manager_token",
+          "content-type": "application/json",
+          "x-request-id": "req_staff_forbidden",
+        },
+        method: "POST",
+      },
+      env,
+    );
+    const body = (await response.json()) as {
+      ok: false;
+      error: { code: string; message: string };
+    };
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe("FORBIDDEN");
+    expect(body.error.message).toContain("ROLE_FORBIDDEN");
+    expect(calls.tenantApi).toBe(0);
+  });
 });
 
 function createEnvWithTenant(

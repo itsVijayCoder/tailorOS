@@ -113,6 +113,18 @@ export const createTenantRequestSchema = z
   })
   .strict();
 
+export const platformTenantOnboardingRequestSchema = createTenantRequestSchema
+  .omit({ turnstileToken: true })
+  .extend({
+    adminReason: z
+      .string()
+      .trim()
+      .min(3)
+      .max(240)
+      .default("super_admin_onboarding"),
+  })
+  .strict();
+
 export const tenantProvisionQueuePayloadSchema = z
   .object({
     tenantId: tenantIdSchema,
@@ -175,8 +187,32 @@ export const retryTenantProvisioningResponseSchema = z
   })
   .strict();
 
+export const ownerAccessSetupSchema = z
+  .object({
+    userId: z.string().trim().min(6).max(128),
+    membershipId: z.string().trim().min(6).max(128),
+    sessionId: z.string().trim().min(6).max(128),
+    role: z.literal("owner"),
+    email: z.string().trim().email(),
+    sessionToken: z.string().trim().min(24).max(256),
+    expiresAt: isoDateTimeSchema,
+    loginHint: z.string().trim().min(1).max(240),
+    tenantApiPath: z.string().trim().min(1).max(240),
+  })
+  .strict();
+
+export const platformTenantOnboardingResponseSchema = z
+  .object({
+    provisioning: createTenantProvisioningResponseSchema,
+    ownerAccess: ownerAccessSetupSchema,
+  })
+  .strict();
+
 export type TenantContext = z.infer<typeof tenantContextSchema>;
 export type CreateTenantRequest = z.infer<typeof createTenantRequestSchema>;
+export type PlatformTenantOnboardingRequest = z.infer<
+  typeof platformTenantOnboardingRequestSchema
+>;
 export type TenantStatus = z.infer<typeof tenantStatusSchema>;
 export type ProvisioningStep = z.infer<typeof provisioningStepSchema>;
 export type ProvisioningJobStatus = z.infer<typeof provisioningJobStatusSchema>;
@@ -192,4 +228,8 @@ export type CreateTenantProvisioningResponse = z.infer<
 >;
 export type RetryTenantProvisioningResponse = z.infer<
   typeof retryTenantProvisioningResponseSchema
+>;
+export type OwnerAccessSetup = z.infer<typeof ownerAccessSetupSchema>;
+export type PlatformTenantOnboardingResponse = z.infer<
+  typeof platformTenantOnboardingResponseSchema
 >;
