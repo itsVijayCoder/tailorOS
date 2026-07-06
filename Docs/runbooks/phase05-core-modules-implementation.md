@@ -60,11 +60,57 @@ The phase needs a pilot-ready operating cockpit with these modules:
 
 ## Completed
 
-- Pending implementation.
+- Added the Phase 05 shop operating console at `/shop`.
+- Added module routes:
+  - `/shop` dashboard and command-search cockpit.
+  - `/shop/customers` family-aware customer lookup and profile disambiguation.
+  - `/shop/measurements` garment templates, capture skeleton, version diff, and R2 photo-upload boundary.
+  - `/shop/orders` order book and counter-speed wizard structure.
+  - `/shop/production` production board, status lanes, task ownership, and alteration logs.
+  - `/shop/payments` append-only ledger and printable receipt snapshots.
+  - `/shop/reports` action-oriented owner reports.
+  - `/shop/settings` pilot configuration, roles, receipt, templates, and WhatsApp boundary.
+- Added a stable shop shell in `apps/web/features/core-modules/components/core-modules-shell.tsx`.
+- Added `Ctrl/Cmd+K` command search in `apps/web/features/core-modules/components/core-command-menu.tsx`.
+- Added typed Phase 05 fixtures and pure helpers in `apps/web/features/core-modules/data.ts`.
+- Added presenter helpers for statuses, dates, and badge tone mapping in `apps/web/features/core-modules/presenters.ts`.
+- Added focused tests in `apps/web/features/core-modules/core-modules.test.ts`.
+- Kept UI aligned with TailorOS design-system tokens and primitives from `apps/web/components/ui`.
+
+## Edge Case Coverage
+
+- Shared mobile search is normalized and returns the family group before individual profiles.
+- Similar-name family members are visible with relation labels and customer codes.
+- Duplicate profile risk is shown with an override-reason requirement.
+- Trial date without exact time is still visible in the dashboard and order book.
+- Partial delivery is shown at item level; mixed readiness cannot be hidden by the order status.
+- Measurement version diff exposes changed fields, actor, unit, and reason.
+- Order-specific measurement override is displayed separately from the permanent measurement version.
+- Payment balance is derived from advance, refund, and correction rows.
+- Correction and refund rows expose reasons instead of silently mutating payment state.
+- Opted-out WhatsApp failures are not retryable; provider failures remain retryable.
+- Settings explicitly keep WhatsApp provider credentials outside TailorOS.
+
+## Verification
+
+- `pnpm test` passed with 9 test files and 39 tests.
+- `pnpm --filter @tailoros/web lint` passed, including the theme-token check.
+- `pnpm --filter @tailoros/web typecheck` passed.
+- `pnpm --filter @tailoros/web build` passed and generated the `/shop` route tree.
+
+## Commits
+
+- `96ef335 docs: analyze phase 05 core modules`
+- `87715ca feat: implement phase 05 shop modules`
 
 ## Remaining Work
 
-- Build Phase 05 `apps/web/app/shop` route group and module screens.
-- Add focused unit tests for search normalization, partial delivery visibility, payment correction handling, and opt-out retry blocking.
-- Run lint, typecheck, tests, and build.
-- Revisit this document after implementation with exact files and follow-up gaps.
+- Connect `/shop` screens to tenant API list/read endpoints after the backend exposes production read models.
+- Add authenticated role checks and route guards before using these screens with real staff.
+- Add mutation flows for order status updates, payment recording, measurement saves, and receipt generation.
+- Add real loading, empty, and error states once server state is wired through the API layer.
+- Persist local order drafts with conflict handling and explicit discard/restore UX.
+- Add R2 signed upload integration for measurement photos and receipt snapshots.
+- Add signed public receipt links with expiry policy.
+- Add exports only after owner/manager authorization and audit logging are enforced.
+- Add visual browser QA screenshots for desktop and mobile once the development server is running.
