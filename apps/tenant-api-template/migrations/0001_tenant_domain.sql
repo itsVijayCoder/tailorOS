@@ -82,6 +82,27 @@ CREATE TABLE IF NOT EXISTS garment_types (
 CREATE INDEX IF NOT EXISTS idx_garment_types_active
   ON garment_types(is_active, display_name);
 
+CREATE TABLE IF NOT EXISTS staff_profiles (
+  user_id TEXT PRIMARY KEY,
+  display_name TEXT NOT NULL,
+  email TEXT,
+  mobile_e164 TEXT,
+  role TEXT NOT NULL CHECK (role IN ('owner', 'manager', 'counter_staff', 'measurement_taker', 'tailor', 'cutter', 'cashier', 'viewer', 'platform_support')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('invited', 'active', 'disabled')),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_staff_profiles_role_status
+  ON staff_profiles(role, status);
+
+CREATE TABLE IF NOT EXISTS tenant_settings (
+  key TEXT PRIMARY KEY,
+  value_json TEXT NOT NULL,
+  updated_by_user_id TEXT,
+  updated_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS measurement_profiles (
   id TEXT PRIMARY KEY,
   customer_profile_id TEXT NOT NULL REFERENCES customer_profiles(id) ON DELETE CASCADE,
@@ -247,6 +268,7 @@ CREATE TABLE IF NOT EXISTS receipts (
   paid_paise INTEGER NOT NULL DEFAULT 0,
   balance_due_paise INTEGER NOT NULL DEFAULT 0 CHECK (balance_due_paise >= 0),
   share_token_hash TEXT,
+  share_token_expires_at TEXT,
   issued_by_user_id TEXT NOT NULL,
   issued_at TEXT NOT NULL,
   void_reason TEXT,
@@ -413,6 +435,35 @@ INSERT OR IGNORE INTO garment_types (
   ('uniform', 'Uniform', '{"fields":["chest","waist","shoulder","sleeve","length"]}', 10, 220000, '2026-07-05T00:00:00.000Z', '2026-07-05T00:00:00.000Z'),
   ('sari_fall', 'Sari fall and pico', '{"fields":["length"]}', 2, 35000, '2026-07-05T00:00:00.000Z', '2026-07-05T00:00:00.000Z'),
   ('alteration', 'Alteration', '{"fields":["note"]}', 3, 50000, '2026-07-05T00:00:00.000Z', '2026-07-05T00:00:00.000Z');
+
+INSERT OR IGNORE INTO staff_profiles (
+  user_id,
+  display_name,
+  email,
+  mobile_e164,
+  role,
+  status,
+  created_at,
+  updated_at
+) VALUES
+  ('usr_owner_01', 'Raja Raman', 'owner@sriraja.example.com', '+919876543210', 'owner', 'active', '2026-07-05T00:00:00.000Z', '2026-07-05T00:00:00.000Z'),
+  ('usr_manager_01', 'Lakshmi Raja', 'manager@sriraja.example.com', '+919876543211', 'manager', 'active', '2026-07-05T00:00:00.000Z', '2026-07-05T00:00:00.000Z'),
+  ('usr_counter_01', 'Counter Staff', 'counter@sriraja.example.com', '+919876543212', 'counter_staff', 'active', '2026-07-05T00:00:00.000Z', '2026-07-05T00:00:00.000Z'),
+  ('usr_measure_01', 'Measurement Staff', 'measure@sriraja.example.com', '+919876543213', 'measurement_taker', 'active', '2026-07-05T00:00:00.000Z', '2026-07-05T00:00:00.000Z'),
+  ('usr_tailor_01', 'Tailor One', 'tailor@sriraja.example.com', '+919876543214', 'tailor', 'active', '2026-07-05T00:00:00.000Z', '2026-07-05T00:00:00.000Z'),
+  ('usr_cashier_01', 'Cashier One', 'cashier@sriraja.example.com', '+919876543215', 'cashier', 'active', '2026-07-05T00:00:00.000Z', '2026-07-05T00:00:00.000Z');
+
+INSERT OR IGNORE INTO tenant_settings (
+  key,
+  value_json,
+  updated_by_user_id,
+  updated_at
+) VALUES (
+  'receipt_branding',
+  '{"shopName":"Sri Raja Tailors","city":"Madurai","footerNote":"Thank you. Please bring this receipt for pickup."}',
+  'usr_owner_01',
+  '2026-07-05T00:00:00.000Z'
+);
 
 INSERT OR IGNORE INTO tenant_schema_migrations (
   version,

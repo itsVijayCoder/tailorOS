@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
@@ -16,23 +15,20 @@ import {
   LockKeyhole,
   ReceiptText,
   ServerCog,
-  ShieldCheck,
   UserRoundCheck,
   UsersRound,
 } from "lucide-react";
 
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import {
   auditCoverageRows,
   credentialVaultRecords,
   getPhase08SecuritySignals,
   publicEndpointControls,
   receiptAccessCases,
-  securityRoleRows,
   supportAccessCases,
   tenantIsolationChecks,
 } from "@/features/core-modules/data";
+import { getRealRoleRows } from "@/features/core-modules/real-data";
 import {
   DataPanel,
   MetricCard,
@@ -43,9 +39,9 @@ import {
 import { humanizeStatus, statusTone } from "@/features/core-modules/presenters";
 
 export const metadata: Metadata = {
-  title: "Security, Privacy and RBAC",
+  title: "Security",
   description:
-    "Phase 08 security, privacy, tenant isolation, RBAC, credential vaulting, signed access, audit coverage, and public endpoint hardening for TailorOS.",
+    "Security, privacy, tenant isolation, RBAC, credential vaulting, signed access, audit coverage, and public endpoint hardening for TailorOS.",
 };
 
 const authorizationFlow = [
@@ -116,31 +112,14 @@ const launchChecklist = [
 
 export default function SecurityPrivacyRbacPage() {
   const signals = getPhase08SecuritySignals();
+  const securityRoleRows = getRealRoleRows();
 
   return (
     <>
       <PageHeader
-        actions={
-          <>
-            <Link
-              className={cn(buttonVariants({ variant: "secondary" }))}
-              href="/docs/phase-wise/Phase08_security_privacy_rbac.html"
-            >
-              Phase 08 source
-              <ArrowRight aria-hidden className="size-4" />
-            </Link>
-            <Link
-              className={cn(buttonVariants({ variant: "outline" }))}
-              href="/admin/design-system"
-            >
-              Design tokens
-              <ShieldCheck aria-hidden className="size-4" />
-            </Link>
-          </>
-        }
-        body="Phase 08 turns security into an operating workspace: staff roles, tenant boundaries, masked credentials, signed media, public endpoint controls, support windows, and audit coverage are visible before real shop data is trusted to TailorOS."
-        eyebrow="Phase 08 security"
-        title="Tenant isolation, privacy, and role gates before automation."
+        body="Staff roles, tenant boundaries, masked credentials, signed media, public endpoint controls, support windows, and audit coverage are visible before real shop data is trusted to TailorOS."
+        eyebrow="Security"
+        title="Tenant isolation, privacy, and role gates."
       />
 
       <div className="grid gap-8 px-4 py-8 sm:px-6 lg:px-8">

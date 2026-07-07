@@ -1,3 +1,8 @@
+/// <reference types="node" />
+
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -10,13 +15,18 @@ import {
 } from "@tailoros/schemas";
 
 import {
+  createOwnerAccessIds,
+  createOwnerSetupSessionToken,
   createTenantSignup,
   processTenantProvisionEnvelope,
   retryTenantProvisioning,
+  sha256Hex,
   TenantSlugConflictError,
   type AuditLogInput,
   type ControlPlaneStore,
   type DatabaseRegistryInput,
+  type OwnerAccessInput,
+  type OwnerAccessRecord,
   type ProvisioningRuntimeConfig,
   type QueueProducer,
   type SignupReservationInput,
@@ -37,6 +47,18 @@ const request = {
 };
 
 describe("control-plane provisioning service", () => {
+  it("creates owner setup credentials with a gateway-compatible token hash", async () => {
+    const ids = createOwnerAccessIds();
+    const token = createOwnerSetupSessionToken("sri-raja-tailors");
+    const hash = await sha256Hex(token);
+
+    expect(ids.userId).toMatch(/^usr_[a-f0-9]{20}$/);
+    expect(ids.membershipId).toMatch(/^mem_[A-F0-9]{16}$/);
+    expect(ids.sessionId).toMatch(/^ses_[a-f0-9]{20}$/);
+    expect(token).toMatch(/^tos_owner_sri_raja_tailors_[a-f0-9]{32}$/);
+    expect(hash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
   it("creates one tenant and one queue message for repeated idempotency keys", async () => {
     const store = new InMemoryControlPlaneStore();
     const queue = new InMemoryQueueProducer();
@@ -180,6 +202,56 @@ describe("control-plane provisioning service", () => {
   });
 });
 
+describe("control-plane D1 migration", () => {
+  it("applies with pilot tenant, membership, and hashed session seed", () => {
+    const require = createRequire(import.meta.url);
+    const { DatabaseSync } = require("node:sqlite") as {
+      DatabaseSync: new (path: string) => SqliteDatabase;
+    };
+    const db = new DatabaseSync(":memory:");
+    const migration = readFileSync(
+      join(
+        process.cwd(),
+        "apps/control-plane/migrations/0001_control_plane.sql",
+      ),
+      "utf8",
+    );
+
+    db.exec(migration);
+
+    expect(
+      db
+        .prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        )
+        .get("staff_sessions"),
+    ).toEqual({ name: "staff_sessions" });
+    expect(
+      db
+        .prepare(
+          "SELECT slug, status FROM tenants WHERE id = 'ten_sriraja000001'",
+        )
+        .get(),
+    ).toEqual({ slug: "sri-raja-tailors", status: "active" });
+    expect(
+      db
+        .prepare(
+          "SELECT role, status FROM memberships WHERE user_id = 'usr_owner_01'",
+        )
+        .get(),
+    ).toEqual({ role: "owner", status: "active" });
+    expect(
+      db
+        .prepare(
+          "SELECT length(session_token_hash) AS hashLength FROM staff_sessions WHERE user_id = 'usr_owner_01'",
+        )
+        .get(),
+    ).toEqual({ hashLength: 64 });
+
+    db.close();
+  });
+});
+
 function createConfig(
   overrides: Partial<ProvisioningRuntimeConfig> = {},
 ): ProvisioningRuntimeConfig {
@@ -269,6 +341,17 @@ class InMemoryControlPlaneStore implements ControlPlaneStore {
     return summary;
   }
 
+  async createOwnerAccess(input: OwnerAccessInput): Promise<OwnerAccessRecord> {
+    return {
+      email: input.email,
+      expiresAt: input.sessionExpiresAt,
+      membershipId: input.membershipId,
+      role: "owner",
+      sessionId: input.sessionId,
+      userId: input.userId,
+    };
+  }
+
   async recordProvisioningAttempt(input: { tenantId: string; now: string }) {
     const current = this.requireSummary(input.tenantId);
     this.summaries.set(
@@ -351,3 +434,13 @@ class InMemoryControlPlaneStore implements ControlPlaneStore {
 function parseSummary(input: unknown) {
   return tenantProvisioningSummarySchema.parse(input);
 }
+
+type SqliteStatement = {
+  get(...params: unknown[]): unknown;
+};
+
+type SqliteDatabase = {
+  exec(sql: string): void;
+  prepare(sql: string): SqliteStatement;
+  close(): void;
+};

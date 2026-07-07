@@ -8,6 +8,7 @@ export type ModuleKey =
   | "dashboard"
   | "search"
   | "customers"
+  | "docs"
   | "measurements"
   | "orders"
   | "production"
@@ -16,6 +17,7 @@ export type ModuleKey =
   | "reports"
   | "security"
   | "release"
+  | "shortcuts"
   | "settings";
 
 export type CoreNavItem = Readonly<{
@@ -78,7 +80,12 @@ export type OrderItem = Readonly<{
   id: string;
   itemCode: string;
   garment: string;
-  status: OrderStatus | "on_hold" | "customer_delay" | "material_shortage";
+  status:
+    | OrderStatus
+    | "on_hold"
+    | "customer_delay"
+    | "material_shortage"
+    | "refunded";
   promisedDate: string;
   assignedTo: string;
   pricePaise: number;
@@ -445,7 +452,7 @@ export type CommandSearchMeta = Readonly<{
   resultCount: number;
   latencyBudgetMs: number | null;
   elapsedMs: number;
-  source: "pilot-fixture";
+  source: "pilot-fixture" | "tenant-api";
 }>;
 
 export type CommandSearchResponse = Readonly<{

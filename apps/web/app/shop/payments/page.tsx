@@ -8,11 +8,17 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { recordPaymentAction } from "@/features/core-modules/actions";
 import {
   calculateOrderFinancials,
   formatPaise,
-  shopOrders,
-} from "@/features/core-modules/data";
+  getRealPaymentsData,
+} from "@/features/core-modules/real-data";
 import {
   DataPanel,
   MetricCard,
@@ -26,7 +32,8 @@ export const metadata: Metadata = {
   title: "Payments and Receipts",
 };
 
-export default function PaymentsPage() {
+export default async function PaymentsPage() {
+  const { shopOrders } = await getRealPaymentsData();
   const ledgerRows = shopOrders.flatMap((order) =>
     order.payments.map((payment) => ({ order, payment })),
   );
@@ -90,10 +97,14 @@ export default function PaymentsPage() {
               <table className="w-full min-w-[48rem] border-separate border-spacing-0 text-left text-sm">
                 <thead>
                   <tr className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                    <th className="border-b border-hairline pb-3 pr-4">Order</th>
+                    <th className="border-b border-hairline pb-3 pr-4">
+                      Order
+                    </th>
                     <th className="border-b border-hairline pb-3 pr-4">Kind</th>
                     <th className="border-b border-hairline pb-3 pr-4">Mode</th>
-                    <th className="border-b border-hairline pb-3 pr-4">Amount</th>
+                    <th className="border-b border-hairline pb-3 pr-4">
+                      Amount
+                    </th>
                     <th className="border-b border-hairline pb-3">Reason</th>
                   </tr>
                 </thead>
@@ -157,6 +168,48 @@ export default function PaymentsPage() {
                 </div>
               ))}
             </div>
+          </DataPanel>
+          <DataPanel title="Record payment">
+            <form action={recordPaymentAction} className="grid gap-3">
+              <div className="grid gap-2">
+                <Label htmlFor="orderId">Order ID</Label>
+                <Input id="orderId" name="orderId" required />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="kind">Kind</Label>
+                  <Select defaultValue="balance" id="kind" name="kind">
+                    <option value="advance">Advance</option>
+                    <option value="balance">Balance</option>
+                    <option value="refund">Refund</option>
+                    <option value="correction">Correction</option>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="mode">Mode</Label>
+                  <Select defaultValue="cash" id="mode" name="mode">
+                    <option value="cash">Cash</option>
+                    <option value="upi">UPI</option>
+                    <option value="card">Card</option>
+                    <option value="bank">Bank</option>
+                    <option value="adjustment">Adjustment</option>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="amountRupees">Amount</Label>
+                <Input id="amountRupees" name="amountRupees" required />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="reason">Reason</Label>
+                <Textarea
+                  id="reason"
+                  name="reason"
+                  placeholder="Required for refund/correction"
+                />
+              </div>
+              <Button type="submit">Append payment</Button>
+            </form>
           </DataPanel>
         </section>
 

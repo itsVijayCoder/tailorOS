@@ -78,22 +78,26 @@ const connectorFlow = [
 
 const launchReadiness = [
   {
-    detail: "Signature, verify-token hash, duplicate event, and stale status handling are visible.",
+    detail:
+      "Signature, verify-token hash, duplicate event, and stale status handling are visible.",
     label: "Webhook safety",
     state: "pass",
   },
   {
-    detail: "Opt-out and missing templates block sends before the provider adapter is called.",
+    detail:
+      "Opt-out and missing templates block sends before the provider adapter is called.",
     label: "Policy first",
     state: "pass",
   },
   {
-    detail: "One blocked provider channel still needs credential rotation before pilot expansion.",
+    detail:
+      "One blocked provider channel still needs credential rotation before pilot expansion.",
     label: "Provider readiness",
     state: "block",
   },
   {
-    detail: "Shared mobile inbound STOP requires staff scope selection before applying opt-out.",
+    detail:
+      "Shared mobile inbound STOP requires staff scope selection before applying opt-out.",
     label: "Family mobile guard",
     state: "warn",
   },
@@ -123,9 +127,9 @@ export default function WhatsAppConnectorPage() {
             </Button>
           </>
         }
-        body="A connector cockpit for Phase 06: provider credentials stay outside shop workflows, while operators can see channel health, template readiness, policy blocks, queue state, webhook evidence, and usage cost."
-        eyebrow="Phase 06 connector"
-        title="WhatsApp operations with policy before automation."
+        body="Operators can see consent, channel health, template readiness, blocked sends, queue state, webhook evidence, and usage cost without handling provider credentials."
+        eyebrow="Messages"
+        title="WhatsApp follow-up without message spam."
       />
 
       <div className="grid gap-8 px-4 py-8 sm:px-6 lg:px-8">
@@ -255,10 +259,18 @@ export default function WhatsAppConnectorPage() {
               <thead>
                 <tr className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   <th className="border-b border-hairline px-4 py-3">Branch</th>
-                  <th className="border-b border-hairline px-4 py-3">Provider identity</th>
-                  <th className="border-b border-hairline px-4 py-3">Quality</th>
-                  <th className="border-b border-hairline px-4 py-3">Consent</th>
-                  <th className="border-b border-hairline px-4 py-3">Rotation</th>
+                  <th className="border-b border-hairline px-4 py-3">
+                    Provider identity
+                  </th>
+                  <th className="border-b border-hairline px-4 py-3">
+                    Quality
+                  </th>
+                  <th className="border-b border-hairline px-4 py-3">
+                    Consent
+                  </th>
+                  <th className="border-b border-hairline px-4 py-3">
+                    Rotation
+                  </th>
                   <th className="border-b border-hairline px-4 py-3">State</th>
                 </tr>
               </thead>
@@ -358,7 +370,9 @@ export default function WhatsAppConnectorPage() {
                       {template.providerTemplateName}
                     </h2>
                     <p className="mt-1 text-sm leading-6 text-ink-muted">
-                      {humanizeStatus(template.purpose)} · {template.variables.length} variables · fallback {humanizeStatus(template.fallback)}
+                      {humanizeStatus(template.purpose)} ·{" "}
+                      {template.variables.length} variables · fallback{" "}
+                      {humanizeStatus(template.fallback)}
                     </p>
                     <p className="mt-2 text-sm leading-6 text-ink-body">
                       {template.ownerAction}
@@ -540,7 +554,8 @@ export default function WhatsAppConnectorPage() {
                   </div>
                   <p className="mt-2 text-xs leading-5 text-ink-muted">
                     {line.period} · {line.templateMessages} template messages ·{" "}
-                    {line.utilityConversations + line.serviceConversations} conversations
+                    {line.utilityConversations + line.serviceConversations}{" "}
+                    conversations
                   </p>
                   <p className="mt-2 text-xs leading-5 text-ink-muted">
                     {line.evidence}
@@ -598,7 +613,10 @@ export default function WhatsAppConnectorPage() {
                             className="size-4 text-state-success"
                           />
                         ) : item.state === "warn" ? (
-                          <Clock3 aria-hidden className="size-4 text-signal-darker" />
+                          <Clock3
+                            aria-hidden
+                            className="size-4 text-signal-darker"
+                          />
                         ) : (
                           <BellRing
                             aria-hidden

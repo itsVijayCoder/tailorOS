@@ -1,8 +1,11 @@
 import Link from "next/link";
 import {
+  Building2,
+  BookOpenText,
   ClipboardList,
   CreditCard,
   Gauge,
+  Keyboard,
   MessageCircle,
   Rocket,
   Search,
@@ -15,8 +18,8 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { LogoutButton } from "@/features/auth/components/logout-button";
 import { cn } from "@/lib/utils";
 
 import { coreNavItems } from "../data";
@@ -26,6 +29,7 @@ import { CoreCommandMenu } from "./core-command-menu";
 const iconByKey: Record<ModuleKey, typeof Gauge> = {
   customers: UsersRound,
   dashboard: Gauge,
+  docs: BookOpenText,
   search: Search,
   measurements: Ruler,
   orders: ClipboardList,
@@ -34,112 +38,160 @@ const iconByKey: Record<ModuleKey, typeof Gauge> = {
   reports: WalletCards,
   release: Rocket,
   security: ShieldCheck,
+  shortcuts: Keyboard,
   settings: Settings2,
   whatsapp: MessageCircle,
 };
 
+const shopName = "Sri Raja Tailors";
+const shopNavItems = coreNavItems.filter(
+  (item) => item.key !== "release" && item.key !== "security",
+);
+
 export function CoreModulesShell({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-page text-ink-body">
-      <header className="sticky top-0 z-40 border-b border-hairline bg-page/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-[96rem] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-          <Link className="group flex items-center gap-3" href="/shop">
-            <span className="grid size-10 place-items-center rounded-lg border border-accent bg-accent text-sm font-bold text-accent-foreground shadow-token transition duration-200 ease-premium group-hover:-rotate-2 group-hover:scale-105 motion-reduce:transition-none">
-              TX
-            </span>
-            <span className="leading-tight">
-              <strong className="block font-display text-lg font-medium leading-none text-ink-display">
-                TailorOS
-              </strong>
-              <span className="block text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                Shop OS pilot
-              </span>
-            </span>
-          </Link>
-          <nav
-            aria-label="Shop quick navigation"
-            className="hidden items-center gap-1 rounded-full border border-hairline bg-surface p-1 shadow-sm xl:flex"
-          >
-            {coreNavItems.slice(0, 6).map((item) => (
-              <Link
-                className="rounded-full px-3 py-1.5 text-sm font-semibold text-ink-muted transition duration-200 ease-premium hover:bg-accent-faded hover:text-ink-display focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
-                href={item.href}
-                key={item.key}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex items-center gap-2">
-            <CoreCommandMenu />
-            <ThemeToggle />
-          </div>
+    <main className="shop-app-shell relative z-[60] h-dvh overflow-hidden bg-page text-ink-body">
+      <aside className="fixed inset-y-0 left-0 z-[70] hidden w-64 flex-col border-r border-hairline bg-surface/95 backdrop-blur-xl lg:flex">
+        <div className="flex h-16 shrink-0 items-center border-b border-hairline px-4">
+          <BrandLockup subtitle={shopName} />
         </div>
-      </header>
-      <nav
-        aria-label="Mobile shop modules"
-        className="sticky top-16 z-30 overflow-hidden border-b border-hairline bg-page/92 px-3 py-2 backdrop-blur-xl lg:hidden"
-      >
-        <div className="flex max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1">
-          {coreNavItems.map((item) => {
-            const Icon = iconByKey[item.key];
-            return (
-              <Link
-                className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-hairline bg-surface px-3 py-2 text-xs font-semibold text-ink-muted shadow-sm transition duration-200 ease-premium hover:bg-accent-faded hover:text-ink-display focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
-                href={item.href}
-                key={item.key}
-              >
-                <Icon aria-hidden className="size-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-      <div className="mx-auto grid w-full max-w-[96rem] lg:grid-cols-[17rem_minmax(0,1fr)]">
-        <aside className="hidden border-r border-hairline bg-surface/40 px-4 py-6 lg:block">
-          <div className="sticky top-24 grid gap-5">
-            <div className="rounded-lg border border-hairline bg-surface-strong p-4 shadow-sm">
-              <Badge variant="signal">Phase 05-06</Badge>
-              <h2 className="mt-3 font-display text-2xl font-medium leading-none text-ink-display">
-                Core modules
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-ink-muted">
-                Pilot-ready workflow screens for counter, owner, tailor, and
-                platform support roles.
-              </p>
-            </div>
-            <nav aria-label="Shop modules" className="grid gap-1">
-              {coreNavItems.map((item) => {
-                const Icon = iconByKey[item.key];
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+          <nav aria-label="Shop modules" className="grid gap-1">
+            {shopNavItems.map((item) => {
+              const Icon = iconByKey[item.key];
 
-                return (
-                  <Link
-                    className={cn(
-                      "group grid grid-cols-[2rem_minmax(0,1fr)] gap-3 rounded-lg px-3 py-3 text-sm transition duration-200 ease-premium hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none",
-                    )}
-                    href={item.href}
-                    key={item.key}
-                  >
-                    <span className="grid size-8 place-items-center rounded-lg border border-hairline bg-page text-accent transition duration-200 ease-premium group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground motion-reduce:transition-none">
-                      <Icon aria-hidden className="size-4" />
-                    </span>
-                    <span className="min-w-0">
-                      <strong className="block font-ui text-sm text-ink-display">
-                        {item.label}
-                      </strong>
-                      <span className="mt-1 block text-xs leading-5 text-ink-muted">
-                        {item.description}
-                      </span>
-                    </span>
-                  </Link>
-                );
-              })}
-            </nav>
+              return (
+                <Link
+                  className={cn(
+                    "group grid grid-cols-[1.75rem_minmax(0,1fr)] items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition duration-200 ease-premium hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none",
+                  )}
+                  href={item.href}
+                  key={item.key}
+                >
+                  <span className="grid size-7 place-items-center rounded-lg border border-hairline bg-page text-accent transition duration-200 ease-premium group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground motion-reduce:transition-none">
+                    <Icon aria-hidden className="size-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <strong className="block font-ui text-sm text-ink-display">
+                      {item.label}
+                    </strong>
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+        <div className="shrink-0 border-t border-hairline p-3">
+          <div className="grid gap-1">
+            <Link
+              className="group grid grid-cols-[1.75rem_minmax(0,1fr)] items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition duration-200 ease-premium hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
+              href="/admin/tenants"
+            >
+              <span className="grid size-7 place-items-center rounded-lg border border-hairline bg-page text-accent transition duration-200 ease-premium group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground motion-reduce:transition-none">
+                <Building2 aria-hidden className="size-4" />
+              </span>
+              <span className="min-w-0">
+                <strong className="block font-ui text-sm text-ink-display">
+                  Super admin
+                </strong>
+              </span>
+            </Link>
+            <LogoutButton />
           </div>
-        </aside>
-        <div className="min-w-0">{children}</div>
-      </div>
+        </div>
+      </aside>
+
+      <section className="flex h-full min-w-0 flex-col lg:pl-64">
+        <header className="z-[60] shrink-0 border-b border-hairline bg-page/94 backdrop-blur-xl">
+          <div className="flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+            <div className="lg:hidden">
+              <BrandLockup subtitle={shopName} />
+            </div>
+            <div className="hidden min-w-0 leading-tight lg:block">
+              <span className="block text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                Shop workspace
+              </span>
+              <strong className="block truncate font-display text-xl font-medium leading-none text-ink-display">
+                {shopName}
+              </strong>
+            </div>
+            <nav
+              aria-label="Shop quick navigation"
+              className="hidden items-center gap-1 rounded-full border border-hairline bg-surface p-1 shadow-sm xl:flex"
+            >
+              {shopNavItems.slice(0, 5).map((item) => (
+                <Link
+                  className="rounded-full px-3 py-1.5 text-sm font-semibold text-ink-muted transition duration-200 ease-premium hover:bg-accent-faded hover:text-ink-display focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
+                  href={item.href}
+                  key={item.key}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            <div className="flex items-center gap-2">
+              <Link
+                className="hidden min-h-10 items-center justify-center gap-2 rounded-full border border-hairline bg-surface px-4 py-2 text-sm font-semibold text-ink-display shadow-sm transition duration-200 ease-premium hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none sm:inline-flex"
+                href="/admin/tenants"
+              >
+                <Building2 aria-hidden className="size-4" />
+                Super admin
+              </Link>
+              <CoreCommandMenu />
+              <ThemeToggle />
+            </div>
+          </div>
+        </header>
+        <nav
+          aria-label="Mobile shop modules"
+          className="z-[55] shrink-0 overflow-hidden border-b border-hairline bg-page/94 px-3 py-2 backdrop-blur-xl lg:hidden"
+        >
+          <div className="flex max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1">
+            {shopNavItems.map((item) => {
+              const Icon = iconByKey[item.key];
+              return (
+                <Link
+                  className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-hairline bg-surface px-3 py-2 text-xs font-semibold text-ink-muted shadow-sm transition duration-200 ease-premium hover:bg-accent-faded hover:text-ink-display focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
+                  href={item.href}
+                  key={item.key}
+                >
+                  <Icon aria-hidden className="size-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+            <Link
+              className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-hairline bg-surface px-3 py-2 text-xs font-semibold text-ink-muted shadow-sm transition duration-200 ease-premium hover:bg-accent-faded hover:text-ink-display focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
+              href="/admin/tenants"
+            >
+              <Building2 aria-hidden className="size-4" />
+              Admin
+            </Link>
+            <LogoutButton variant="chip" />
+          </div>
+        </nav>
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
+          {children}
+        </div>
+      </section>
     </main>
+  );
+}
+
+function BrandLockup({ subtitle }: { subtitle: string }) {
+  return (
+    <Link className="group flex items-center gap-3" href="/shop">
+      <span className="grid size-10 place-items-center rounded-lg border border-accent bg-accent text-sm font-bold text-accent-foreground shadow-token transition duration-200 ease-premium group-hover:-rotate-2 group-hover:scale-105 motion-reduce:transition-none">
+        TX
+      </span>
+      <span className="min-w-0 leading-tight">
+        <strong className="block font-display text-lg font-medium leading-none text-ink-display">
+          TailorOS
+        </strong>
+        <span className="block truncate text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          {subtitle}
+        </span>
+      </span>
+    </Link>
   );
 }

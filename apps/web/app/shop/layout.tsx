@@ -8,6 +8,8 @@ export const metadata: Metadata = {
     "TailorOS pilot-ready shop operating system modules for core workflows and WhatsApp connector operations.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function ShopLayout({
   children,
 }: Readonly<{

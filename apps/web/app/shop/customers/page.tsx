@@ -1,21 +1,19 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
-  AlertTriangle,
   History,
   MessageCircle,
-  Phone,
-  Search,
-  ShieldCheck,
-  UserRoundCheck,
+  UserRoundPlus,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { SearchField } from "@/components/ui/search-field";
 import {
-  familyAccounts,
-  shopOrders,
-  whatsAppFailures,
-} from "@/features/core-modules/data";
+  getRealDashboardData,
+  getRealFamilyAccounts,
+  getRealOrders,
+} from "@/features/core-modules/real-data";
 import {
   DataPanel,
   EmptyState,
@@ -23,26 +21,48 @@ import {
   SectionHeader,
   StatusBadge,
 } from "@/features/core-modules/components/module-primitives";
-import { formatShortDate, statusTone } from "@/features/core-modules/presenters";
+import {
+  formatShortDate,
+  statusTone,
+} from "@/features/core-modules/presenters";
 
 export const metadata: Metadata = {
   title: "Customers and Family",
 };
 
-export default function CustomersPage() {
+export const dynamic = "force-dynamic";
+
+export default async function CustomersPage() {
+  const [customers, orders, dashboard] = await Promise.all([
+    getRealFamilyAccounts(),
+    getRealOrders(),
+    getRealDashboardData(),
+  ]);
+  const familyAccounts = customers.familyAccounts;
+  const shopOrders = orders.shopOrders;
+  const whatsAppFailures = dashboard.whatsAppFailures;
+  const selectedCustomerCode =
+    familyAccounts[0]?.profiles[0]?.customerCode ?? "";
+
   return (
     <>
       <PageHeader
+        actions={
+          <Link
+            className={buttonVariants({ variant: "secondary" })}
+            href="/shop/customers/new"
+          >
+            <UserRoundPlus aria-hidden className="size-4" />
+            New customer
+          </Link>
+        }
         body="The adoption-critical workflow starts with one search box, then forces exact profile selection before measurements, orders, or payment history can be edited."
         eyebrow="Customer module"
-        title="Family-aware lookup that is faster than the notebook."
+        title="Customers"
       />
       <div className="grid gap-8 px-4 py-8 sm:px-6 lg:px-8">
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
-          <DataPanel
-            description="Mobile, customer code, order code, receipt code, and name all converge here. Exact mobile matches group family profiles first."
-            title="Search and disambiguate"
-          >
+        <section>
+          <DataPanel title="Customer lookup">
             <div className="grid gap-5">
               <SearchField
                 defaultValue="09876543210"
@@ -58,10 +78,18 @@ export default function CustomersPage() {
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant={family.whatsappOptIn ? "whatsapp" : "warning"}>
-                            {family.whatsappOptIn ? "WhatsApp opt-in" : "Call fallback"}
+                          <Badge
+                            variant={
+                              family.whatsappOptIn ? "whatsapp" : "warning"
+                            }
+                          >
+                            {family.whatsappOptIn
+                              ? "WhatsApp opt-in"
+                              : "Call fallback"}
                           </Badge>
-                          <StatusBadge tone="neutral">{family.familyCode}</StatusBadge>
+                          <StatusBadge tone="neutral">
+                            {family.familyCode}
+                          </StatusBadge>
                         </div>
                         <h2 className="mt-3 font-display text-2xl font-medium text-ink-display">
                           {family.primaryMobileDisplay}
@@ -79,19 +107,11 @@ export default function CustomersPage() {
                         </span>
                       </div>
                     </div>
-                    {family.duplicateRisk ? (
-                      <div className="mt-4 grid gap-3 rounded-lg border border-signal bg-signal-faded p-3 text-sm leading-6 text-ink-body md:grid-cols-[2rem_minmax(0,1fr)]">
-                        <AlertTriangle
-                          aria-hidden
-                          className="mt-0.5 size-5 text-signal-darker"
-                        />
-                        <p>{family.duplicateRisk}</p>
-                      </div>
-                    ) : null}
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                       {family.profiles.map((profile) => (
-                        <div
+                        <Link
                           className="group rounded-lg border border-hairline bg-page p-4 transition duration-200 ease-premium hover:-translate-y-0.5 hover:border-border-accent hover:bg-accent-faded motion-reduce:transition-none"
+                          href={`/shop/customers/${family.id}`}
                           key={profile.id}
                         >
                           <div className="flex items-start justify-between gap-3">
@@ -121,57 +141,12 @@ export default function CustomersPage() {
                               {profile.activeOrders}
                             </strong>
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   </article>
                 ))}
               </div>
-            </div>
-          </DataPanel>
-
-          <DataPanel
-            description="The customer page should surface why staff must pick a person before opening measurements."
-            title="Safety rules"
-          >
-            <div className="grid gap-3">
-              {[
-                {
-                  icon: Phone,
-                  title: "Normalize every phone input",
-                  body: "Leading zero, spaces, and +91 variants resolve to the same E.164 number.",
-                },
-                {
-                  icon: UserRoundCheck,
-                  title: "Select exact person",
-                  body: "Measurements and orders belong to a customer profile, never directly to a mobile number.",
-                },
-                {
-                  icon: ShieldCheck,
-                  title: "Override duplicate with reason",
-                  body: "Duplicate profile creation is allowed only with a staff reason and audit record.",
-                },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <article
-                    className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 rounded-lg border border-hairline bg-surface p-3"
-                    key={item.title}
-                  >
-                    <span className="grid size-9 place-items-center rounded-lg border border-hairline bg-page text-accent">
-                      <Icon aria-hidden className="size-4" />
-                    </span>
-                    <div>
-                      <h3 className="text-sm font-semibold text-ink-display">
-                        {item.title}
-                      </h3>
-                      <p className="mt-1 text-sm leading-6 text-ink-muted">
-                        {item.body}
-                      </p>
-                    </div>
-                  </article>
-                );
-              })}
             </div>
           </DataPanel>
         </section>
@@ -186,7 +161,9 @@ export default function CustomersPage() {
             <DataPanel title="Orders">
               <div className="grid gap-3">
                 {shopOrders
-                  .filter((order) => order.customerCode === "CUS-MDU-000231")
+                  .filter(
+                    (order) => order.customerCode === selectedCustomerCode,
+                  )
                   .map((order) => (
                     <div
                       className="rounded-lg border border-hairline bg-surface p-3"
@@ -254,24 +231,6 @@ export default function CustomersPage() {
                 )}
               </div>
             </DataPanel>
-          </div>
-        </section>
-
-        <section className="rounded-lg border border-hairline bg-surface-strong p-5">
-          <div className="grid gap-3 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
-            <span className="grid size-10 place-items-center rounded-lg border border-hairline bg-page text-accent">
-              <Search aria-hidden className="size-5" />
-            </span>
-            <div>
-              <h2 className="font-display text-2xl font-medium text-ink-display">
-                Production requirement
-              </h2>
-              <p className="mt-2 max-w-4xl text-sm leading-6 text-ink-muted">
-                The first production API connection should return family groups
-                rather than a flat result list. Flat results are the fastest
-                path to wrong-person measurement mistakes.
-              </p>
-            </div>
           </div>
         </section>
       </div>

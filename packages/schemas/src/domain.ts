@@ -127,6 +127,29 @@ export const createContactWithProfilesSchema = z
   })
   .strict();
 
+export const updateContactSchema = z
+  .object({
+    primaryMobile: mobileInputSchema.optional(),
+    whatsappMobile: mobileInputSchema.optional(),
+    whatsappOptIn: z.boolean().optional(),
+    address: jsonObjectSchema.optional(),
+    notes: z.string().trim().max(1000).optional(),
+  })
+  .strict();
+
+export const createCustomerProfileSchema = customerProfileInputSchema.extend({
+  createdByUserId: domainIdSchema,
+});
+
+export const updateCustomerProfileSchema = z
+  .object({
+    fullName: z.string().trim().min(2).max(120).optional(),
+    relationLabel: z.string().trim().min(1).max(80).optional(),
+    genderContext: z.string().trim().min(1).max(80).optional(),
+    isActive: z.boolean().optional(),
+  })
+  .strict();
+
 export const createMeasurementVersionSchema = z
   .object({
     customerProfileId: domainIdSchema,
@@ -351,6 +374,13 @@ export const paymentSummarySchema = z
 
 export type CreateContactWithProfiles = z.infer<
   typeof createContactWithProfilesSchema
+>;
+export type UpdateContact = z.infer<typeof updateContactSchema>;
+export type CreateCustomerProfile = z.infer<
+  typeof createCustomerProfileSchema
+>;
+export type UpdateCustomerProfile = z.infer<
+  typeof updateCustomerProfileSchema
 >;
 export type ContactProfileSummary = z.infer<typeof contactProfileSummarySchema>;
 export type CreateMeasurementVersion = z.infer<

@@ -17,7 +17,7 @@ const DialogBackdrop = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <BaseDialog.Backdrop
     className={cn(
-      "fixed inset-0 z-50 bg-ink-display/30 backdrop-blur-sm transition-opacity duration-200 ease-premium data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 motion-reduce:transition-none",
+      "fixed inset-0 z-[100] bg-ink-display/30 backdrop-blur-sm transition-opacity duration-200 ease-premium data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 motion-reduce:transition-none",
       className,
     )}
     ref={ref}
@@ -37,7 +37,7 @@ const DialogContent = React.forwardRef<
     <DialogBackdrop />
     <BaseDialog.Popup
       className={cn(
-        "fixed left-1/2 top-1/2 z-50 grid max-h-[min(42rem,calc(100dvh-2rem))] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto rounded-xl border border-hairline bg-surface-strong p-5 text-ink-body shadow-lift transition duration-200 ease-premium data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0 motion-reduce:transition-none sm:p-6",
+        "fixed left-1/2 top-1/2 z-[110] grid max-h-[min(42rem,calc(100dvh-2rem))] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto rounded-xl border border-hairline bg-surface-strong p-5 text-ink-body shadow-lift transition duration-200 ease-premium data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0 motion-reduce:transition-none sm:p-6",
         size === "sm" && "max-w-md",
         size === "md" && "max-w-xl",
         size === "lg" && "max-w-3xl",

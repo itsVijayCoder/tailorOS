@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import {
   AlertTriangle,
-  ArrowRight,
   BellRing,
   BookOpenCheck,
   CheckCircle2,
@@ -14,13 +12,10 @@ import {
   ListChecks,
   RadioTower,
   Rocket,
-  ShieldCheck,
   Siren,
   TestTube2,
 } from "lucide-react";
 
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import {
   getPhase09BlockingReleaseGates,
   getPhase09ReleaseSignals,
@@ -40,15 +35,12 @@ import {
   SectionHeader,
   StatusBadge,
 } from "@/features/core-modules/components/module-primitives";
-import {
-  humanizeStatus,
-  statusTone,
-} from "@/features/core-modules/presenters";
+import { humanizeStatus, statusTone } from "@/features/core-modules/presenters";
 
 export const metadata: Metadata = {
-  title: "Testing, Observability and Release",
+  title: "Release",
   description:
-    "Phase 09 testing, observability, QA gates, runbooks, and first-shop release readiness for TailorOS.",
+    "Testing, observability, QA gates, runbooks, and first-shop release readiness for TailorOS.",
 };
 
 export default function ReleaseReadinessPage() {
@@ -58,27 +50,9 @@ export default function ReleaseReadinessPage() {
   return (
     <>
       <PageHeader
-        actions={
-          <>
-            <Link
-              className={cn(buttonVariants({ variant: "secondary" }))}
-              href="/docs/phase-wise/Phase09_testing_observability_release.html"
-            >
-              Phase 09 source
-              <ArrowRight aria-hidden className="size-4" />
-            </Link>
-            <Link
-              className={cn(buttonVariants({ variant: "outline" }))}
-              href="/admin/design-system"
-            >
-              Design tokens
-              <ShieldCheck aria-hidden className="size-4" />
-            </Link>
-          </>
-        }
-        body="Phase 09 turns launch readiness into an operating screen: the test pyramid, fixture coverage, Worker telemetry, release gates, DLQ alerts, runbooks, and first-shop pilot checks stay visible before production traffic is trusted."
-        eyebrow="Phase 09 QA and release"
-        title="Ship only when tests, telemetry, runbooks, and pilot gates agree."
+        body="The test pyramid, fixture coverage, Worker telemetry, release gates, alerts, runbooks, and first-shop pilot checks stay visible before production traffic is trusted."
+        eyebrow="Release"
+        title="Ship when tests, telemetry, and pilot gates agree."
       />
 
       <div className="grid min-w-0 gap-8 px-4 py-8 sm:px-6 lg:px-8">
@@ -198,8 +172,8 @@ export default function ReleaseReadinessPage() {
                 Example trace target
               </div>
               <p className="mt-3 font-mono text-xs leading-6 text-ink-muted">
-                POST /v1/orders · req_01j · ten_01j · usr_01j ·
-                ORD-MDU-000421 · 42ms · D1 12/7 · 2026.07.06.1
+                POST /v1/orders · req_01j · ten_01j · usr_01j · ORD-MDU-000421 ·
+                42ms · D1 12/7 · 2026.07.06.1
               </p>
             </div>
           </DataPanel>
@@ -324,10 +298,7 @@ export default function ReleaseReadinessPage() {
                   key={fixture.id}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <FlaskConical
-                      aria-hidden
-                      className="size-5 text-accent"
-                    />
+                    <FlaskConical aria-hidden className="size-5 text-accent" />
                     <StatusBadge tone="accent">{fixture.owner}</StatusBadge>
                   </div>
                   <h2 className="mt-3 font-display text-xl font-medium leading-none text-ink-display">

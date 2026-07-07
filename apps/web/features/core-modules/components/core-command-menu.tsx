@@ -1,21 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  Clock3,
+  ArrowRight,
   Command,
-  DatabaseZap,
-  FileText,
-  MessageCircleWarning,
-  ReceiptText,
+  Keyboard,
+  Ruler,
   Search,
-  Sparkles,
-  UsersRound,
+  ShoppingBag,
+  UserRoundPlus,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -26,102 +24,92 @@ import {
 } from "@/components/ui/dialog";
 import { SearchField } from "@/components/ui/search-field";
 import { cn } from "@/lib/utils";
+import type { CustomerContactRead } from "@tailoros/schemas";
 
-import {
-  createCommandSearchMeta,
-  searchPilotRecordsAsync,
-  shouldApplyCommandSearchResponse,
-} from "../data";
-import type {
-  CommandSearchMeta,
-  CommandSearchResponse,
-  CommandSearchResult,
-  SearchEntityType,
-} from "../types";
-
-const recentSearchKey = "tailoros-command-search-recent-v1";
-const maxRecentResults = 5;
-
-const iconByType: Record<SearchEntityType, typeof UsersRound> = {
-  customer: UsersRound,
-  family: UsersRound,
-  message: MessageCircleWarning,
-  order: FileText,
-  receipt: ReceiptText,
+type ApiState<T> = {
+  data: T;
+  error: string | null;
+  source: "offline" | "tenant-api";
 };
 
+const routeShortcuts = [
+  {
+    href: "/shop/customers/new",
+    keys: "Ctrl Alt C",
+    label: "New customer",
+  },
+  {
+    href: "/shop/orders/new",
+    keys: "Ctrl Alt O",
+    label: "New order",
+  },
+  {
+    href: "/shop/measurements/new",
+    keys: "Ctrl Alt M",
+    label: "New measurement",
+  },
+] as const;
+
 export function CoreCommandMenu() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  const [response, setResponse] = useState<CommandSearchResponse>(() =>
-    createEmptyResponse(""),
+  const [customers, setCustomers] = useState<CustomerContactRead[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const openSearch = useCallback(() => {
+    setOpen(true);
+  }, []);
+
+  const navigate = useCallback(
+    (href: string) => {
+      setOpen(false);
+      router.push(href);
+    },
+    [router],
   );
-  const [recentResults, setRecentResults] =
-    useState<readonly CommandSearchResult[]>(readRecentResults);
-  const latestRequestId = useRef(0);
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        setOpen((current) => !current);
+    function handleKeyDown(event: KeyboardEvent) {
+      if (
+        event.defaultPrevented ||
+        event.repeat ||
+        isEditableTarget(event.target)
+      ) {
+        return;
       }
-    };
+
+      const key = event.key.toLowerCase();
+      const searchPressed =
+        key === "k" &&
+        (event.metaKey || event.ctrlKey) &&
+        !event.altKey &&
+        !event.shiftKey;
+      const route = routeForShortcut(event);
+
+      if (!searchPressed && !route) return;
+
+      event.preventDefault();
+      if (searchPressed) openSearch();
+      if (route) navigate(route);
+    }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [navigate, openSearch]);
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
+    if (!open) return;
 
-    const requestId = latestRequestId.current + 1;
-    latestRequestId.current = requestId;
     const controller = new AbortController();
-
-    const timeout = window.setTimeout(() => {
-      setIsSearching(true);
-
-      searchPilotRecordsAsync(query, {
-        signal: controller.signal,
-        delayMs: query.trim().length >= 2 ? 96 : 48,
-      })
-        .then((nextResponse) => {
-          if (
-            !shouldApplyCommandSearchResponse({
-              requestId,
-              latestRequestId: latestRequestId.current,
-              aborted: controller.signal.aborted,
-            })
-          ) {
-            return;
-          }
-
-          setResponse(nextResponse);
-
-          if (nextResponse.results.length > 0) {
-            setRecentResults((current) => {
-              const next = mergeRecentResults(nextResponse.results, current);
-              writeRecentResults(next);
-              return next;
-            });
-          }
-        })
-        .catch((error: unknown) => {
-          if (!controller.signal.aborted) {
-            void error;
-            setResponse(createEmptyResponse(query));
-          }
-        })
-        .finally(() => {
-          if (requestId === latestRequestId.current) {
-            setIsSearching(false);
-          }
-        });
-    }, 150);
+    const timeout = window.setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        setCustomers(await loadCustomers(query, controller.signal));
+      } finally {
+        setIsLoading(false);
+      }
+    }, 140);
 
     return () => {
       window.clearTimeout(timeout);
@@ -129,20 +117,22 @@ export function CoreCommandMenu() {
     };
   }, [open, query]);
 
-  const showRecent =
-    !response.meta.minLengthSatisfied &&
-    recentResults.length > 0 &&
-    query.trim().length < 2;
-  const visibleResults = showRecent ? recentResults : response.results;
+  const hasQuery = query.trim().length > 0;
+  const resultLabel = useMemo(() => {
+    if (!hasQuery) return "Recent customer matches";
+    return `${customers.length} customer result${
+      customers.length === 1 ? "" : "s"
+    }`;
+  }, [customers.length, hasQuery]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
-        aria-label="Open command search"
+        aria-label="Search customers"
         className={cn(buttonVariants({ variant: "secondary" }))}
       >
         <Search aria-hidden className="size-4" />
-        <span className="hidden sm:inline">Command search</span>
+        <span className="hidden sm:inline">Search</span>
         <span className="ml-1 hidden rounded-full border border-hairline bg-page px-2 py-0.5 text-[11px] font-semibold text-ink-muted lg:inline">
           Ctrl K
         </span>
@@ -151,238 +141,149 @@ export function CoreCommandMenu() {
         <DialogHeader>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="signal">
-              <DatabaseZap aria-hidden className="size-3.5" />
-              Exact indexes first
+              <Command aria-hidden className="size-3.5" />
+              Cmd/Ctrl K
             </Badge>
             <Badge variant="neutral">
-              <Clock3 aria-hidden className="size-3.5" />
-              {formatBudget(response.meta)}
+              <Keyboard aria-hidden className="size-3.5" />
+              Search only
             </Badge>
           </div>
-          <DialogTitle className="flex items-center gap-2">
-            <Command aria-hidden className="size-5 text-accent" />
-            TailorOS command search
-          </DialogTitle>
+          <DialogTitle>Search customers</DialogTitle>
           <DialogDescription>
-            Search mobile, customer code, order code, receipt code, garment, or
-            WhatsApp evidence. Pilot UI mirrors the tenant-local D1 strategy.
+            Select a customer to open the customer detail page.
           </DialogDescription>
         </DialogHeader>
 
         <SearchField
           autoFocus
-          isLoading={isSearching}
+          isLoading={isLoading}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Try 98765, CUS-MDU-000231, ORD-MDU-000421, today delivery..."
+          placeholder="Search mobile, customer code, or family name"
           value={query}
         />
 
-        <SearchTelemetry isSearching={isSearching} meta={response.meta} />
+        <div className="flex items-center justify-between gap-3 border-b border-hairline pb-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            {resultLabel}
+          </p>
+          <Button
+            onClick={() => navigate("/shop/search")}
+            size="sm"
+            type="button"
+            variant="ghost"
+          >
+            Full search
+            <ArrowRight aria-hidden className="size-4" />
+          </Button>
+        </div>
 
-        <div
-          aria-live="polite"
-          className="grid max-h-[24rem] gap-2 overflow-y-auto pr-1"
-        >
-          {visibleResults.length > 0 ? (
-            <>
-              {showRecent ? (
-                <p className="px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                  Recent results
-                </p>
-              ) : null}
-              {visibleResults.map((result) => (
-                <CommandResult
-                  key={`${result.entityType}:${result.id}`}
-                  onSelect={() => setOpen(false)}
-                  result={result}
-                />
-              ))}
-            </>
+        <div className="grid max-h-[24rem] gap-2 overflow-y-auto pr-1">
+          {customers.length > 0 ? (
+            customers.map((customer) => (
+              <button
+                className="grid gap-2 rounded-lg border border-hairline bg-surface p-3 text-left transition duration-200 ease-premium hover:border-border-accent hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
+                key={customer.contactId}
+                onClick={() =>
+                  navigate(`/shop/customers/${customer.contactId}`)
+                }
+                type="button"
+              >
+                <span className="flex items-start justify-between gap-3">
+                  <span>
+                    <strong className="block text-sm text-ink-display">
+                      {customer.profiles
+                        .map((profile) => profile.fullName)
+                        .join(", ")}
+                    </strong>
+                    <span className="mt-1 block text-xs text-ink-muted">
+                      {customer.primaryMobileE164} ·{" "}
+                      {customer.profiles.length} profile
+                      {customer.profiles.length === 1 ? "" : "s"}
+                    </span>
+                  </span>
+                  <ArrowRight
+                    aria-hidden
+                    className="mt-0.5 size-4 text-accent"
+                  />
+                </span>
+              </button>
+            ))
           ) : (
-            <CommandEmptyState meta={response.meta} query={query} />
+            <div className="rounded-lg border border-dashed border-hairline bg-surface p-4 text-sm text-ink-muted">
+              {hasQuery
+                ? "No customer matched this search."
+                : "Start typing to search customers."}
+            </div>
           )}
+        </div>
+
+        <div className="grid gap-2 border-t border-hairline pt-3 sm:grid-cols-3">
+          {routeShortcuts.map((shortcut) => (
+            <button
+              className="grid gap-2 rounded-lg border border-hairline bg-page p-3 text-left text-sm transition duration-200 ease-premium hover:border-border-accent hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
+              key={shortcut.href}
+              onClick={() => navigate(shortcut.href)}
+              type="button"
+            >
+              <ShortcutIcon href={shortcut.href} />
+              <span className="font-semibold text-ink-display">
+                {shortcut.label}
+              </span>
+              <span className="text-xs text-ink-muted">{shortcut.keys}</span>
+            </button>
+          ))}
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-function SearchTelemetry({
-  isSearching,
-  meta,
-}: {
-  isSearching: boolean;
-  meta: CommandSearchMeta;
-}) {
-  return (
-    <div className="grid gap-2 rounded-lg border border-hairline bg-surface p-3 text-xs text-ink-muted sm:grid-cols-3">
-      <span>
-        <strong className="text-ink-display">Strategy:</strong>{" "}
-        {humanizeStrategy(meta.strategy)}
-      </span>
-      <span>
-        <strong className="text-ink-display">Results:</strong>{" "}
-        {isSearching ? "Searching" : meta.resultCount}
-      </span>
-      <span>
-        <strong className="text-ink-display">Round trip:</strong>{" "}
-        {isSearching ? "..." : `${meta.elapsedMs}ms`}
-      </span>
-    </div>
+function ShortcutIcon({ href }: { href: string }) {
+  const className = "size-4";
+
+  if (href.includes("orders")) {
+    return <ShoppingBag aria-hidden className={className} />;
+  }
+
+  if (href.includes("measurements")) {
+    return <Ruler aria-hidden className={className} />;
+  }
+
+  return <UserRoundPlus aria-hidden className={className} />;
+}
+
+function routeForShortcut(event: KeyboardEvent) {
+  if (!event.ctrlKey || !event.altKey || event.metaKey || event.shiftKey) {
+    return null;
+  }
+
+  const key = event.key.toLowerCase();
+  if (key === "c") return "/shop/customers/new";
+  if (key === "o") return "/shop/orders/new";
+  if (key === "m") return "/shop/measurements/new";
+  return null;
+}
+
+async function loadCustomers(query: string, signal?: AbortSignal) {
+  const response = await fetch(
+    `/api/shop/customers?q=${encodeURIComponent(query)}`,
+    signal ? { signal } : undefined,
   );
+  const result = (await response.json()) as ApiState<{
+    customers: CustomerContactRead[];
+  }>;
+  return result.data.customers;
 }
 
-function CommandResult({
-  onSelect,
-  result,
-}: {
-  onSelect: () => void;
-  result: CommandSearchResult;
-}) {
-  const Icon = iconByType[result.entityType];
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
 
+  const tagName = target.tagName.toLowerCase();
   return (
-    <Link
-      className="group grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 rounded-lg border border-hairline bg-surface p-3 text-left transition duration-200 ease-premium hover:-translate-y-0.5 hover:border-border-accent hover:bg-accent-faded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
-      href={result.href}
-      onClick={onSelect}
-    >
-      <span className="grid size-9 place-items-center rounded-lg border border-hairline bg-page text-accent transition duration-200 ease-premium group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground motion-reduce:transition-none">
-        <Icon aria-hidden className="size-4" />
-      </span>
-      <span className="min-w-0">
-        <span className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-            {result.eyebrow}
-          </span>
-          <span className="rounded-full border border-hairline bg-page px-2 py-0.5 text-[11px] font-semibold uppercase text-ink-muted">
-            {result.hitType}
-          </span>
-        </span>
-        <strong className="mt-1 block truncate font-ui text-sm font-semibold text-ink-display">
-          {result.title}
-        </strong>
-        <span className="mt-1 block text-sm leading-5 text-ink-muted">
-          {result.description}
-        </span>
-        <span className="mt-2 block text-xs text-ink-muted">
-          Matched on {result.matchedOn}
-        </span>
-      </span>
-    </Link>
-  );
-}
-
-function CommandEmptyState({
-  meta,
-  query,
-}: {
-  meta: CommandSearchMeta;
-  query: string;
-}) {
-  const shortQuery = query.trim().length < 2;
-
-  return (
-    <div className="rounded-lg border border-dashed border-hairline bg-surface p-5 text-sm leading-6 text-ink-muted">
-      <div className="flex items-start gap-3">
-        <span className="grid size-9 place-items-center rounded-lg border border-hairline bg-page text-accent">
-          {shortQuery ? (
-            <Sparkles aria-hidden className="size-4" />
-          ) : (
-            <Search aria-hidden className="size-4" />
-          )}
-        </span>
-        <div>
-          <strong className="block font-ui text-sm text-ink-display">
-            {shortQuery ? "Type at least two characters" : "No pilot match"}
-          </strong>
-          <p className="mt-1">
-            {shortQuery
-              ? "One-character searches stay idle so the counter flow does not waste backend work."
-              : `No result for "${meta.rawQuery}". Production search would still return the same empty state with request metadata.`}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function createEmptyResponse(rawQuery: string): CommandSearchResponse {
-  return {
-    results: [],
-    meta: createCommandSearchMeta({ rawQuery, resultCount: 0 }),
-  };
-}
-
-function formatBudget(meta: CommandSearchMeta) {
-  return meta.latencyBudgetMs ? `<${meta.latencyBudgetMs}ms target` : "Idle";
-}
-
-function humanizeStrategy(strategy: CommandSearchMeta["strategy"]) {
-  return strategy.replaceAll("_", " ");
-}
-
-function readRecentResults(): readonly CommandSearchResult[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(
-      window.localStorage.getItem(recentSearchKey) ?? "[]",
-    ) as unknown;
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed.filter(isCommandSearchResult).slice(0, maxRecentResults);
-  } catch {
-    return [];
-  }
-}
-
-function writeRecentResults(results: readonly CommandSearchResult[]) {
-  try {
-    window.localStorage.setItem(recentSearchKey, JSON.stringify(results));
-  } catch {
-    // Recent search cache is a convenience only.
-  }
-}
-
-function mergeRecentResults(
-  nextResults: readonly CommandSearchResult[],
-  currentResults: readonly CommandSearchResult[],
-) {
-  const seen = new Set<string>();
-  const merged: CommandSearchResult[] = [];
-
-  for (const result of [...nextResults, ...currentResults]) {
-    const key = `${result.entityType}:${result.id}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      merged.push(result);
-    }
-
-    if (merged.length === maxRecentResults) {
-      break;
-    }
-  }
-
-  return merged;
-}
-
-function isCommandSearchResult(value: unknown): value is CommandSearchResult {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Record<string, unknown>;
-  return (
-    typeof candidate.entityType === "string" &&
-    typeof candidate.id === "string" &&
-    typeof candidate.title === "string" &&
-    typeof candidate.href === "string" &&
-    typeof candidate.description === "string"
+    tagName === "input" ||
+    tagName === "select" ||
+    tagName === "textarea" ||
+    target.isContentEditable
   );
 }

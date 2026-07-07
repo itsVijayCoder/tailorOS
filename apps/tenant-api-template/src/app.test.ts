@@ -99,6 +99,33 @@ describe("tenant-api-template Worker", () => {
     expect(body.error.code).toBe("VALIDATION_ERROR");
   });
 
+  it("rejects invalid staff payloads before touching D1", async () => {
+    const response = await app.request(
+      "/v1/staff",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-request-id": "req_staff_invalid",
+        },
+        body: JSON.stringify({
+          displayName: "A",
+          role: "platform_support",
+        }),
+      },
+      {} as Env,
+    );
+    const body = (await response.json()) as {
+      ok: false;
+      error: { code: string; fields: Record<string, string[]> };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_ERROR");
+    expect(body.error.fields.displayName).toBeDefined();
+    expect(body.error.fields.role).toBeDefined();
+  });
+
   it("does not bypass the WhatsApp connector with direct queue writes", async () => {
     const response = await app.request(
       "/v1/orders/ORD-MDU-100/notification-outbox",
@@ -109,7 +136,9 @@ describe("tenant-api-template Worker", () => {
       {
         WHATSAPP_SEND_QUEUE: {
           send: async () => {
-            throw new Error("Tenant API must not write WhatsApp queue directly.");
+            throw new Error(
+              "Tenant API must not write WhatsApp queue directly.",
+            );
           },
         },
       } as unknown as Env,

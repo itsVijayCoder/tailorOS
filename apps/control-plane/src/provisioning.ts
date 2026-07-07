@@ -25,6 +25,7 @@ export type ControlPlaneStore = {
   createSignupReservation(
     input: SignupReservationInput,
   ): Promise<TenantProvisioningSummary>;
+  createOwnerAccess(input: OwnerAccessInput): Promise<OwnerAccessRecord>;
   recordProvisioningAttempt(input: {
     tenantId: string;
     now: string;
@@ -65,6 +66,28 @@ export type SignupReservationInput = {
   step: ProvisioningStep;
   idempotencyKey: string;
   now: string;
+};
+
+export type OwnerAccessInput = {
+  tenantId: string;
+  userId: string;
+  membershipId: string;
+  sessionId: string;
+  displayName: string;
+  email: string;
+  mobileE164: string;
+  sessionTokenHash: string;
+  sessionExpiresAt: string;
+  now: string;
+};
+
+export type OwnerAccessRecord = {
+  userId: string;
+  membershipId: string;
+  sessionId: string;
+  role: "owner";
+  email: string;
+  expiresAt: string;
 };
 
 export type DatabaseRegistryInput = {
@@ -170,6 +193,32 @@ export function resolveIdempotencyKey(input: {
     ok: true as const,
     value: `tenant-signup:${input.request.preferredSlug}:${emailSegment}`,
   };
+}
+
+export function createOwnerAccessIds() {
+  const userEntropy = crypto.randomUUID().replaceAll("-", "");
+  const sessionEntropy = crypto.randomUUID().replaceAll("-", "");
+
+  return {
+    userId: `usr_${userEntropy.slice(0, 20)}`,
+    membershipId: createStableId({ prefix: "MBR" }).replace("MBR-", "mem_"),
+    sessionId: `ses_${sessionEntropy.slice(0, 20)}`,
+  };
+}
+
+export function createOwnerSetupSessionToken(slug: string) {
+  const slugPrefix = slug.replace(/[^a-z0-9]+/g, "_").slice(0, 32);
+  return `tos_owner_${slugPrefix}_${crypto.randomUUID().replaceAll("-", "")}`;
+}
+
+export async function sha256Hex(value: string) {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(value),
+  );
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 export async function createTenantSignup(input: {
