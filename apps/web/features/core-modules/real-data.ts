@@ -59,6 +59,18 @@ export async function getRealFamilyAccounts(query?: string) {
   };
 }
 
+export async function getRealCustomerContact(contactId: string) {
+  const customers = await readCustomers();
+  return {
+    contact:
+      customers.data.customers.find(
+        (customer) => customer.contactId === contactId,
+      ) ?? null,
+    error: customers.error,
+    source: customers.source,
+  };
+}
+
 export async function getRealMeasurementsData() {
   const [templates, measurements] = await Promise.all([
     readMeasurementTemplates(),
