@@ -50,7 +50,7 @@ const shopNavItems = coreNavItems.filter(
 
 export function CoreModulesShell({ children }: { children: ReactNode }) {
   return (
-    <main className="shop-app-shell relative z-[60] min-h-dvh overflow-x-hidden bg-page text-ink-body">
+    <main className="shop-app-shell relative z-[60] h-dvh overflow-hidden bg-page text-ink-body">
       <aside className="fixed inset-y-0 left-0 z-[70] hidden w-64 flex-col border-r border-hairline bg-surface/95 backdrop-blur-xl lg:flex">
         <div className="flex h-16 shrink-0 items-center border-b border-hairline px-4">
           <BrandLockup subtitle={shopName} />
@@ -101,8 +101,8 @@ export function CoreModulesShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <section className="min-h-dvh min-w-0 lg:pl-64">
-        <header className="sticky top-0 z-[60] border-b border-hairline bg-page/94 backdrop-blur-xl">
+      <section className="flex h-full min-w-0 flex-col lg:pl-64">
+        <header className="z-[60] shrink-0 border-b border-hairline bg-page/94 backdrop-blur-xl">
           <div className="flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
             <div className="lg:hidden">
               <BrandLockup subtitle={shopName} />
@@ -144,7 +144,7 @@ export function CoreModulesShell({ children }: { children: ReactNode }) {
         </header>
         <nav
           aria-label="Mobile shop modules"
-          className="sticky top-16 z-[55] overflow-hidden border-b border-hairline bg-page/94 px-3 py-2 backdrop-blur-xl lg:hidden"
+          className="z-[55] shrink-0 overflow-hidden border-b border-hairline bg-page/94 px-3 py-2 backdrop-blur-xl lg:hidden"
         >
           <div className="flex max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1">
             {shopNavItems.map((item) => {
@@ -170,7 +170,9 @@ export function CoreModulesShell({ children }: { children: ReactNode }) {
             <LogoutButton variant="chip" />
           </div>
         </nav>
-        <div className="min-w-0">{children}</div>
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
+          {children}
+        </div>
       </section>
     </main>
   );
