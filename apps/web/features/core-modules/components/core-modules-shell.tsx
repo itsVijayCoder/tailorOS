@@ -1,9 +1,11 @@
 import Link from "next/link";
 import {
   Building2,
+  BookOpenText,
   ClipboardList,
   CreditCard,
   Gauge,
+  Keyboard,
   MessageCircle,
   Rocket,
   Search,
@@ -27,6 +29,7 @@ import { CoreCommandMenu } from "./core-command-menu";
 const iconByKey: Record<ModuleKey, typeof Gauge> = {
   customers: UsersRound,
   dashboard: Gauge,
+  docs: BookOpenText,
   search: Search,
   measurements: Ruler,
   orders: ClipboardList,
@@ -35,6 +38,7 @@ const iconByKey: Record<ModuleKey, typeof Gauge> = {
   reports: WalletCards,
   release: Rocket,
   security: ShieldCheck,
+  shortcuts: Keyboard,
   settings: Settings2,
   whatsapp: MessageCircle,
 };

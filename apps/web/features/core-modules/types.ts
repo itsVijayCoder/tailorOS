@@ -8,6 +8,7 @@ export type ModuleKey =
   | "dashboard"
   | "search"
   | "customers"
+  | "docs"
   | "measurements"
   | "orders"
   | "production"
@@ -16,6 +17,7 @@ export type ModuleKey =
   | "reports"
   | "security"
   | "release"
+  | "shortcuts"
   | "settings";
 
 export type CoreNavItem = Readonly<{

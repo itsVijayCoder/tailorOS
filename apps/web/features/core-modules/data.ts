@@ -81,6 +81,12 @@ export const coreNavItems = [
     description: "Garment templates, versions, fit notes, reference photos.",
   },
   {
+    key: "shortcuts",
+    href: "/shop/shortcuts",
+    label: "Shortcuts",
+    description: "Keyboard commands for search and routed create flows.",
+  },
+  {
     key: "orders",
     href: "/shop/orders",
     label: "Orders",
@@ -128,6 +134,12 @@ export const coreNavItems = [
     href: "/shop/settings",
     label: "Settings",
     description: "Shop profile, roles, templates, receipt and message policy.",
+  },
+  {
+    key: "docs",
+    href: "/shop/docs",
+    label: "Docs",
+    description: "Operational rules, flow references, and implementation notes.",
   },
 ] as const satisfies readonly CoreNavItem[];
 
